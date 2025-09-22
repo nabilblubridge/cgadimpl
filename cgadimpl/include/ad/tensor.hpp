@@ -46,10 +46,13 @@ float sum_scalar() const;
 static Tensor sum_all(const Tensor& X);
 
 
-// pointwise / matrix ops
+// Broadcasting-aware elementwise ops (NumPy-style for 2D):
+// result shape: (max(r), max(c)); dimensions must match or be 1.
 friend Tensor operator+(const Tensor& a, const Tensor& b);
 friend Tensor operator-(const Tensor& a, const Tensor& b);
 friend Tensor operator*(const Tensor& a, const Tensor& b); // Hadamard
+
+// unary / scalar ops
 friend Tensor operator-(const Tensor& x); // unary negation
 friend Tensor operator*(const Tensor& a, float s); // scalar scale
 friend Tensor operator*(float s, const Tensor& a); // scalar scale
@@ -60,6 +63,36 @@ static Tensor relu_mask(const Tensor& x); // 1 where x>0 else 0
 static Tensor transpose(const Tensor& x);
 static Tensor matmul (const Tensor& A, const Tensor& B);
 
+// Reduce G to the shape of `like` by summing broadcasted axes.
+static Tensor reduce_to(const Tensor& G, const Tensor& like);
+
+
+// elementwise unary
+static Tensor exp(const Tensor& x);
+static Tensor log(const Tensor& x);
+static Tensor tanh(const Tensor& x);
+static Tensor sigmoid(const Tensor& x);
+static Tensor softplus(const Tensor& x);
+static Tensor gelu_tanh(const Tensor& x); // tanh approx
+static Tensor leaky_relu(const Tensor& x, float alpha);
+
+
+// binary elementwise division (broadcasting)
+friend Tensor operator/(const Tensor& a, const Tensor& b);
+
+
+// rowwise reductions (produce [R,1])
+static Tensor row_sum(const Tensor& X);
+static Tensor row_max(const Tensor& X);
+
+
+// softmax family (rowwise)
+static Tensor softmax_row(const Tensor& Z);
+static Tensor logsumexp_row(const Tensor& Z);
+
+
+// averages
+static Tensor mean_all(const Tensor& X);
 
 private:
 int r{0}, c{0};
