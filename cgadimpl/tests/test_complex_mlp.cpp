@@ -41,8 +41,8 @@ static void print_grad(const std::string& label, ag::Value& v,  int max_r = 6, i
 using namespace ag;
 
 int main() {
-    ag::debug::enable_tracing(true);
-    ag::debug::set_print_limits(/*rows*/6, /*cols*/8, /*width*/10, /*precision*/4);
+    // ag::debug::enable_tracing(true);
+    // ag::debug::set_print_limits(/*rows*/6, /*cols*/8, /*width*/10, /*precision*/4);
 
     // ---------- Shapes ----------
     const int B = 8;     // batch size
@@ -118,9 +118,10 @@ int main() {
     zero_grad(loss);
     backward(loss);
     
-    ag::debug::print_all_grads(loss);                   // optional full gradient dump
+    // ag::debug::print_all_grads(loss);                   // optional full gradient dump
     // ag::debug::dump_dot(loss, "build/graph.dot");       // write GraphViz DOT
-    ag::debug::dump_vjp_dot(loss, "build/graph_vjp.dot"); // write VJP DOT
+    // ag::debug::dump_vjp_dot(loss, "build/graph_vjp.dot"); // write VJP DOT
+    // ag::debug::dump_jvp_dot(loss, "build/graph_jvp.dot"); // write JVP DOT
 
 
 
@@ -134,8 +135,8 @@ int main() {
         std::cout << logits.val()(0, j) << (j+1<5? ' ' : '\n');
 
     std::cout << "probs [0,:0..4] = ";
-    for (int j = 0; j < std::min(5, Out); ++j)
-        std::cout << probs.val()(0, j) << (j+1<5? ' ' : '\n');
+    for (int j = 0; j <Out; ++j)
+        std::cout << probs.val()(0, j) << (j+1<10? ' ' : '\n');
 
     // Peek at some gradient entries so you know it's flowing
     std::cout << "dL/dW1[0,0]=" << W1.grad()(0,0)
@@ -152,8 +153,8 @@ int main() {
     // print_grad("b3", b3);
     std::cout << "dL/dW4[0,0]=" << W4.grad()(0,0)
               << "  dL/db4[0,0]=" << b4.grad()(0,0) << "\n";
-    print_grad("W4", W4);   
-    print_grad("b4", b4);
+    // print_grad("W4", W4);   
+    // print_grad("b4", b4);
     std::cout << "dL/dW5[0,0]=" << W5.grad()(0,0)
               << "  dL/db5[0,0]=" << b5.grad()(0,0) << "\n";
     // print_grad("W5", W5);   

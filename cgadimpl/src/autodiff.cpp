@@ -15,12 +15,13 @@
 
 namespace ag {
 
-
+// =========================================================
 void zero_grad(const Value& root){
 auto order = topo_from(root.node.get());
 for(Node* n : order) if(n->requires_grad) n->grad = Tensor::zeros_like(n->value);
 }
-
+// =========================================================
+// Backpropagation (reverse-mode autodiff)
 // a.k.a VJP (vector-Jacobian product)
 void backward(const Value& root, const Tensor* grad_seed){
 auto order = topo_from(root.node.get());
@@ -159,6 +160,9 @@ case Op::Leaf: default: break;
 }
 }
 
+// =========================================================
+// Forward-mode autodiff (Jacobian-vector product)
+// a.k.a JVP (Jacobian-vector product)
 
 Tensor jvp(const Value& root, const std::unordered_map<Node*, Tensor>& seed){
 auto order = topo_from(root.node.get());

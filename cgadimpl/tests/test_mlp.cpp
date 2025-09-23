@@ -1,6 +1,7 @@
 #include <iostream>
 #include <random>
 #include "ad/ag_all.hpp"
+#include "ad/export_hlo.hpp"
 
 #include <iomanip>
 #include <fstream>
@@ -160,10 +161,12 @@ int main() {
     // dump_csv_val("logits", logits);
     // dump_csv_val("Y", Y);
 
+    ag::hlo::dump_stablehlo(loss, "build/graph_stablehlo.mlir");
 
     // ----- Backprop -----
     zero_grad(loss);
     backward(loss);
+// ag::hlo::dump_stablehlo(loss, "build/graph_stablehlo.mlir");
 
     // ----- Prints -----
     std::cout << "loss = " << loss.val()(0,0) << "\n";
