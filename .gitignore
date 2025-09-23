@@ -4,7 +4,14 @@
 *.log
 *.tmp
 *.a
+./build/
 build/
+./dumps/
+dumps/
 bin/
 lib/
 out/
+././dumps/
+obj/
+./obj/
+././obj/

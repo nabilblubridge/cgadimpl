@@ -1,2 +1,1 @@
-# cgadimpl
-# cgadimpl
+# Computational graph and Autodifferentiation implementation
