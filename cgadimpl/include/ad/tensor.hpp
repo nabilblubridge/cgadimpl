@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <utility>
 #include <vector>
+#include <iosfwd> // for std::ostream forward decl
 
 
 namespace ag {
@@ -93,6 +94,10 @@ static Tensor logsumexp_row(const Tensor& Z);
 
 // averages
 static Tensor mean_all(const Tensor& X);
+
+// debug print
+friend std::ostream& operator<<(std::ostream& os, const Tensor& t);
+
 
 private:
 int r{0}, c{0};

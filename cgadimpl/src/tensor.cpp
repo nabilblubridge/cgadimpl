@@ -4,6 +4,8 @@
 #include <random>
 #include <algorithm>
 #include <stdexcept>
+#include <ostream>
+#include <iomanip>
 #include <cmath>
 #include "ad/tensor.hpp"
 
@@ -27,7 +29,9 @@ Tensor::Tensor(int rows, int cols) : r(rows), c(cols), d(static_cast<std::size_t
 
 
 Tensor Tensor::zeros(int r, int c){ return Tensor(r,c); }
+
 Tensor Tensor::ones (int r, int c){ Tensor t(r,c); std::fill(t.d.begin(), t.d.end(), 1.f); return t; }
+// random tensor wich generates a tensor with dimensions r x c with values from N(0,1) using the given seed by normal distribution
 Tensor Tensor::randn(int r, int c, unsigned seed){ Tensor t(r,c); std::mt19937 gen(seed); std::normal_distribution<float> N(0.f,1.f); for(auto &x: t.d) x = N(gen); return t; }
 Tensor Tensor::zeros_like(const Tensor& x){ return zeros(x.r, x.c); }
 Tensor Tensor::ones_like (const Tensor& x){ return ones (x.r, x.c); }
@@ -135,16 +139,29 @@ Tensor s = row_sum(e); // [R,1]
 return e / s; // broadcast divide
 }
 
-
+// used for cross-entropy with logits
 Tensor Tensor::logsumexp_row(const Tensor& Z){
-Tensor M = row_max(Z);
-Tensor e = exp(Z - M);
-Tensor s = row_sum(e);
-Tensor lse = log(s) + M; // broadcast add
-return lse; // [R,1]
+    Tensor M = row_max(Z);
+    Tensor e = exp(Z - M);
+    Tensor s = row_sum(e);
+    Tensor lse = log(s) + M; // broadcast add
+    return lse; // [R,1]
 }
 
-
+// mean of all elements
 Tensor Tensor::mean_all(const Tensor& X){ Tensor y(1,1); y(0,0) = X.sum_scalar() / float(X.r * X.c); return y; }
+
+// to print the tensor in a readable format
+std::ostream& operator<<(std::ostream& os, const Tensor& t) {
+    os << "Tensor (" << t.rows() << "x" << t.cols() << "):\n";
+    for (int i = 0; i < t.rows(); ++i) {
+        for (int j = 0; j < t.cols(); ++j) {
+            os << t(i, j);
+            if (j + 1 < t.cols()) os << ' ';
+        }
+        if (i + 1 < t.rows()) os << '\n';
+    }
+    return os; // enable chaining
+}
 
 } // namespace ag
