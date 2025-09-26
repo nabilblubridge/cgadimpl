@@ -1,7 +1,7 @@
-#include "ad/autodiff_ops.hpp"
+#include "ad/detail/autodiff_ops.hpp"
 
 namespace ag {
-namespace {
+namespace detail{
 
 // helper: reduce a gradient to a parent's shape (broadcast-aware)
 inline Tensor rt(const Tensor& g, const Tensor& like){ return Tensor::reduce_to(g, like); }
@@ -151,13 +151,30 @@ void vjp_CeWithLogits(Node* n, const Tensor& gy /*unused: scalar gy*/){
 }
 void vjp_Leaf(Node*, const Tensor&){ /* no-op */ }
 
+void vjp_KLDivergence(Node* n, const Tensor& gy /*unused: scalar gy*/){
+    Node* Z = n->inputs[0].get();
+    Node* Y = n->inputs[1].get();
+    int B = Z->value.rows();
+    Tensor sm = Tensor::softmax_row(Z->value);
+    Tensor gZ = (Tensor::log(Y->value) - sm + Y->value) * (1.0f / float(B));
+    if (Z->requires_grad) Z->grad.add_( gZ );
+    if (Y->requires_grad) {
+        Tensor lse = Tensor::logsumexp_row(Z->value);
+        Tensor lsm = Z->value - lse;
+        Tensor gY = (Tensor::log(Y->value) + Tensor::ones_like(Y->value) - lsm) * (1.0f / float(B));
+        Y->grad.add_( gY );
+    }
+}
+
+
 } // anon
+
 
 // -------- dispatch table --------
 VjpFn vjp_lookup(Op op){
     switch(op){
-#define OP(name, arity, str) case Op::name: return &vjp_##name;
-#include "ad/ops.def"
+#define OP(name, arity, str) case Op::name: return &detail::vjp_##name;
+#include "ad/detail/ops.def"
 #undef OP
         default: return nullptr;
     }

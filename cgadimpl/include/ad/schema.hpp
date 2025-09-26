@@ -5,7 +5,7 @@ namespace ag {
 
 enum class Op : uint8_t {
 #define OP(name, arity, str) name,
-#include "ad/ops.def"
+#include "ad/detail/ops.def"
 #undef OP
     Count
 };

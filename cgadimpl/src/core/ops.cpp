@@ -182,4 +182,24 @@ namespace ag {
         return Value(n);
     }
 
+    Value kldivergence(const Value& logits, const Value& onehot){
+    // Stable CE = mean( -sum(onehot * (logits - logsumexp_row(logits))) )
+        Tensor Z = logits.val();
+        Tensor Y = onehot.val();
+        Tensor X = Tensor::log(Y + Tensor::ones_like(Y)*1e-10f); // add small value to avoid log(0)
+        Tensor LSE = Tensor::logsumexp_row(Z); // [B,1]
+        Tensor log_sm = X- Z + LSE; // [B,C]
+        Tensor prod = Y * log_sm; // [B,C]
+        Tensor rs = Tensor::row_sum(prod); // [B,1]
+        Tensor s = Tensor::sum_all(rs); // [1,1]
+        Tensor out = Tensor::mean_all(rs * Tensor::ones_like(rs)); // mean over B (same as s/B)
+        // We'll compute exact mean: s / B
+        Tensor mean(1,1); mean(0,0) = s(0,0) / float(Z.rows());
+        Tensor loss = Tensor::zeros(1,1); loss(0,0) = -mean(0,0);
+        auto n = std::make_shared<Node>(loss, logits.node->requires_grad || onehot.node->requires_grad, Op::KLDivergence, "kldivergence");
+        n->inputs = {logits.node, onehot.node};
+        ag::debug::on_node_created(n);  
+        return Value(n);
+    }
+
 } // namespace ag

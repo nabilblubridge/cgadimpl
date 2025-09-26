@@ -16,5 +16,17 @@ using JvpFn = Tensor(*)(Node* n, const std::function<const Tensor&(Node*)>& tang
 // Lookup tables (one slot per Op value).
 VjpFn vjp_lookup(Op op);
 JvpFn jvp_lookup(Op op);
+// Optional: expose per-op rule symbols to tests only.
+
 
 } // namespace ag
+#ifdef AG_EXPOSE_AUTODIFF_RULES
+namespace ag::detail {
+  // Declare all rule functions via the registry
+  #define OP(name, arity, str) \
+    void   vjp_##name(Node* n, const Tensor& gy); \
+    Tensor jvp_##name(Node* n, const std::function<const Tensor&(Node*)>& tangent_of);
+  #include "ad/detail/ops.def"
+  #undef OP
+} // namespace ag::detail
+#endif

@@ -3,7 +3,7 @@
 *.o
 *.log
 *.tmp
-*.a
+# *.a
 ./build/
 build/
 ./dumps/
@@ -15,3 +15,11 @@ out/
 obj/
 ./obj/
 ././obj/
+./build-*/
+build-*/
+./.vscode/
+.vscode/
+*.exe
+*.dll
+*.pdb
+*.class     

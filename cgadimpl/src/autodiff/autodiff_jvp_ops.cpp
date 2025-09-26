@@ -1,7 +1,7 @@
-#include "ad/autodiff_ops.hpp"
+#include "ad/detail/autodiff_ops.hpp"
 
 namespace ag {
-namespace {
+namespace detail{
 
 // shorthand
 inline const Tensor& T(const std::function<const Tensor&(Node*)>& f, Node* p){ return f(p); }
@@ -117,14 +117,20 @@ Tensor jvp_CeWithLogits(Node* n, const std::function<const Tensor&(Node*)>& t){
 Tensor jvp_Leaf(Node*, const std::function<const Tensor&(Node*)>&){
     return Tensor(); // unused
 }
+Tensor jvp_KLDivergence(Node* n, const std::function<const Tensor&(Node*)>& t){
+    // leave it
+    return Tensor();
+}
 
 } // anon
+
+
 
 // -------- dispatch table --------
 JvpFn jvp_lookup(Op op){
     switch(op){
-#define OP(name, arity, str) case Op::name: return &jvp_##name;
-#include "ad/ops.def"
+#define OP(name, arity, str) case Op::name: return &detail::jvp_##name;
+#include "ad/detail/ops.def"
 #undef OP
         default: return nullptr;
     }

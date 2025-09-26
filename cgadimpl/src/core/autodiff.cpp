@@ -416,7 +416,7 @@
 // src/autodiff.cpp
 #include <unordered_map>
 #include "ad/autodiff.hpp"
-#include "ad/autodiff_ops.hpp"
+#include "ad/detail/autodiff_ops.hpp"
 #include "ad/debug.hpp"
 
 namespace ag {
