@@ -3,6 +3,7 @@
 // =====================
 #include "ad/ops.hpp"
 #include "ad/debug.hpp"
+#include "nn/nn.hpp" // for relu    
 
 
 namespace ag {

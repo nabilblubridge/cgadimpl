@@ -73,9 +73,9 @@ static Tensor exp(const Tensor& x);
 static Tensor log(const Tensor& x);
 static Tensor tanh(const Tensor& x);
 static Tensor sigmoid(const Tensor& x);
-// static Tensor softplus(const Tensor& x);
-// static Tensor gelu_tanh(const Tensor& x); // tanh approx
-// static Tensor leaky_relu(const Tensor& x, float alpha);
+static Tensor softplus(const Tensor& x);
+static Tensor gelu_tanh(const Tensor& x); // tanh approx
+static Tensor leaky_relu(const Tensor& x, float alpha);
 
 
 // binary elementwise division (broadcasting)
