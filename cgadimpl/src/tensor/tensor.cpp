@@ -7,7 +7,7 @@
 #include <ostream>
 #include <iomanip>
 #include <cmath>
-#include "ad/tensor.hpp"
+#include "tensor.hpp"
 
 
 namespace ag {

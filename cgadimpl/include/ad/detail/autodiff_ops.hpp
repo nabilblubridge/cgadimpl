@@ -2,7 +2,7 @@
 #include <functional>
 #include "ad/graph.hpp"
 #include "ad/schema.hpp"
-#include "ad/tensor.hpp"
+#include "tensor.hpp"
 
 namespace ag {
 

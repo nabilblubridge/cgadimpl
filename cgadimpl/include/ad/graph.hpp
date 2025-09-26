@@ -4,7 +4,7 @@
 #pragma once
 #include <memory>
 #include <vector>
-#include "ad/tensor.hpp"
+#include "tensor.hpp"
 #include "ad/schema.hpp"
 
 
