@@ -77,6 +77,7 @@
 // }
 #include <iostream>
 #include "ad/ag_all.hpp"
+#include "ad/optim.hpp"
 
 
 int main(){
@@ -89,13 +90,24 @@ auto b = param(B, "B");
 
 
 auto bias = param(Tensor::zeros(1,2), "bias");
-auto y = sum(relu(matmul(a,b) + bias)); // scalar, tests broadcasting [B,2] + [1,2]
 
-
+for(int i=0;i<10;i++){
+    auto y = sum((matmul(a,b) + bias)); // scalar, tests broadcasting [B,2] + [1,2]
+std::cout << "A = " << a.val()
+<<","<< endl<< "B = " << b.val()<<","<< endl
+<< "bias = " << bias.val() << endl;
 zero_grad(y);
 backward(y);
-std::cout << "y = " << y.val().sum_scalar() << endl;
-std::cout << "dL/dA[0,0] = " << a.grad()(0,0)
-<<","<< endl<< "dL/dB[0,0] = " << b.grad()(0,0)<<","<< endl
-<< "dL/dbias[0,0] = " << bias.grad()(0,0) << endl;
+SGD(y);
+std::cout << "y = " << y.grad() << endl;
+std::cout << "dL/dA[0,0] = " << a.grad()
+<<","<< endl<< "dL/dB[0,0] = " << b.grad()<<","<< endl
+<< "dL/dbias[0,0] = " << bias.grad() << endl;
+
+
+
+std::cout << "A = " << a.val()
+<<","<< endl<< "B = " << b.val()<<","<< endl
+<< "bias = " << bias.val() << endl;
+}
 }
