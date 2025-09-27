@@ -17,7 +17,7 @@ namespace ag {
 
 
 
-void SGD(const Value& root, const Tensor* grad_seed){
+void SGD(const Value& root, const Tensor* grad_seed, int learning_rate=100){
 auto order = topo_from(root.node.get());
 
     // seed
@@ -38,7 +38,7 @@ auto order = topo_from(root.node.get());
         if (fn) {
     for(int i=0;i<n->inputs.size();++i)
         if (n->inputs[i]->requires_grad) {
-            n->inputs[i]->value.add_(-100*n->inputs[i]->grad );
+            n->inputs[i]->value.add_(-1*learning_rate*n->inputs[i]->grad );
         }
         }
 
