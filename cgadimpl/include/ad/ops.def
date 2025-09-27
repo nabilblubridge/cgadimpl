@@ -27,3 +27,4 @@ OP(MSELoss,       2,    "mseloss") // mse loss
 OP(MAELoss,       2,    "maeloss") // mae loss
 OP(GCU,       1,    "gcu") // Growing Cosine Unit
 OP(Mish,      1,    "mish") // mish activation
+OP(Gaus,      1,    "gaus") // mish activation

@@ -129,6 +129,14 @@ namespace ag {
         ag::debug::on_node_created(n);  
         return Value(n);
     }
+
+    Value gaus(const Value& x){ 
+        Tensor y = Tensor::exp(-1*x.val()*x.val()); 
+        auto n=std::make_shared<Node>(y, x.node->requires_grad, Op::Gaus, "gaus"); 
+        n->inputs={x.node}; 
+        ag::debug::on_node_created(n);  
+        return Value(n);
+    }
     
     Value gelu(const Value& x){ 
         Tensor y = Tensor::gelu_tanh(x.val()); 

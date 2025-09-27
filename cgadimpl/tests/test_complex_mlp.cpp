@@ -102,7 +102,7 @@ int main() {
     // print_value("L3", L3); 
 
     // L4 = Softplus(L3 @ W4 + b4)
-    Value L4 = softplus( fmab(L3, W4,  b4) );      // [B,H4]
+    Value L4 = gaus( fmab(L3, W4,  b4) );      // [B,H4]
     // print_value("L4", L4);
 
     // Logits = L4 @ W5 + b5

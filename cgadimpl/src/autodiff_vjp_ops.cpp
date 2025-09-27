@@ -115,6 +115,15 @@ void vjp_Softplus(Node* n, const Tensor& gy){
     Node* X = n->inputs[0].get(); if (!X->requires_grad) return;
     X->grad.add_( rt( gy * Tensor::sigmoid(X->value), X->value) );
 }
+
+void vjp_Gaus(Node* n, const Tensor& gy){
+    Node* X = n->inputs[0].get(); if (!X->requires_grad) return;
+    X->grad.add_( rt( gy * -2*X->value*Tensor::exp(-1*X->value*X->value), X->value) );
+}
+
+
+
+
 void vjp_SiLU(Node* n, const Tensor& gy){
     Node* X = n->inputs[0].get(); if (!X->requires_grad) return;
     Tensor s = Tensor::sigmoid(X->value);

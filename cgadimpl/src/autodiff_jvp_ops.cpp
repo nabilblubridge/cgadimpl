@@ -97,7 +97,9 @@ Tensor jvp_GCU(Node* n, const std::function<const Tensor&(Node*)>& t){
 Tensor jvp_Mish(Node* n, const std::function<const Tensor&(Node*)>& t){
     return Tensor();
 }
-
+Tensor jvp_Gaus(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
 // ---- reductions ----
 Tensor jvp_Sum(Node* n, const std::function<const Tensor&(Node*)>& t){
     Node* X=n->inputs[0].get(); Tensor s(1,1); s(0,0) = t(X).sum_scalar(); return s;
