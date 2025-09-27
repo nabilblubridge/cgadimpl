@@ -2,6 +2,7 @@
 #include <random>
 #include "ad/ag_all.hpp"
 #include "ad/export_hlo.hpp"
+#include "ad/optim.hpp"
 
 #include <iomanip>
 #include <fstream>
@@ -108,11 +109,17 @@ auto c = param(C, "C");
 auto d = param(D, "D");
 
 auto bias = param(Tensor::zeros(1,2), "bias");
+for(int i=0;i<2;i++){
 auto y = attention(a, b, c, d); // scalar, tests broadcasting [B,2] + [1,2]
-
+std::cout << "A = " << a.val()
+<<","<< endl<< "B = " << b.val()<<","<< endl
+<< "C = " << c.val()<<","<< endl
+<< "D = " << d.val() << endl;
 
 zero_grad(y);
 backward(y);
+SGD(y);
+
 std::cout << "y = " << y.val() << endl;
 std::cout << "dL/dA = " << a.grad()
 <<","<< endl<< "dL/dB = " << b.grad()<<","<< endl
@@ -122,4 +129,5 @@ std::cout << "A = " << a.val()
 <<","<< endl<< "B = " << b.val()<<","<< endl
 << "C = " << c.val()<<","<< endl
 << "D = " << d.val() << endl;
+}
 }

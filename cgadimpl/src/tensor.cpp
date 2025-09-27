@@ -32,7 +32,9 @@ Tensor Tensor::zeros(int r, int c){ return Tensor(r,c); }
 
 Tensor Tensor::ones (int r, int c){ Tensor t(r,c); std::fill(t.d.begin(), t.d.end(), 1.f); return t; }
 // random tensor wich generates a tensor with dimensions r x c with values from N(0,1) using the given seed by normal distribution
-Tensor Tensor::randn(int r, int c, unsigned seed){ Tensor t(r,c); std::mt19937 gen(seed); std::normal_distribution<float> N(0.f,1.f); for(auto &x: t.d) x = N(gen); return t; }
+Tensor Tensor::randn(int r, int c, unsigned seed){ Tensor t(r,c); std::mt19937 gen(seed); std::normal_distribution<float> N(0.f,1.f); 
+for(auto &x: t.d) x = N(gen); 
+return t; }
 Tensor Tensor::zeros_like(const Tensor& x){ return zeros(x.r, x.c); }
 Tensor Tensor::ones_like (const Tensor& x){ return ones (x.r, x.c); }
 
@@ -49,6 +51,7 @@ const float& Tensor::operator()(int i, int j) const { return d[static_cast<std::
 
 Tensor& Tensor::add_(const Tensor& g){
 if(r!=g.r || c!=g.c) throw std::runtime_error("add_: shape mismatch");
+#pragma omp simd
 for(std::size_t i=0;i<d.size();++i) d[i]+=g.d[i];
 return *this;
 }
@@ -62,30 +65,34 @@ Tensor operator+(const Tensor& a, const Tensor& b){
 auto [R,C] = bshape(a.r,a.c,b.r,b.c);
 Tensor y(R,C);
 for(int i=0;i<R;++i){ int ia = pick(i,a.r), ib = pick(i,b.r);
-for(int j=0;j<C;++j){ int ja = pick(j,a.c), jb = pick(j,b.c);
-y(i,j) = a(ia,ja) + b(ib,jb);
-}
+    #pragma omp simd
+    for(int j=0;j<C;++j){ int ja = pick(j,a.c), jb = pick(j,b.c);
+        y(i,j) = a(ia,ja) + b(ib,jb);
+    }
 }
 return y; }
 Tensor operator-(const Tensor& a, const Tensor& b){
 auto [R,C] = bshape(a.r,a.c,b.r,b.c);
 Tensor y(R,C);
 for(int i=0;i<R;++i){ int ia = pick(i,a.r), ib = pick(i,b.r);
-for(int j=0;j<C;++j){ int ja = pick(j,a.c), jb = pick(j,b.c);
-y(i,j) = a(ia,ja) - b(ib,jb);
-}
+    #pragma omp simd
+    for(int j=0;j<C;++j){ int ja = pick(j,a.c), jb = pick(j,b.c);
+        y(i,j) = a(ia,ja) - b(ib,jb);
+    }
 }
 return y; }
 Tensor operator*(const Tensor& a, const Tensor& b){
 auto [R,C] = bshape(a.r,a.c,b.r,b.c);
 Tensor y(R,C);
 for(int i=0;i<R;++i){ int ia = pick(i,a.r), ib = pick(i,b.r);
-for(int j=0;j<C;++j){ int ja = pick(j,a.c), jb = pick(j,b.c);
-y(i,j) = a(ia,ja) * b(ib,jb);
-}
+    #pragma omp simd
+    for(int j=0;j<C;++j){ int ja = pick(j,a.c), jb = pick(j,b.c);
+        y(i,j) = a(ia,ja) * b(ib,jb);
+    }
 }
 return y; }
 Tensor operator-(const Tensor& x){ Tensor y(x.r,x.c); for(std::size_t i=0;i<x.d.size();++i) y.d[i] = -x.d[i]; return y; }
+// ...existing code...
 Tensor operator*(const Tensor& a, float s){ Tensor y(a.r,a.c); for(std::size_t i=0;i<a.d.size();++i) y.d[i]=a.d[i]*s; return y; }
 Tensor operator*(float s, const Tensor& a){ return a*s; }
 
@@ -104,14 +111,19 @@ Tensor Tensor::reduce_to(const Tensor& G, const Tensor& like){
 if(G.r==like.r && G.c==like.c) return G; // nothing to do
 Tensor out(like.r, like.c);
 for(int i=0;i<G.r;++i){ int oi = (like.r==1?0:i);
-for(int j=0;j<G.c;++j){ int oj = (like.c==1?0:j); out(oi,oj) += G(i,j); }
+    #pragma omp simd
+    for(int j=0;j<G.c;++j){ int oj = (like.c==1?0:j); out(oi,oj) += G(i,j); }
 }
 return out;
 }
 
 
 Tensor Tensor::matmul(const Tensor& A, const Tensor& B){ if(A.c!=B.r) throw std::runtime_error("matmul: inner dim mismatch"); Tensor Y(A.r, B.c);
-for(int i=0;i<A.r;++i){ for(int k=0;k<A.c;++k){ float aik=A(i,k); for(int j=0;j<B.c;++j){ Y(i,j) += aik * B(k,j); } } }
+// Use simd only for innermost loop
+#pragma omp simd collapse(2)
+for(int i=0;i<A.r;++i){ for(int k=0;k<A.c;++k){ float aik=A(i,k); 
+
+for(int j=0;j<B.c;++j){ Y(i,j) += aik * B(k,j); } } }
 return Y; }
 
 Tensor Tensor::exp(const Tensor& x){ Tensor y(x.r,x.c); for(size_t i=0;i<x.d.size();++i) y.d[i]=std::exp(x.d[i]); return y; }
@@ -128,7 +140,10 @@ Tensor Tensor::cosh(const Tensor& x){ Tensor y(x.r,x.c); for(size_t i=0;i<x.d.si
 
 Tensor operator/(const Tensor& a, const Tensor& b){
 auto [R,C] = bshape(a.r,a.c,b.r,b.c); Tensor y(R,C);
-for(int i=0;i<R;++i){ int ia=pick(i,a.r), ib=pick(i,b.r); for(int j=0;j<C;++j){ int ja=pick(j,a.c), jb=pick(j,b.c); y(i,j) = a(ia,ja)/b(ib,jb); }}
+for(int i=0;i<R;++i){ int ia=pick(i,a.r), ib=pick(i,b.r); 
+    #pragma omp simd
+    for(int j=0;j<C;++j){ int ja=pick(j,a.c), jb=pick(j,b.c); y(i,j) = a(ia,ja)/b(ib,jb); }
+}
 return y;
 }
 
@@ -159,6 +174,7 @@ Tensor Tensor::mean_all(const Tensor& X){ Tensor y(1,1); y(0,0) = X.sum_scalar()
 // to print the tensor in a readable format
 std::ostream& operator<<(std::ostream& os, const Tensor& t) {
     os << "Tensor (" << t.rows() << "x" << t.cols() << "):\n";
+    
     for (int i = 0; i < t.rows(); ++i) {
         for (int j = 0; j < t.cols(); ++j) {
             os << t(i, j);
