@@ -13,7 +13,7 @@ namespace ag {
 
 
 
-void SGD(const Value& root, const Tensor* grad_seed=nullptr);
+void SGD(const Value& root, const Tensor* grad_seed=nullptr, int learning_rate=100);
 
 
 
