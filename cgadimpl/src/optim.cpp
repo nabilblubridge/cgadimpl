@@ -17,8 +17,9 @@ namespace ag {
 
 
 
-void SGD(const Value& root, const Tensor* grad_seed, int learning_rate=100){
-auto order = topo_from(root.node.get());
+
+void SGD(const Value& root, const Tensor* grad_seed, int learning_rate) {
+    auto order = topo_from(root.node.get());
 
     // seed
     if (root.node->requires_grad) {
@@ -36,25 +37,13 @@ auto order = topo_from(root.node.get());
 
         VjpFn fn = vjp_lookup(n->op);
         if (fn) {
-    for(int i=0;i<n->inputs.size();++i)
-        if (n->inputs[i]->requires_grad) {
-            n->inputs[i]->value.add_(-1*learning_rate*n->inputs[i]->grad );
+            for(int i=0;i<n->inputs.size();++i)
+                if (n->inputs[i]->requires_grad) {
+                    n->inputs[i]->value.add_(-1*learning_rate*n->inputs[i]->grad );
+                }
         }
-        }
-
-
-
-
-
-        }; // handler accumulates into parents
+        // handler accumulates into parents
     }
-
-
-    
-
-
-
-
-    
+}
 
 }

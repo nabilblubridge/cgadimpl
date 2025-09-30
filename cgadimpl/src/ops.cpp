@@ -27,6 +27,8 @@ namespace ag {
         return Value(n); 
     }
 
+
+
     Value mul(const Value& a, const Value& b){ 
         Tensor y = a.val() * b.val(); 
         auto n = std::make_shared<Node>(y, a.node->requires_grad || b.node->requires_grad, Op::Mul, "*"); 
@@ -40,6 +42,14 @@ namespace ag {
         auto n = std::make_shared<Node>(y, x.node->requires_grad, Op::Relu, "relu"); 
         n->inputs = {x.node}; 
         ag::debug::on_node_created(n);  
+        return Value(n); 
+    }
+
+
+    Value deconval(const Value& x, float g){ 
+        Tensor y = x.val(); 
+        auto f = Tensor::ones_like(y)*g;
+        auto n = std::make_shared<Node>(f, false, Op::Leaf, "leaf"); 
         return Value(n); 
     }
 
@@ -73,12 +83,22 @@ namespace ag {
 
 
 
+
+
     Value sum(const Value& x){ 
         Tensor y = Tensor::sum_all(x.val()); 
         auto n = std::make_shared<Node>(y, x.node->requires_grad, Op::Sum, "sum"); 
         n->inputs = {x.node}; 
         ag::debug::on_node_created(n);  
         return Value(n); 
+    }
+
+    Value transpose(const Value& x){ 
+        Tensor y = Tensor::transpose(x.val()); 
+        auto n=std::make_shared<Node>(y, x.node->requires_grad, Op::Transpose, "exp"); 
+        n->inputs={x.node}; 
+        ag::debug::on_node_created(n);  
+        return Value(n);
     }
 
     Value exp(const Value& x){ 
@@ -146,6 +166,8 @@ namespace ag {
         return Value(n);
     }
 
+
+
     Value gcu(const Value& x){ 
         Tensor y = x.val() * Tensor::cos(x.val());
         auto n=std::make_shared<Node>(y, x.node->requires_grad, Op::GCU, "gcu"); 
@@ -158,6 +180,24 @@ namespace ag {
         Tensor y = Tensor::sigmoid(x.val()); 
         y = y * x.val(); 
         auto n=std::make_shared<Node>(y, x.node->requires_grad, Op::SiLU, "silu"); 
+        n->inputs={x.node}; 
+        ag::debug::on_node_created(n);  
+        return Value(n);
+    }
+
+    Value parcon(const Value& x){ 
+        Tensor y = x.val()*(2*Tensor::ones_like(x.val())-x.val()); 
+
+        auto n=std::make_shared<Node>(y, x.node->requires_grad, Op::Parcon, "parcon"); 
+        n->inputs={x.node}; 
+        ag::debug::on_node_created(n);  
+        return Value(n);
+    }
+
+    Value lisht(const Value& x){ 
+        Tensor y = x.val()*Tensor::tanh(x.val()); 
+
+        auto n=std::make_shared<Node>(y, x.node->requires_grad, Op::Parcon, "parcon"); 
         n->inputs={x.node}; 
         ag::debug::on_node_created(n);  
         return Value(n);

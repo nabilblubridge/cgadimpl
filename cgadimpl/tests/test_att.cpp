@@ -109,8 +109,13 @@ auto c = param(C, "C");
 auto d = param(D, "D");
 
 auto bias = param(Tensor::zeros(1,2), "bias");
-for(int i=0;i<2;i++){
+
 auto y = attention(a, b, c, d); // scalar, tests broadcasting [B,2] + [1,2]
+std::cout << "y = " << y.val() << endl;
+std::cout << "dL/dA = " << a.grad()
+<<","<< endl<< "dL/dB = " << b.grad()<<","<< endl
+<< "dL/dC = " << c.grad()<<","<< endl
+<< "dL/dD = " << d.grad() << endl;
 std::cout << "A = " << a.val()
 <<","<< endl<< "B = " << b.val()<<","<< endl
 << "C = " << c.val()<<","<< endl
@@ -118,7 +123,6 @@ std::cout << "A = " << a.val()
 
 zero_grad(y);
 backward(y);
-SGD(y);
 
 std::cout << "y = " << y.val() << endl;
 std::cout << "dL/dA = " << a.grad()
@@ -129,5 +133,41 @@ std::cout << "A = " << a.val()
 <<","<< endl<< "B = " << b.val()<<","<< endl
 << "C = " << c.val()<<","<< endl
 << "D = " << d.val() << endl;
-}
+
+zero_grad(y);
+
+
+auto q = matmul(a, b); 
+    auto k = matmul(a, c); 
+    auto v = matmul(a, d);
+    auto g = matmul(q, transpose(k)) ;
+    auto s = softmax_row(g);
+    auto yy = matmul(s, v);
+
+
+
+
+std::cout << "y = " << yy.val() << endl;
+std::cout << "dL/dA = " << a.grad()
+<<","<< endl<< "dL/dB = " << b.grad()<<","<< endl
+<< "dL/dC = " << c.grad()<<","<< endl
+<< "dL/dD = " << d.grad() << endl;
+std::cout << "A = " << a.val()
+<<","<< endl<< "B = " << b.val()<<","<< endl
+<< "C = " << c.val()<<","<< endl
+<< "D = " << d.val() << endl;
+
+zero_grad(yy);
+backward(yy);
+
+std::cout << "y = " << yy.val() << endl;
+std::cout << "dL/dA = " << a.grad()
+<<","<< endl<< "dL/dB = " << b.grad()<<","<< endl
+<< "dL/dC = " << c.grad()<<","<< endl
+<< "dL/dD = " << d.grad() << endl;
+std::cout << "A = " << a.val()
+<<","<< endl<< "B = " << b.val()<<","<< endl
+<< "C = " << c.val()<<","<< endl
+<< "D = " << d.val() << endl;
+
 }

@@ -27,12 +27,17 @@ Value tanh (const Value& x);
 Value gcu (const Value& x);
 Value mish (const Value& x);
 Value gaus (const Value& x);
-
+Value parcon(const Value& x);
 Value sigmoid(const Value& x);
 Value softplus(const Value& x);
 Value gelu (const Value& x); // tanh approx
 Value silu (const Value& x); // x * sigmoid(x)
 Value leaky_relu(const Value& x, float alpha=0.01f); // alpha via const input
+Value lisht(const Value& x);
+Value transpose(const Value& x);
+
+Value deconval(const Value& x, float g); // alpha via const input
+
 
 
 // rowwise reductions / softmax family

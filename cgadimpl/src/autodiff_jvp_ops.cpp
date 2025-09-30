@@ -78,7 +78,8 @@ Tensor jvp_FMA(Node* n, const std::function<const Tensor&(Node*)>& t){
     return Tensor();
 }
 
-Tensor jvp_Attention(Node* n, const std::function<const Tensor&(Node*)>& t){
+Tensor jvp_Attention(Node* n, const std::function<const Tensor
+    &(Node*)>& t){
     return Tensor();
 }
 
@@ -91,6 +92,18 @@ Tensor jvp_MAELoss(Node* n, const std::function<const Tensor&(Node*)>& t){
 }
 
 Tensor jvp_GCU(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_Parcon(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_LiSHT(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_Transpose(Node* n, const std::function<const Tensor&(Node*)>& t){
     return Tensor();
 }
 

@@ -37,36 +37,56 @@ void vjp_FMA(Node* n, const Tensor& gy){
 
 // ----- elementwise quarternary -----
 void vjp_Attention(Node* n, const Tensor& gy){
-    Node* A = n->inputs[0].get(); Node* B = n->inputs[1].get(); Node* C = n->inputs[2].get(); Node* D = n->inputs[3].get();
-    Tensor q = Tensor::matmul(A->value, B->value); 
-        Tensor k = Tensor::matmul(A->value, C->value); 
-        Tensor v = Tensor::matmul(A->value, D->value); 
-        Tensor g = Tensor::matmul(q, Tensor::transpose(k)) *(1/sqrt(float(k.cols())));
-        Tensor s = Tensor::softmax_row(g);
+    Node* A = n->inputs[0].get();
+    Node* B = n->inputs[1].get();
+    Node* C = n->inputs[2].get();
+    Node* D = n->inputs[3].get();
+    
+    Tensor q = Tensor::matmul(A->value, B->value);
+    Tensor k = Tensor::matmul(A->value, C->value);
+    Tensor v = Tensor::matmul(A->value, D->value);
+    float scale = 1.0f / sqrt(float(k.cols()));
+    Tensor g = Tensor::matmul(q, Tensor::transpose(k)) * scale;
+    Tensor s = Tensor::softmax_row(g);
 
-        Tensor x = Tensor::matmul(Tensor::transpose(s), gy);
-        Tensor t = Tensor::matmul(Tensor::transpose(A->value), x);
+    // ---- Backprop chain ----
 
+    // y = s v
+    Tensor dL_ds = Tensor::matmul(gy, Tensor::transpose(v));   // [B x B]
+    Tensor dL_dv = Tensor::matmul(Tensor::transpose(s), gy);   // [A x D]
 
-    Tensor h = Tensor::matmul(gy, Tensor::transpose(v));
+    // s = softmax(g)
+    Tensor dL_dg; 
+    {
+        Tensor dot = Tensor::row_sum(s * dL_ds);
+        dL_dg = s * (dL_ds - dot);
+    }
 
-    Tensor z = Tensor::row_sum( s * h ); // [B,1]
-    Tensor p = (h - z);
-    Tensor f = s * p;
-    Tensor r = Tensor::matmul(Tensor::transpose(q*(1/sqrt(float(k.cols())))), f);
-    Tensor m = Tensor::matmul(Tensor::transpose(A->value), r);
+    // g = q k^T
+    Tensor dL_dq = Tensor::matmul(dL_dg, k);
+    Tensor dL_dk = Tensor::matmul(Tensor::transpose(dL_dg), q);
 
+    // q = A B
+    Tensor dL_dA_q = Tensor::matmul(dL_dq, Tensor::transpose(B->value));
+    Tensor dL_dB   = Tensor::matmul(Tensor::transpose(A->value), dL_dq)* scale;;
 
+    // k = A C
+    Tensor dL_dA_k = Tensor::matmul(dL_dk, Tensor::transpose(C->value));
+    Tensor dL_dC   = Tensor::matmul(Tensor::transpose(A->value), dL_dk)* scale;
 
-    Tensor w = Tensor::matmul(f, Tensor::transpose(k*(1/sqrt(float(k.cols())))));
-    Tensor u = Tensor::matmul(Tensor::transpose(A->value), w);
+    // v = A D
+    Tensor dL_dA_v = Tensor::matmul(dL_dv, Tensor::transpose(D->value));
+    Tensor dL_dD   = Tensor::matmul(Tensor::transpose(A->value), dL_dv);
 
-    Tensor j = Tensor::matmul(w, Tensor::transpose(B->value)) + Tensor::matmul(r, Tensor::transpose(C->value)) + Tensor::matmul(x, Tensor::transpose(D->value));
+    // combine A contributions
+    Tensor dL_dA = dL_dA_q + dL_dA_k + dL_dA_v;
 
-        if (A->requires_grad) A->grad.add_( rt( j, A->value) ); //?????
-        if (B->requires_grad) B->grad.add_(rt( u, B->value) );
-    if (C->requires_grad) C->grad.add_(rt( m, C->value) );
-    if (D->requires_grad) D->grad.add_(rt( t, D->value) );
+    // ---- Accumulate ----
+    if (A->requires_grad) A->grad.add_(dL_dA);
+    if (B->requires_grad) B->grad.add_(dL_dB);
+    if (C->requires_grad) C->grad.add_(dL_dC);
+    if (D->requires_grad) D->grad.add_(dL_dD);
+
 }
 
 
@@ -121,6 +141,11 @@ void vjp_Gaus(Node* n, const Tensor& gy){
     X->grad.add_( rt( gy * -2*X->value*Tensor::exp(-1*X->value*X->value), X->value) );
 }
 
+void vjp_Transpose(Node* n, const Tensor& gy){
+    Node* X = n->inputs[0].get(); if (!X->requires_grad) return;
+
+    X->grad.add_( rt( Tensor::transpose(gy) , X->value) );
+}
 
 
 
@@ -129,6 +154,18 @@ void vjp_SiLU(Node* n, const Tensor& gy){
     Tensor s = Tensor::sigmoid(X->value);
     X->grad.add_( rt( gy * ( s + X->value * ( s * (Tensor::ones_like(s)-s) ) ), X->value) );
 }
+
+void vjp_Parcon(Node* n, const Tensor& gy){
+    Node* X = n->inputs[0].get(); if (!X->requires_grad) return;
+    X->grad.add_( rt( gy * ( 2 *Tensor::ones_like(X->value)- 2*X->value  ), X->value) );
+}
+
+void vjp_LiSHT(Node* n, const Tensor& gy){
+    Node* X = n->inputs[0].get(); if (!X->requires_grad) return;
+    X->grad.add_( rt( gy * ( Tensor::tanh(X->value)+ (Tensor::sech(X->value)*Tensor::sech(X->value)*X->value ) ), X->value) );
+}
+
+
 void vjp_GELU(Node* n, const Tensor& gy){
     Node* X = n->inputs[0].get(); if (!X->requires_grad) return;
     constexpr float c = 0.79788456080286535588f; // sqrt(2/pi)
