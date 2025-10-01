@@ -107,12 +107,29 @@ Tensor jvp_Transpose(Node* n, const std::function<const Tensor&(Node*)>& t){
     return Tensor();
 }
 
+Tensor jvp_SWIGLU(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
 Tensor jvp_Mish(Node* n, const std::function<const Tensor&(Node*)>& t){
     return Tensor();
 }
 Tensor jvp_Gaus(Node* n, const std::function<const Tensor&(Node*)>& t){
     return Tensor();
 }
+
+Tensor jvp_LayerNorm(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_RMSNorm(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_Dyntanh(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}   
+
 // ---- reductions ----
 Tensor jvp_Sum(Node* n, const std::function<const Tensor&(Node*)>& t){
     Node* X=n->inputs[0].get(); Tensor s(1,1); s(0,0) = t(X).sum_scalar(); return s;

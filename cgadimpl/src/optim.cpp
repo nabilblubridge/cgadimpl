@@ -29,21 +29,13 @@ void SGD(const Value& root, const Tensor* grad_seed, int learning_rate) {
     }
 
     // reverse topo
-    for (auto it = order.rbegin(); it != order.rend(); ++it) {
+    for (auto it = order.begin(); it != order.end(); ++it) {
         Node* n = *it;
-        if (!n->requires_grad) continue;
-        const Tensor& gy = n->grad;
-        ag::debug::on_backprop_step(n, gy); // (optional) prints one line per node
-
-        VjpFn fn = vjp_lookup(n->op);
-        if (fn) {
-            for(int i=0;i<n->inputs.size();++i)
-                if (n->inputs[i]->requires_grad) {
-                    n->inputs[i]->value.add_(-1*learning_rate*n->inputs[i]->grad );
-                }
+        if (n->requires_grad ) {
+            n->value.add_(-learning_rate * n->grad);
         }
-        // handler accumulates into parents
     }
+
 }
 
 }

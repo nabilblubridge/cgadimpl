@@ -31,3 +31,7 @@ OP(Gaus,      1,    "gaus") // gaussian activation
 OP(Parcon,      1,    "parcon") 
 OP(LiSHT,      1,    "lisht") 
 OP(Transpose,      1,    "transpose") 
+OP(SWIGLU,      1,    "swiglu") 
+OP(LayerNorm,      1,    "layernorm") 
+OP(RMSNorm,      1,    "rmsnorm") 
+OP(Dyntanh,      1,    "dyntanh") 

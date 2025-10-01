@@ -99,27 +99,28 @@ static inline ag::Value mse_loss(const ag::Value& pred, const ag::Value& target)
 int main(){
 using namespace std;
 using namespace ag;
+Tensor X = Tensor::randn(3,2);
 Tensor A = Tensor::randn(2,3);
-Tensor B = Tensor::randn(3,2);
-Tensor C = Tensor::randn(3,2);
-Tensor D = Tensor::randn(3,2);
+Tensor B = Tensor::zeros(3, 3);
+Tensor C = Tensor::randn(2,3);
+Tensor D = Tensor::zeros(3, 3);
 auto a = param(A, "A");
 auto b = param(B, "B");
 auto c = param(C, "C");
 auto d = param(D, "D");
-
+auto x = param(X, "X");
 auto bias = param(Tensor::zeros(1,2), "bias");
 
-auto y = dyntanh(attention(a, b, c, d), 3, 4, 5); // scalar, tests broadcasting [B,2] + [1,2]
+auto y = swiglu(x, a, b, c, d); // scalar, tests broadcasting [B,2] + [1,2]
 std::cout << "y = " << y.val() << endl;
 std::cout << "dL/dA = " << a.grad()
 <<","<< endl<< "dL/dB = " << b.grad()<<","<< endl
 << "dL/dC = " << c.grad()<<","<< endl
-<< "dL/dD = " << d.grad() << endl;
+<< "dL/dD = " << d.grad() <<","<< endl << "dL/dX = " << x.grad() << endl;
 std::cout << "A = " << a.val()
 <<","<< endl<< "B = " << b.val()<<","<< endl
 << "C = " << c.val()<<","<< endl
-<< "D = " << d.val() << endl;
+<< "D = " << d.val() <<","<< endl << "X = " << x.val() << endl;
 
 zero_grad(y);
 backward(y);
@@ -128,15 +129,67 @@ std::cout << "y = " << y.val() << endl;
 std::cout << "dL/dA = " << a.grad()
 <<","<< endl<< "dL/dB = " << b.grad()<<","<< endl
 << "dL/dC = " << c.grad()<<","<< endl
-<< "dL/dD = " << d.grad() << endl;
+<< "dL/dD = " << d.grad() <<","<< endl << "dL/dX = " << x.grad() << endl;
 std::cout << "A = " << a.val()
 <<","<< endl<< "B = " << b.val()<<","<< endl
 << "C = " << c.val()<<","<< endl
-<< "D = " << d.val() << endl;
+<< "D = " << d.val() <<","<< endl << "X= " << x.val() << endl;
+std::cout << " \n \n \n";
 
-zero_grad(y);
+SGD(y);
+
+std::cout << "y = " << y.val() << endl;
+std::cout << "dL/dA = " << a.grad()
+<<","<< endl<< "dL/dB = " << b.grad()<<","<< endl
+<< "dL/dC = " << c.grad()<<","<< endl
+<< "dL/dD = " << d.grad() <<","<< endl << "dL/dX = " << x.grad() << endl;
+std::cout << "A = " << a.val()
+<<","<< endl<< "B = " << b.val()<<","<< endl
+<< "C = " << c.val()<<","<< endl
+<< "D = " << d.val() <<","<< endl << "X= " << x.val() << endl;
 std::cout << " \n \n \n";
 
 
 
+
+
+zero_grad(y);
+    auto f = matmul(x, a)+b; 
+    auto q = f*sigmoid(f); 
+    y = q*(matmul(x, c) + d);
+ // scalar, tests broadcasting [B,2] + [1,2]
+std::cout << "y = " << y.val() << endl;
+std::cout << "dL/dA = " << a.grad()
+<<","<< endl<< "dL/dB = " << b.grad()<<","<< endl
+<< "dL/dC = " << c.grad()<<","<< endl
+<< "dL/dD = " << d.grad() <<","<< endl << "dL/dX = " << x.grad() << endl;
+std::cout << "A = " << a.val()
+<<","<< endl<< "B = " << b.val()<<","<< endl
+<< "C = " << c.val()<<","<< endl
+<< "D = " << d.val() <<","<< endl << "X = " << x.val() << endl;
+
+zero_grad(y);
+backward(y);
+
+std::cout << "y = " << y.val() << endl;
+std::cout << "dL/dA = " << a.grad()
+<<","<< endl<< "dL/dB = " << b.grad()<<","<< endl
+<< "dL/dC = " << c.grad()<<","<< endl
+<< "dL/dD = " << d.grad() <<","<< endl << "dL/dX = " << x.grad() << endl;
+std::cout << "A = " << a.val()
+<<","<< endl<< "B = " << b.val()<<","<< endl
+<< "C = " << c.val()<<","<< endl
+<< "D = " << d.val() <<","<< endl << "X= " << x.val() << endl;
+std::cout << " \n \n \n";
+
+SGD(y);
+std::cout << "y = " << y.val() << endl;
+std::cout << "dL/dA = " << a.grad()
+<<","<< endl<< "dL/dB = " << b.grad()<<","<< endl
+<< "dL/dC = " << c.grad()<<","<< endl
+<< "dL/dD = " << d.grad() <<","<< endl << "dL/dX = " << x.grad() << endl;
+std::cout << "A = " << a.val()
+<<","<< endl<< "B = " << b.val()<<","<< endl
+<< "C = " << c.val()<<","<< endl
+<< "D = " << d.val() <<","<< endl << "X= " << x.val() << endl;
 }
