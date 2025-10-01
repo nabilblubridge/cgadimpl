@@ -18,6 +18,7 @@ Tensor value; // forward value
 Tensor grad; // same shape as value
 bool requires_grad{false};
 const char* debug_name{""};
+std::vector<std::shared_ptr<Tensor>> tape;
 
 
 Node();

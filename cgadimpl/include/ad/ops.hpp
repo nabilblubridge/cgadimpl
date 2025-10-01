@@ -14,11 +14,12 @@ Value mul (const Value& a, const Value& b);
 Value relu (const Value& x);
 Value matmul(const Value& a, const Value& b);
 Value sum (const Value& x);
-
+Value flomul (const Value& a, float b);
 
 inline Value operator+(const Value& a, const Value& b){ return add(a,b);}
 inline Value operator-(const Value& a, const Value& b){ return sub(a,b);}
 inline Value operator*(const Value& a, const Value& b){ return mul(a,b);}
+inline Value operator*(const Value& a, float b){ return flomul(a,b);}
 
 // unary elementwise
 Value exp (const Value& x);
@@ -35,9 +36,10 @@ Value silu (const Value& x); // x * sigmoid(x)
 Value leaky_relu(const Value& x, float alpha=0.01f); // alpha via const input
 Value lisht(const Value& x);
 Value transpose(const Value& x);
-
+Value swiglu(const Value& x, const Value& a, const Value& b, const Value& c, const Value& d);
 Value deconval(const Value& x, float g); // alpha via const input
-
+Value rms(const Value& x); // root mean square normalization
+Value dyntanh(const Value& x, float a, float b, float g); // dynamic tanh via mean_all
 
 
 // rowwise reductions / softmax family
@@ -46,6 +48,7 @@ Value rowmax (const Value& x); // [B,C] -> [B,1]
 Value mean_all(const Value& x); // scalar
 Value softmax_row(const Value& z); // [B,C] -> [B,C]
 Value logsumexp_row(const Value& z); // [B,C] -> [B,1]
+Value laynor(const Value& x);
 
 
 // composite loss (one-hot targets)
@@ -55,5 +58,6 @@ Value fmab(const Value& a, const Value& b, const Value& c); // fused multiply-ad
 Value attention(const Value& a, const Value& b, const Value& c, const Value& d);
 Value mse_loss(const Value& pred, const Value& target);
 Value mae_loss(const Value& pred, const Value& target);
+
 
 } // namespace ag

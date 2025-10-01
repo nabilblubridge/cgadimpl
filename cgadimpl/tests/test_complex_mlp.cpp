@@ -98,7 +98,7 @@ int main() {
 
     // L3 = LeakyReLU(L2 @ W3 + b3, alpha=0.1)
     Value L3_pre = fmab(L2, W3, b3);              // [B,H3]
-    Value L3 = leaky_relu(L3_pre, 0.1f);             // [B,H3]
+    Value L3 = laynor(leaky_relu(L3_pre, 0.1f));             // [B,H3]
     // print_value("L3", L3); 
 
     // L4 = Softplus(L3 @ W4 + b4)

@@ -8,17 +8,26 @@
 #include <iomanip>
 #include <cmath>
 #include "ad/tensor.hpp"
-
+#include<iostream>
 
 namespace ag {
 
 
 namespace {
 inline std::pair<int,int> bshape(int r1,int c1,int r2,int c2){
-int R = r1>r2? r1 : r2; int C = c1>c2? c1 : c2;
-bool ok = ((r1==r2) || r1==1 || r2==1) && ((c1==c2) || c1==1 || c2==1);
-if(!ok) throw std::runtime_error("broadcast: incompatible shapes");
-return {R,C};
+    bool row_ok = (r1==r2) || (r1==1) || (r2==1);
+    bool col_ok = (c1==c2) || (c1==1) || (c2==1);
+
+    if (!row_ok || !col_ok) {
+        std::cerr << "Broadcast error: shapes (" 
+                  << r1 << "," << c1 << ") vs (" 
+                  << r2 << "," << c2 << ")\n";
+        throw std::runtime_error("Incompatible broadcast shapes");
+    }
+
+    int R = std::max(r1,r2);
+    int C = std::max(c1,c2);
+    return {R,C};
 }
 inline int pick(int i, int dim){ return dim==1 ? 0 : i; }
 }
@@ -91,6 +100,8 @@ Tensor operator-(const Tensor& x){ Tensor y(x.r,x.c); for(std::size_t i=0;i<x.d.
 // ...existing code...
 Tensor operator*(const Tensor& a, float s){ Tensor y(a.r,a.c); for(std::size_t i=0;i<a.d.size();++i) y.d[i]=a.d[i]*s; return y; }
 Tensor operator*(float s, const Tensor& a){ return a*s; }
+Tensor operator+(const Tensor& a, float s){ Tensor y(a.r,a.c); for(std::size_t i=0;i<a.d.size();++i) y.d[i]=a.d[i]+s; return y; }
+Tensor operator+(float s, const Tensor& a){ Tensor y(a.r,a.c); for(std::size_t i=0;i<a.d.size();++i) y.d[i]=a.d[i]+s; return y; }
 
 
 Tensor Tensor::relu(const Tensor& x){ Tensor y(x.r,x.c); for(std::size_t i=0;i<x.d.size();++i) y.d[i] = x.d[i] > 0.f ? x.d[i] : 0.f; return y; }
@@ -130,6 +141,7 @@ Tensor Tensor::cos(const Tensor& x){ Tensor y(x.r,x.c); for(size_t i=0;i<x.d.siz
 Tensor Tensor::sin(const Tensor& x){ Tensor y(x.r,x.c); for(size_t i=0;i<x.d.size();++i) y.d[i]=std::sin(x.d[i]); return y; }
 Tensor Tensor::cosh(const Tensor& x){ Tensor y(x.r,x.c); for(size_t i=0;i<x.d.size();++i) y.d[i]=std::cosh(x.d[i]); return y; }
 Tensor Tensor::sech(const Tensor& x){ Tensor y(x.r,x.c); for(size_t i=0;i<x.d.size();++i) y.d[i]=1.f/std::cosh(x.d[i]); return y; }
+Tensor Tensor::sqrt(const Tensor& x){ Tensor y(x.r,x.c); for(size_t i=0;i<x.d.size();++i) y.d[i]=std::sqrt(x.d[i]); return y; }
 
 
 Tensor operator/(const Tensor& a, const Tensor& b){

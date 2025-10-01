@@ -57,6 +57,8 @@ friend Tensor operator*(const Tensor& a, const Tensor& b); // Hadamard
 friend Tensor operator-(const Tensor& x); // unary negation
 friend Tensor operator*(const Tensor& a, float s); // scalar scale
 friend Tensor operator*(float s, const Tensor& a); // scalar scale
+friend Tensor operator+(const Tensor& a, float s); // scalar scale
+friend Tensor operator+(float s, const Tensor& a); // scalar scale
 
 
 static Tensor relu (const Tensor& x);
@@ -77,6 +79,8 @@ static Tensor cos(const Tensor& x);
 static Tensor sin(const Tensor& x);
 static Tensor cosh(const Tensor& x);
 static Tensor sech(const Tensor& x);
+
+static Tensor sqrt(const Tensor &x);
 
 static Tensor tanh(const Tensor& x);
 static Tensor sigmoid(const Tensor& x);
