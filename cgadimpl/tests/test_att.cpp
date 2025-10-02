@@ -96,49 +96,63 @@ static inline ag::Value mse_loss(const ag::Value& pred, const ag::Value& target)
 }
 
 
+
 int main(){
 using namespace std;
 using namespace ag;
-Tensor X = Tensor::randn(3,1);
-Tensor A = Tensor::randn(4,4);
-Tensor B = Tensor::randn(1,4);
-Tensor C = Tensor::randn(4,1);
-Tensor D = Tensor::randn(3,3);
+Tensor A = Tensor::randn(2,2);
+Tensor B = Tensor::randn(2,2);
+Tensor C = Tensor::randn(2,2);
+Tensor D = Tensor::randn(2,2);
+Tensor E = Tensor::randn(2,2);
+Tensor F = Tensor::randn(2,2);
+Tensor G = Tensor::randn(2,2);
+Tensor H = Tensor::randn(2,2);
+Tensor I = Tensor::randn(2,2);
+Tensor J = Tensor::randn(2,2);
+Tensor K = Tensor::randn(2,1);
+
 auto a = param(A, "A");
 auto b = param(B, "B");
 auto c = param(C, "C");
 auto d = param(D, "D");
-auto x = param(X, "X");
+auto e = param(E, "E");
+auto f = param(F, "F");
+auto g = param(G, "G");
+auto h = param(H, "H");
+auto i = param(I, "I");
+auto j = param(J, "J");
+auto k = param(K, "K");
 
-auto bias = param(Tensor::zeros(1,2), "bias");
 
-for( int i=0;i<10;++i)
-{
-auto y = mambassm(x, a, b, c, d); // scalar, tests broadcasting [B,2] + [1,2]
+auto y = dyntanh(attention(a, b, c, d), 0.5, 0.1, 1.5); // scalar, tests broadcasting [B,2] + [1,2]
+
 std::cout << "y = " << y.val() << endl;
 std::cout << "dL/dA = " << a.grad()
 <<","<< endl<< "dL/dB = " << b.grad()<<","<< endl
 << "dL/dC = " << c.grad()<<","<< endl
-<< "dL/dD = " << d.grad() << endl<< "dL/dX = " << x.grad() << endl;
+<< "dL/dD = " << d.grad() << endl;
 std::cout << "A = " << a.val()
 <<","<< endl<< "B = " << b.val()<<","<< endl
 << "C = " << c.val()<<","<< endl
-<< "D = " << d.val() << endl<< "X = " << x.val() << endl;
+<< "D = " << d.val() << endl;
 
 zero_grad(y);
+backward(y);
 
 std::cout << "y = " << y.val() << endl;
 std::cout << "dL/dA = " << a.grad()
 <<","<< endl<< "dL/dB = " << b.grad()<<","<< endl
 << "dL/dC = " << c.grad()<<","<< endl
-<< "dL/dD = " << d.grad() << endl<< "dL/dX = " << x.grad() << endl;
+<< "dL/dD = " << d.grad() << endl;
 std::cout << "A = " << a.val()
 <<","<< endl<< "B = " << b.val()<<","<< endl
 << "C = " << c.val()<<","<< endl
-<< "D = " << d.val() << endl<< "X = " << x.val() << endl;
+<< "D = " << d.val() << endl;
 
+zero_grad(y);
 std::cout << " \n \n \n";
 
-}
+
 
 }
