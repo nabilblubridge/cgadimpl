@@ -203,4 +203,49 @@ namespace ag {
         return Value(n);
     }
 
+    // --- Transpose (new op) ---
+    Value transpose(const Value& x){
+        Tensor y = Tensor::transpose(x.val());
+        auto n = std::make_shared<Node>(y, x.node->requires_grad, Op::Transpose, "transpose");
+        n->inputs = { x.node };
+        ag::debug::on_node_created(n);
+        return Value(n);
+    }
+
+    // --- Scaled Dot-Product Attention (composed, no new fused op) ---
+    // Q:[B,D], K:[C,D], V:[C,E], optional mask:[B,C]; scale ~ 1/sqrt(D)
+    Value sdpa(const Value& Q,
+            const Value& K,
+            const Value& V,
+            const Value* mask,
+            float scale) {
+        // S = (Q @ K^T) * scale
+        Value KT = transpose(K);
+        Value S  = matmul(Q, KT);
+        if (scale != 1.0f) {
+            Tensor sT(1,1); sT(0,0) = scale;
+            Value sC = constant(sT, "scale");
+            S = mul(S, sC); // broadcast scalar
+        }
+
+        // mask fill: S = mask*S + (1-mask)*(-1e9)
+        if (mask) {
+            // ones like mask
+            Tensor onesT = Tensor::ones_like(mask->val());
+            Value Ones   = constant(onesT, "ones");
+            // 1 - mask
+            Value invM   = sub(Ones, *mask);
+            // negInf scalar
+            Tensor negInfT(1,1); negInfT(0,0) = -1e9f;
+            Value NegInf = constant(negInfT, "neg_inf");
+            // combine
+            S = add( mul(*mask, S), mul(invM, NegInf) );
+        }
+
+        // P = softmax_row(S), O = P @ V
+        Value P = softmax_row(S);
+        Value O = matmul(P, V);
+        return O;
+    }
+
 } // namespace ag

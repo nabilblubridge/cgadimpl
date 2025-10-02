@@ -21,3 +21,56 @@ OP(SoftmaxRow,1,    "softmax_row")
 OP(LogSumExpRow,1,  "logsumexp_row")
 OP(CeWithLogits,2,  "ce_with_logits")
 OP(KLDivergence, 2 , "kldivergence")
+OP(Transpose, 1, "transpose")
+
+// // ---- math & unary ----
+// OP(Div,        2, "div")
+// OP(Neg,        1, "neg")
+// OP(Sqrt,       1, "sqrt")
+// OP(Rsqrt,      1, "rsqrt")
+// OP(Clip,       3, "clip")            // clip(x, lo, hi)
+
+// // ---- views / shape / axis ----
+// OP(ConcatCols, 2, "concat_cols")
+// OP(ConcatRows, 2, "concat_rows")
+// OP(SliceRows,  3, "slice_rows")      // (x, start, end) as 1x1 literals
+// OP(SliceCols,  3, "slice_cols")
+// OP(Reshape,    1, "reshape")         // target shape as node attr
+// OP(RowMean,    1, "rowmean")
+
+// // ---- activations (extras) ----
+// OP(Mish,       1, "mish")
+
+// // ---- regularization / control ----
+// OP(Dropout,    2, "dropout")         // (x, p)
+// OP(DropPath,   2, "droppath")        // (x, p)
+// OP(StopGrad,   1, "stop_grad")
+// OP(ClampGrad,  3, "clamp_grad")      // (x, lo, hi) on backward
+
+// // ---- norms ----
+// OP(LayerNorm,  3, "layernorm")       // (x, gamma, beta)
+// OP(RMSNorm,    2, "rmsnorm")         // (x, gamma)
+
+// // ---- attention helpers ----
+// OP(MaskFill,   3, "mask_fill")       // where(mask, x, fill)
+// OP(RoPE,       3, "rope")            // (x, sin, cos)
+// OP(ALiBi,      2, "alibi")           // (scores, bias)
+
+// // ---- GLU family ----
+// OP(GLU,        2, "glu")             // (A, B) => A ⊙ sigmoid(B)
+// OP(GeGLU,      2, "geglu")           // (A, B) => A ⊙ gelu(B)
+// OP(SwiGLU,     2, "swiglu")          // (A, B) => A ⊙ silu(B)
+
+// // ---- losses / metrics ----
+// OP(MSE,        2, "mse")
+// OP(MAE,        2, "mae")
+// OP(Huber,      3, "huber")           // (x, y, delta)
+// OP(LabelSmoothCE, 3, "label_smooth_ce")
+// OP(CosineSim,  2, "cosine_sim")
+// OP(CosineLoss, 2, "cosine_loss")
+
+// // ---- indexing (2D conveniences) ----
+// OP(GatherRows,      2, "gather_rows")      // (x, idx)
+// OP(ScatterAddRows,  3, "scatter_add_rows") // (x, idx, updates)
+// OP(ArgmaxRow,       1, "argmax_row")
+// OP(TopK,            3, "topk")             // (x, k, largest)

@@ -166,6 +166,14 @@ void vjp_KLDivergence(Node* n, const Tensor& gy /*unused: scalar gy*/){
     }
 }
 
+void vjp_Transpose(Node* n, const Tensor& gy){
+    // y = x^T  ⇒  ∂L/∂x = (∂L/∂y)^T
+    Node* x = n->inputs[0].get();
+    if (!x->requires_grad) return;
+    Tensor gx = Tensor::transpose(gy);
+    x->grad.add_(gx);
+}
+
 
 } // anon
 

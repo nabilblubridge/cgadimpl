@@ -42,4 +42,16 @@ Value logsumexp_row(const Value& z); // [B,C] -> [B,1]
 // composite loss (one-hot targets)
 Value cross_entropy_with_logits(const Value& logits, const Value& onehot);
 
+// For attention
+// Transpose builder (needed for K^T)
+Value transpose(const Value& x);
+
+// Composed Scaled Dot-Product Attention (no fused op, just composition)
+Value sdpa(const Value& Q,
+           const Value& K,
+           const Value& V,
+           const Value* mask = nullptr,
+           float scale = 1.0f);
+
+
 } // namespace ag

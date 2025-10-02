@@ -27,7 +27,7 @@ Node(const Tensor& v, bool rg, Op op_, const char* nm="");
 
 struct Value { // user handle
 std::shared_ptr<Node> node;
-Value();
+Value();    
 explicit Value(std::shared_ptr<Node> n);
 
 
@@ -45,32 +45,31 @@ Value param (const Tensor& v, const char* name="param");
 std::vector<Node*> topo_from(Node* root);
 
 
-// // ---- Lightweight trace→compile→replay (CPU) ----
-// namespace jit {
+// ---- Lightweight trace→compile→replay (CPU) ----
+namespace jit {
 
-// struct CompileOptions {
-//     bool use_cuda_graph = false; // ignored for now (no CUDA)
-// };
+struct CompileOptions {
+    bool use_cuda_graph = false; // ignored for now (no CUDA)
+};
 
-// struct Compiled {
-//     // Opaque impl; created by compile()
-//     struct Impl;
-//     std::shared_ptr<Impl> p;
+struct Compiled {
+    // Opaque impl; created by compile()
+    struct Impl;
+    std::shared_ptr<Impl> p;
 
-//     // Run with external inputs/params. Returns false if shape guard fails.
-//     bool run(const std::vector<Tensor*>& inputs,
-//              const std::vector<Tensor*>& params,
-//              Tensor& out) const;
-// };
+    // Run with external inputs/params. Returns false if shape guard fails.
+    bool run(const std::vector<Tensor*>& inputs,
+             const std::vector<Tensor*>& params,
+             Tensor& out) const;
+};
 
-// // Build a compiled plan from a finished forward Value (dynamic graph).
-// // 'inputs' and 'params' enumerate leaf Values whose storage is provided at run().
-// Compiled compile(const Value& output,
-//                  const std::vector<Value>& inputs,
-//                  const std::vector<Value>& params,
-//                  const CompileOptions& opts = {});
+// Build a compiled plan from a finished forward Value (dynamic graph).
+// 'inputs' and 'params' enumerate leaf Values whose storage is provided at run().
+Compiled compile(const Value& output,
+                 const std::vector<Value>& inputs,
+                 const std::vector<Value>& params,
+                 const CompileOptions& opts = {});
 
-// } // namespace jit
-
+} // namespace jit
 
 } // namespace ag

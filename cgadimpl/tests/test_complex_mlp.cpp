@@ -118,10 +118,10 @@ int main() {
     zero_grad(loss);
     backward(loss);
     
-    // ag::debug::print_all_grads(loss);                   // optional full gradient dump
-    // ag::debug::dump_dot(loss, "build/graph.dot");       // write GraphViz DOT
-    // ag::debug::dump_vjp_dot(loss, "build/graph_vjp.dot"); // write VJP DOT
-    // ag::debug::dump_jvp_dot(loss, "build/graph_jvp.dot"); // write JVP DOT
+    ag::debug::print_all_grads(loss);                   // optional full gradient dump
+    ag::debug::dump_dot(loss, "build/graph.dot");       // write GraphViz DOT
+    ag::debug::dump_vjp_dot(loss, "build/graph_vjp.dot"); // write VJP DOT
+    ag::debug::dump_jvp_dot(loss, "build/graph_jvp.dot"); // write JVP DOT
 
 
 

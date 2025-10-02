@@ -122,6 +122,11 @@ Tensor jvp_KLDivergence(Node* n, const std::function<const Tensor&(Node*)>& t){
     return Tensor();
 }
 
+Tensor jvp_Transpose(Node* n, const std::function<const Tensor&(Node*)>& tangent_of){
+    const Tensor& jx = tangent_of(n->inputs[0].get());
+    return Tensor::transpose(jx);
+}
+
 } // anon
 
 
