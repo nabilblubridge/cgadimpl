@@ -80,10 +80,61 @@ void vjp_LayerNorm(Node* n, const Tensor& gy){
 }
 
 
+void vjp_RealLayerNorm(Node* n, const Tensor& gy){
+
+    Node* x = n->inputs[0].get();
+    Node* b = n->inputs[1].get();
+    Node* g = n->inputs[2].get();
+     int N = x->value.cols(); // normalize over last dim (row-wise)
+
+   //  debug::print_tensor("gy",gy);
+     
+    
+    // stddev [2x1] - float
+    Tensor std = Tensor::sqrt(*(n->tape[0]) +0.01);
+  //  debug::print_tensor("std",std);
+
+    // x - mean [2x1]
+    Tensor xmu = x->value - *(n->tape[1]);
+ //   debug::print_tensor("xmu",xmu);
+
+    // sum of grad_out along row
+    Tensor grad_sum = Tensor::row_sum(gy);
+  //  debug::print_tensor("grad_sum",grad_sum);
+
+    // dot(grad_out, x - mean) along row
+    Tensor grad_dot_xmu = Tensor::row_sum(gy * xmu);
+   // debug::print_tensor("grad_dot_xmu",grad_dot_xmu);
+
+    // term: N * grad_out
+    Tensor term1 = gy * float(N);
+ //   debug::print_tensor("term1",term1);
+
+    // term: subtract sum of grad_out
+    Tensor term2 = term1 - grad_sum;
+   // debug::print_tensor("term2",term2);
+
+    // term: subtract (x - mean) * (grad_dot_xmu / (var + eps))
+    Tensor term3 = term2 - (xmu * (grad_dot_xmu / (*(n->tape[0]) + 0.01)));
+  //  debug::print_tensor("term3",term3);
+
+    // scale: divide by (N * std)
+    Tensor dx = term3 / (std * float(N));
+ //debug::print_tensor("dx",term3);
+// debug::print_tensor("g",g->value);
+
+    if (x->requires_grad) x->grad.add_( dx);
+if (b->requires_grad) b->grad.add_( Tensor::row_sum(gy) );   // db = sum over batch
+if (g->requires_grad) g->grad.add_( Tensor::row_sum(gy * (*(n->tape[2]))) );
+
+}
+
+
 void vjp_RMSNorm(Node* n, const Tensor& gy){
 
     Node* x = n->inputs[0].get();
 if (x->requires_grad) x->grad.add_( x->value/ *(x->tape[0]) );
+
 }
 
 

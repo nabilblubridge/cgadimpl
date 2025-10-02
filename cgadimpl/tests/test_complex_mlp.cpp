@@ -110,7 +110,7 @@ int main() {
     // print_value("logits", logits);
 
     // Loss: stable cross-entropy with logits (one-hot)
-    Value loss = cross_entropy_with_logits(logits, Y); // scalar [1,1]
+    Value loss = relaynor(cross_entropy_with_logits(logits, Y), 3, 4); // scalar [1,1]
     // print_value("Y (one-hot)", Y);
     // print_value("loss", loss);
 

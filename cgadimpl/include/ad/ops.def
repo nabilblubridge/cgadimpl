@@ -34,4 +34,6 @@ OP(Transpose,      1,    "transpose")
 OP(SWIGLU,      1,    "swiglu") 
 OP(LayerNorm,      1,    "layernorm") 
 OP(RMSNorm,      1,    "rmsnorm") 
-OP(Dyntanh,      1,    "dyntanh") 
+OP(Dyntanh,      4,    "dyntanh") 
+OP(RealLayerNorm,      4,    "reallayernorm") 
+
