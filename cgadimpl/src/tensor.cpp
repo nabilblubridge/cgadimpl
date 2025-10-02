@@ -47,6 +47,12 @@ return t; }
 Tensor Tensor::zeros_like(const Tensor& x){ return zeros(x.r, x.c); }
 Tensor Tensor::ones_like (const Tensor& x){ return ones (x.r, x.c); }
 
+Tensor Tensor::floten (float q){
+    Tensor t(1,1);
+    t(0,0) = q;
+    return t;
+}
+
 
 int Tensor::rows() const { return r; }
 int Tensor::cols() const { return c; }

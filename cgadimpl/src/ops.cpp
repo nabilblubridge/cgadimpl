@@ -279,6 +279,29 @@ namespace ag {
         ag::debug::on_node_created(n);  
         return Value(n);
     }
+
+    Value relaynor(const Value& x, float b, float g){ 
+        Tensor y = Tensor::row_sum(x.val())*(1.f/x.val().cols()); 
+      //  std::cout<<"q      "<<y<<std::endl;
+        Tensor vrc = Tensor::row_sum(((x.val() )- y)*((x.val() )- y))*(1.f/x.val().cols());
+      //  std::cout<<"q      "<<vrc<<std::endl;
+        Tensor q = ((((x.val() )- y)/(Tensor::sqrt(vrc)+0.01)))   ;
+        Tensor qg = (q*g) + b;
+
+        Value B = param(b*Tensor::ones_like(qg), "b");
+        Value G = param(g*Tensor::ones_like(qg), "g");
+        
+        auto n=std::make_shared<Node>(q, x.node->requires_grad || B.node->requires_grad||G.node->requires_grad, Op::RealLayerNorm, "reallayernorm");
+      //  debug::print_tensor("q",q);
+        n->tape.resize(3);
+        n->tape[0] = std::make_shared<Tensor>(vrc);
+        n->tape[1] = std::make_shared<Tensor>(y);
+        n->tape[2] = std::make_shared<Tensor>(q);
+
+        n->inputs={x.node}; 
+        ag::debug::on_node_created(n);  
+        return Value(n);
+    }
     
     Value mean_all(const Value& x){ 
         Tensor y = Tensor::mean_all(x.val()); 
@@ -313,6 +336,38 @@ namespace ag {
         n->inputs={z.node}; 
         ag::debug::on_node_created(n);  
         return Value(n);
+    }
+
+
+    Value mambassm(const Value& z, const Value& a, const Value& b, const Value& c, const Value& d, int timen){ 
+
+        if (z.node->tape.size()==0) {
+
+                    Tensor w = Tensor::matmul(z.val(), b.val()); 
+                    Tensor q = Tensor::matmul(w, c.val());
+                    Tensor y = (z.val()* d.val())+q;
+        auto n=std::make_shared<Node>(y, z.node->requires_grad || a.node->requires_grad || b.node->requires_grad || c.node->requires_grad || d.node->requires_grad, Op::LogSumExpRow, "logsumexp_row"); 
+        n->inputs={z.node, a.node, b.node, c.node, d.node}; 
+            z.node->tape.push_back(std::make_shared<Tensor>(w));
+            z.node->tape.push_back(std::make_shared<Tensor>(Tensor::floten(1.0)));
+                    ag::debug::on_node_created(n);  
+return Value(n);
+        }
+        else
+        {
+
+Tensor w = Tensor::matmul(z.val(), b.val())+(*(z.node->tape[0])); 
+                    Tensor q = Tensor::matmul(w, c.val());
+                    Tensor y = (z.val()* d.val())+q;
+        auto n=std::make_shared<Node>(y, z.node->requires_grad || a.node->requires_grad || b.node->requires_grad || c.node->requires_grad || d.node->requires_grad, Op::LogSumExpRow, "logsumexp_row"); 
+        n->inputs={z.node, a.node, b.node, c.node, d.node}; 
+            z.node->tape.push_back(std::make_shared<Tensor>(w));
+            *(z.node->tape[1]) = (*(z.node->tape[1]))+1;
+                    ag::debug::on_node_created(n);  
+return Value(n);
+        }
+
+        
     }
 
 

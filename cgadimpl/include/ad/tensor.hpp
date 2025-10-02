@@ -70,7 +70,7 @@ static Tensor sign (const Tensor& x);
 
 // Reduce G to the shape of `like` by summing broadcasted axes.
 static Tensor reduce_to(const Tensor& G, const Tensor& like);
-
+static Tensor floten(float q);
 
 // elementwise unary
 static Tensor exp(const Tensor& x);
