@@ -114,7 +114,7 @@ auto bias = param(Tensor::zeros(1,2), "bias");
 
 for( int i=0;i<10;++i)
 {
-auto y = mambassm(x, a, b, c, d, 0); // scalar, tests broadcasting [B,2] + [1,2]
+auto y = mambassm(x, a, b, c, d); // scalar, tests broadcasting [B,2] + [1,2]
 std::cout << "y = " << y.val() << endl;
 std::cout << "dL/dA = " << a.grad()
 <<","<< endl<< "dL/dB = " << b.grad()<<","<< endl

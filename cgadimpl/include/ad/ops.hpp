@@ -41,7 +41,7 @@ Value deconval(const Value& x, float g); // alpha via const input
 Value rms(const Value& x); // root mean square normalization
 Value dyntanh(const Value& x, float a, float b, float g); // dynamic tanh via mean_all
 Value relaynor(const Value& x, float b, float g); // with learned scale and bias
-Value mambassm(const Value& z, const Value& a, const Value& b, const Value& c, const Value& d, int timen); // state space model
+Value mambassm(const Value& z, const Value& a, const Value& b, const Value& c, const Value& d); // state space model
 
 
 // rowwise reductions / softmax family
