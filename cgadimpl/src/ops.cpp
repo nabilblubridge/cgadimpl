@@ -339,7 +339,7 @@ namespace ag {
     }
 
 
-    Value mambassm(const Value& z, const Value& a, const Value& b, const Value& c, const Value& d, int timen){ 
+    Value mambassm(const Value& z, const Value& a, const Value& b, const Value& c, const Value& d){ 
 
         if (z.node->tape.size()==0) {
 
@@ -349,8 +349,8 @@ namespace ag {
         auto n=std::make_shared<Node>(y, z.node->requires_grad || a.node->requires_grad || b.node->requires_grad || c.node->requires_grad || d.node->requires_grad, Op::LogSumExpRow, "logsumexp_row"); 
         n->inputs={z.node, a.node, b.node, c.node, d.node}; 
             z.node->tape.push_back(std::make_shared<Tensor>(w));
-            z.node->tape.push_back(std::make_shared<Tensor>(Tensor::floten(1.0)));
                     ag::debug::on_node_created(n);  
+                    std::cout<<"Initialized SSM state"<<std::endl;
 return Value(n);
         }
         else
@@ -362,8 +362,8 @@ Tensor w = Tensor::matmul(z.val(), b.val())+(*(z.node->tape[0]));
         auto n=std::make_shared<Node>(y, z.node->requires_grad || a.node->requires_grad || b.node->requires_grad || c.node->requires_grad || d.node->requires_grad, Op::LogSumExpRow, "logsumexp_row"); 
         n->inputs={z.node, a.node, b.node, c.node, d.node}; 
             z.node->tape.push_back(std::make_shared<Tensor>(w));
-            *(z.node->tape[1]) = (*(z.node->tape[1]))+1;
                     ag::debug::on_node_created(n);  
+                    std::cout<<"SSM step"<<std::endl;
 return Value(n);
         }
 
