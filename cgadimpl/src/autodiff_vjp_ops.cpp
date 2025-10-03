@@ -153,16 +153,13 @@ void vjp_RealRMSNorm(Node* n, const Tensor& gy){
     Node* g = n->inputs[1].get();
     Tensor rms = *n->tape[0];
     Tensor y   = *n->tape[1];   // normalized x
-    debug::print_tensor("gy",gy);
-    debug::print_tensor("x",x->value);
-    debug::print_tensor("g",g->value);
+
 
     // upstream dot
     Tensor dot = Tensor::row_sum(gy * y);  // [batch x 1]
 
     Tensor grad_x = g->value*((gy / rms) - (y * dot / (rms*x->value.cols())));
 
-     debug::print_tensor("grad_x",grad_x);
 
     if (x->requires_grad) x->grad.add_(grad_x);
     if (g->requires_grad) g->grad.add_( gy * (x->value / rms));
