@@ -121,6 +121,7 @@ namespace ag {
     Tensor w = q*(Tensor::matmul(x.val(), c.val()) + d.val());
     auto n=std::make_shared<Node>(w, x.node->requires_grad || a.node->requires_grad || b.node->requires_grad || c.node->requires_grad || d.node->requires_grad, Op::SWIGLU, "swiglu"); 
     n->inputs={x.node, a.node, b.node, c.node, d.node};
+    x.node->inputs[0]->inputs[8].get()->value=Tensor::matmul(x.val(), a.val())+b.val();
     ag::debug::on_node_created(n); 
     return Value(n);
     }
@@ -291,10 +292,10 @@ return Value(n);
     Value realrms(const Value& x, float g){ 
 Tensor z = Tensor::row_sum(x.val()*x.val()) * (1.f/x.val().cols());
 Tensor q = Tensor::sqrt(z + 1e-8f);
-Tensor y = (x.val()*g) / q;
+Tensor y = (x.val()) / q;
         Value G = param(g*Tensor::ones_like(y), "g");
 
-auto n = std::make_shared<Node>(y, x.node->requires_grad || G.node->requires_grad, Op::RealRMSNorm, "realrmsnorm");
+auto n = std::make_shared<Node>(y*g, x.node->requires_grad || G.node->requires_grad, Op::RealRMSNorm, "realrmsnorm");
 n->tape.resize(2);
 n->tape[0] = std::make_shared<Tensor>(q); // denominator
 n->tape[1] = std::make_shared<Tensor>(y);   // normalized output
