@@ -125,7 +125,9 @@ auto j = param(J, "J");
 auto k = param(K, "K");
 
 
-auto y = dyntanh(attention(a, b, c, d), 0.5, 0.1, 1.5); // scalar, tests broadcasting [B,2] + [1,2]
+auto q = alibiatt(realrms(a, 0.03), b, c, d, (0.125))+a; // scalar, tests broadcasting [B,2] + [1,2]
+auto p = swiglu(realrms(q, 0.02), e, f, g, h)+q;
+auto y = softmax_row((realrms(p, 0.01), i, k))+p;
 
 std::cout << "y = " << y.val() << endl;
 std::cout << "dL/dA = " << a.grad()
@@ -139,6 +141,7 @@ std::cout << "A = " << a.val()
 
 zero_grad(y);
 backward(y);
+
 
 std::cout << "y = " << y.val() << endl;
 std::cout << "dL/dA = " << a.grad()
