@@ -39,6 +39,7 @@ Value transpose(const Value& x);
 Value swiglu(const Value& x, const Value& a, const Value& b, const Value& c, const Value& d);
 Value deconval(const Value& x, float g); // alpha via const input
 Value rms(const Value& x); // root mean square normalization
+Value realrms(const Value& x, float g); // with learned scale
 Value dyntanh(const Value& x, float a, float b, float g); // dynamic tanh via mean_all
 Value relaynor(const Value& x, float b, float g); // with learned scale and bias
 Value mambassm(const Value& z, const Value& a, const Value& b, const Value& c, const Value& d); // state space model
@@ -51,7 +52,7 @@ Value mean_all(const Value& x); // scalar
 Value softmax_row(const Value& z); // [B,C] -> [B,C]
 Value logsumexp_row(const Value& z); // [B,C] -> [B,1]
 Value laynor(const Value& x);
-
+Value alibiatt(const Value& a, const Value& b, const Value& c, const Value& d, float m); // m = max seq len
 
 // composite loss (one-hot targets)
 Value cross_entropy_with_logits(const Value& logits, const Value& onehot);

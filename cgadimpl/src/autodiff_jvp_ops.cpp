@@ -132,7 +132,15 @@ Tensor jvp_Dyntanh(Node* n, const std::function<const Tensor&(Node*)>& t){
 
 Tensor jvp_RealLayerNorm(Node* n, const std::function<const Tensor&(Node*)>& t){
     return Tensor();
-}   
+} 
+
+Tensor jvp_RealRMSNorm(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_AlibiAttention(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
 
 // ---- reductions ----
 Tensor jvp_Sum(Node* n, const std::function<const Tensor&(Node*)>& t){

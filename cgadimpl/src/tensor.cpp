@@ -54,6 +54,9 @@ Tensor Tensor::floten (float q){
 }
 
 
+
+
+
 int Tensor::rows() const { return r; }
 int Tensor::cols() const { return c; }
 std::pair<int,int> Tensor::shape() const { return {r,c}; }
@@ -118,7 +121,15 @@ Tensor Tensor::sign(const Tensor& x){ Tensor m(x.r,x.c); for(std::size_t i=0;i<x
 
 
 Tensor Tensor::transpose(const Tensor& x){ Tensor y(x.c, x.r); for(int i=0;i<x.r;++i) for(int j=0;j<x.c;++j) y(j,i)=x(i,j); return y; }
-
+Tensor Tensor::alibi(int rows, int cols, float m) {
+    Tensor bias(rows, cols);
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            bias(i,j) = m * -(i - j);
+        }
+    }
+    return bias;
+}
 
 Tensor Tensor::reduce_to(const Tensor& G, const Tensor& like){
 if(G.r==like.r && G.c==like.c) return G; // nothing to do

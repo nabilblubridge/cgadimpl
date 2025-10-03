@@ -36,4 +36,6 @@ OP(LayerNorm,      1,    "layernorm")
 OP(RMSNorm,      1,    "rmsnorm") 
 OP(Dyntanh,      4,    "dyntanh") 
 OP(RealLayerNorm,      4,    "reallayernorm") 
+OP(AlibiAttention,      3,    "alibiattention")
+OP(RealRMSNorm,      1,    "rmsnorm")
 
