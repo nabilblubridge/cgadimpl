@@ -281,22 +281,25 @@ void vjp_SWIGLU(Node* n, const Tensor& gy){
     Node* B = n->inputs[2].get();
     Node* C = n->inputs[3].get();
     Node* D = n->inputs[4].get();
-    Tensor y = Tensor::matmul(X->value, A->value)+B->value; 
-    Tensor q = y*Tensor::sigmoid(y); 
-    Tensor h = Tensor::matmul(X->value, C->value) + D->value;
-    Tensor w = q*h;
 
-    Tensor dL_dC = Tensor::matmul(Tensor::transpose(X->value), q*gy)  ;
-    Tensor dL_dD = q*gy ;
-        Tensor Swishdif = ( Tensor::sigmoid(y) + y * ( Tensor::sigmoid(y) * (Tensor::ones_like(Tensor::sigmoid(y))-Tensor::sigmoid(y)) ) );
+    Tensor y = Tensor::matmul(X->value, Tensor::transpose(A->value)) + B->value;
+    Tensor q = y * Tensor::sigmoid(y);
+    Tensor h = Tensor::matmul(X->value, Tensor::transpose(C->value)) + D->value;
+    Tensor w = q * h;
 
-    Tensor dL_dB = Swishdif*h*gy ;
-    Tensor dL_dA = Tensor::matmul(Tensor::transpose(X->value), Swishdif*h*gy )  ;
+    // derivatives
+    Tensor Swishdif = Tensor::sigmoid(y) + y * (Tensor::sigmoid(y) * (Tensor::ones_like(y) - Tensor::sigmoid(y)));
 
-    Tensor dL_dX = Tensor::matmul(Swishdif*h*gy, Tensor::transpose(A->value) ) + Tensor::matmul(q*gy, Tensor::transpose(C->value) );
+    Tensor dL_dB = Swishdif * h * gy;
+    Tensor dL_dA = Tensor::matmul(Tensor::transpose(Swishdif * h * gy), X->value);
 
+    Tensor dL_dD = q * gy;
+    Tensor dL_dC = Tensor::matmul(Tensor::transpose(q * gy), X->value);
 
+    Tensor dL_dX = Tensor::matmul(Swishdif * h * gy, A->value)
+                 + Tensor::matmul(q * gy, C->value);
 
+    // accumulate grads
     if (X->requires_grad) X->grad.add_(dL_dX);
     if (A->requires_grad) A->grad.add_(dL_dA);
     if (B->requires_grad) B->grad.add_(dL_dB);
