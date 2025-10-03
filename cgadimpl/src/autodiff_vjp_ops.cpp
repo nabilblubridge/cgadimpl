@@ -293,7 +293,7 @@ void vjp_SWIGLU(Node* n, const Tensor& gy){
     Tensor dL_dB = Swishdif * h * gy;
     Tensor dL_dA = Tensor::matmul(Tensor::transpose(Swishdif * h * gy), X->value);
 
-    Tensor dL_dD = q * gy;
+    Tensor dL_dD = q*gy;
     Tensor dL_dC = Tensor::matmul(Tensor::transpose(q * gy), X->value);
 
     Tensor dL_dX = Tensor::matmul(Swishdif * h * gy, A->value)
