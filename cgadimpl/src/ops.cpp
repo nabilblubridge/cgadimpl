@@ -117,11 +117,11 @@ namespace ag {
 
     Value swiglu(const Value& x, const Value& a, const Value& b, const Value& c, const Value& d){ 
     Tensor y = Tensor::matmul(x.val(), a.val())+b.val(); 
+    debug::print_tensor("y",y);
     Tensor q = y*Tensor::sigmoid(y); 
     Tensor w = q*(Tensor::matmul(x.val(), c.val()) + d.val());
     auto n=std::make_shared<Node>(w, x.node->requires_grad || a.node->requires_grad || b.node->requires_grad || c.node->requires_grad || d.node->requires_grad, Op::SWIGLU, "swiglu"); 
     n->inputs={x.node, a.node, b.node, c.node, d.node};
-    x.node->inputs[0]->inputs[8].get()->value=Tensor::matmul(x.val(), a.val())+b.val();
     ag::debug::on_node_created(n); 
     return Value(n);
     }
