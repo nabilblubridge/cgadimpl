@@ -42,6 +42,15 @@ Tensor jvp_Sigmoid(Node* n, const std::function<const Tensor&(Node*)>& t){
     Node* X=n->inputs[0].get(); Tensor s=Tensor::sigmoid(X->value);
     return T(t,X) * ( s * (Tensor::ones_like(s)-s) );
 }
+
+Tensor jvp_RELUAtt(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+
+
+
+
 Tensor jvp_Softplus(Node* n, const std::function<const Tensor&(Node*)>& t){
     Node* X=n->inputs[0].get(); return T(t,X) * Tensor::sigmoid(X->value);
 }
@@ -100,11 +109,11 @@ Tensor jvp_GCU(Node* n, const std::function<const Tensor&(Node*)>& t){
 }
 
 Tensor jvp_Parcon(Node* n, const std::function<const Tensor&(Node*)>& t){
-    return Tensor();
+    Node* X=n->inputs[0].get(); return T(t,X) * ( 2 *Tensor::ones_like(X->value)- 2*X->value  );
 }
 
 Tensor jvp_LiSHT(Node* n, const std::function<const Tensor&(Node*)>& t){
-    return Tensor();
+    Node* X=n->inputs[0].get(); return T(t,X) * ( Tensor::tanh(X->value)+ (Tensor::sech(X->value)*Tensor::sech(X->value)*X->value ) );
 }
 
 Tensor jvp_Transpose(Node* n, const std::function<const Tensor&(Node*)>& t){

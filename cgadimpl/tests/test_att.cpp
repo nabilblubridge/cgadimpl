@@ -110,7 +110,7 @@ Tensor G = Tensor::randn(2,2);
 Tensor H = Tensor::randn(2,2);
 Tensor I = Tensor::randn(2,2);
 Tensor J = Tensor::randn(2,2);
-Tensor K = Tensor::randn(2,2);
+Tensor K = Tensor::randn(2,1);
 Tensor L = Tensor::randn(2,2);
 
 auto a = param(A, "A");
@@ -127,12 +127,16 @@ auto k = param(K, "K");
 auto l = param(L, "L");
 
 
-auto y = sum(softmax_row(fmab(rms(swiglu(rms(alibiatt(rms(a), b, c, d, 1) + a), e, f, g, h) + (alibiatt(rms(a), b, c, d, 1) + a)), i, k)));
+auto q = alibiatt(rms(a), b, c, d, 0.125) + a; // scalar, tests broadcasting [B,2] + [1,2]
+auto p = swiglu(rms(q), e, f, g, h) + q;
+auto y = sum(softmax_row(fmab(rms(p), i, k)));
 
 // --- BEFORE backward ---
 std::cout << "Before backward:" << std::endl;
 
 std::cout << "y = " << y.val() << std::endl;
+std::cout << "q = " << q.val() << std::endl;
+std::cout << "p = " << p.val() << std::endl;
 
 std::cout << "dL/dA = " << a.grad() << std::endl;
 std::cout << "dL/dB = " << b.grad() << std::endl;
@@ -163,6 +167,8 @@ backward(y);
 std::cout << "\nAfter backward:" << std::endl;
 
 std::cout << "y = " << y.val() << std::endl;
+std::cout << "q = " << q.val() << std::endl;
+std::cout << "p = " << p.val() << std::endl;
 
 std::cout << "dL/dA = " << a.grad() << std::endl;
 std::cout << "dL/dB = " << b.grad() << std::endl;

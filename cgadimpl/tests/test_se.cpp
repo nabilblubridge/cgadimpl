@@ -115,28 +115,44 @@ Tensor X = Tensor::randn(2,2);
 
 
 auto x = param(X, "X"); 
-auto j = param(J, "J");
-auto k = param(K, "K"); 
 auto a = param(A, "A");
 auto b = param(B, "B");
 auto c = param(C, "C");
 auto d = param(D, "D");
-auto e = param(E, "E");
-auto f = param(F, "F");
-auto g = param(G, "G");
-auto h = param(H, "H");
-auto i = param(I, "I");
-// auto j = param(J, "J");
-// auto k = param(K, "K");
 
 
 
 
+auto y = reluatt(a, b, c, d); // scalar, tests broadcasting [B,2] + [1,2]
+std::cout << "y = " << y.val() << endl;
+std::cout << "dL/dA = " << a.grad()
+<<","<< endl<< "dL/dB = " << b.grad()<<","<< endl
+<< "dL/dC = " << c.grad()<<","<< endl
+<< "dL/dD = " << d.grad() <<","<< endl << "dL/dX = " << x.grad() << endl;
+std::cout << "A = " << a.val()
+<<","<< endl<< "B = " << b.val()<<","<< endl
+<< "C = " << c.val()<<","<< endl
+<< "D = " << d.val() <<","<< endl << "X = " << x.val() << endl;
 
-auto m = f + g;  // simple add
-auto loss = sum(m);
-backward(loss);
-std::cout << f.grad() << ", " << g.grad() << std::endl;  // should be non-zero
+zero_grad(y);
+backward(y);
+std::cout << "Forward \n \n \n \n \n";
+
+
+std::cout << "y = " << y.val() << endl;
+std::cout << "dL/dA = " << a.grad()
+<<","<< endl<< "dL/dB = " << b.grad()<<","<< endl
+<< "dL/dC = " << c.grad()<<","<< endl
+<< "dL/dD = " << d.grad() <<","<< endl << "dL/dX = " << x.grad() << endl;
+std::cout << "A = " << a.val()
+<<","<< endl<< "B = " << b.val()<<","<< endl
+<< "C = " << c.val()<<","<< endl
+<< "D = " << d.val() <<","<< endl << "X= " << x.val() << endl;
+
+
+zero_grad(y);
+std::cout << "Backward \n \n \n";
+
 
 
 }
