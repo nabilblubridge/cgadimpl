@@ -47,5 +47,4 @@ set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/test_complex_mlp.dir/DependInfo.cmake"
   "CMakeFiles/test_graph_compile.dir/DependInfo.cmake"
   "CMakeFiles/test.dir/DependInfo.cmake"
-  "CMakeFiles/smoke_all.dir/DependInfo.cmake"
   )

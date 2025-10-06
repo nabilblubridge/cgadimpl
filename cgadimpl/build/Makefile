@@ -195,19 +195,6 @@ test/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/build
 .PHONY : test/fast
 
-#=============================================================================
-# Target rules for targets named smoke_all
-
-# Build rule for target.
-smoke_all: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 smoke_all
-.PHONY : smoke_all
-
-# fast build rule for target.
-smoke_all/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/smoke_all.dir/build.make CMakeFiles/smoke_all.dir/build
-.PHONY : smoke_all/fast
-
 src/autodiff/autodiff_jvp_ops.o: src/autodiff/autodiff_jvp_ops.cpp.o
 .PHONY : src/autodiff/autodiff_jvp_ops.o
 
@@ -376,6 +363,30 @@ src/nn/nn.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/ag.dir/build.make CMakeFiles/ag.dir/src/nn/nn.cpp.s
 .PHONY : src/nn/nn.cpp.s
 
+src/optimizer/optim.o: src/optimizer/optim.cpp.o
+.PHONY : src/optimizer/optim.o
+
+# target to build an object file
+src/optimizer/optim.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ag.dir/build.make CMakeFiles/ag.dir/src/optimizer/optim.cpp.o
+.PHONY : src/optimizer/optim.cpp.o
+
+src/optimizer/optim.i: src/optimizer/optim.cpp.i
+.PHONY : src/optimizer/optim.i
+
+# target to preprocess a source file
+src/optimizer/optim.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ag.dir/build.make CMakeFiles/ag.dir/src/optimizer/optim.cpp.i
+.PHONY : src/optimizer/optim.cpp.i
+
+src/optimizer/optim.s: src/optimizer/optim.cpp.s
+.PHONY : src/optimizer/optim.s
+
+# target to generate assembly for a file
+src/optimizer/optim.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ag.dir/build.make CMakeFiles/ag.dir/src/optimizer/optim.cpp.s
+.PHONY : src/optimizer/optim.cpp.s
+
 src/tensor/tensor.o: src/tensor/tensor.cpp.o
 .PHONY : src/tensor/tensor.o
 
@@ -447,30 +458,6 @@ src/tools/export_hlo.s: src/tools/export_hlo.cpp.s
 src/tools/export_hlo.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/ag.dir/build.make CMakeFiles/ag.dir/src/tools/export_hlo.cpp.s
 .PHONY : src/tools/export_hlo.cpp.s
-
-tests/smoke_all.o: tests/smoke_all.cpp.o
-.PHONY : tests/smoke_all.o
-
-# target to build an object file
-tests/smoke_all.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/smoke_all.dir/build.make CMakeFiles/smoke_all.dir/tests/smoke_all.cpp.o
-.PHONY : tests/smoke_all.cpp.o
-
-tests/smoke_all.i: tests/smoke_all.cpp.i
-.PHONY : tests/smoke_all.i
-
-# target to preprocess a source file
-tests/smoke_all.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/smoke_all.dir/build.make CMakeFiles/smoke_all.dir/tests/smoke_all.cpp.i
-.PHONY : tests/smoke_all.cpp.i
-
-tests/smoke_all.s: tests/smoke_all.cpp.s
-.PHONY : tests/smoke_all.s
-
-# target to generate assembly for a file
-tests/smoke_all.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/smoke_all.dir/build.make CMakeFiles/smoke_all.dir/tests/smoke_all.cpp.s
-.PHONY : tests/smoke_all.cpp.s
 
 tests/test.o: tests/test.cpp.o
 .PHONY : tests/test.o
@@ -601,7 +588,6 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... ag"
-	@echo "... smoke_all"
 	@echo "... test"
 	@echo "... test_ag"
 	@echo "... test_complex_mlp"
@@ -628,6 +614,9 @@ help:
 	@echo "... src/nn/nn.o"
 	@echo "... src/nn/nn.i"
 	@echo "... src/nn/nn.s"
+	@echo "... src/optimizer/optim.o"
+	@echo "... src/optimizer/optim.i"
+	@echo "... src/optimizer/optim.s"
 	@echo "... src/tensor/tensor.o"
 	@echo "... src/tensor/tensor.i"
 	@echo "... src/tensor/tensor.s"
@@ -637,9 +626,6 @@ help:
 	@echo "... src/tools/export_hlo.o"
 	@echo "... src/tools/export_hlo.i"
 	@echo "... src/tools/export_hlo.s"
-	@echo "... tests/smoke_all.o"
-	@echo "... tests/smoke_all.i"
-	@echo "... tests/smoke_all.s"
 	@echo "... tests/test.o"
 	@echo "... tests/test.i"
 	@echo "... tests/test.s"
