@@ -44,4 +44,4 @@ void on_jvp_step(Node* n);                         // called once per node durin
 void dump_jvp_dot(const Value& root, const std::string& filepath);  // parent->child (green)
 
 
-} // namespace ag::debug
+} // namespace ag::debugcm

@@ -1,9 +1,11 @@
 // =====================
 // file: src/ops.cpp
 // =====================
+
+#include <iostream>
 #include "ad/ops.hpp"
 #include "ad/debug.hpp"
-#include "nn/nn.hpp" // for relu    
+#include <math.h>
 
 
 namespace ag {
@@ -25,10 +27,21 @@ namespace ag {
         return Value(n); 
     }
 
+
+
     Value mul(const Value& a, const Value& b){ 
         Tensor y = a.val() * b.val(); 
         auto n = std::make_shared<Node>(y, a.node->requires_grad || b.node->requires_grad, Op::Mul, "*"); 
         n->inputs = {a.node, b.node}; 
+        ag::debug::on_node_created(n); 
+        return Value(n); 
+    }
+
+    Value flomul(const Value& a, float b){ 
+        auto c = constant(b*Tensor::ones_like(a.val()));
+        Tensor y = a.val() * c.val(); 
+        auto n = std::make_shared<Node>(y, a.node->requires_grad || c.node->requires_grad, Op::Mul, "*"); 
+        n->inputs = {a.node, c.node}; 
         ag::debug::on_node_created(n); 
         return Value(n); 
     }
@@ -41,6 +54,10 @@ namespace ag {
         return Value(n); 
     }
 
+
+
+
+
     Value matmul(const Value& a, const Value& b){ 
         Tensor y = Tensor::matmul(a.val(), b.val()); 
         auto n = std::make_shared<Node>(y, a.node->requires_grad || b.node->requires_grad, Op::MatMul, "matmul"); 
@@ -48,12 +65,87 @@ namespace ag {
         return Value(n); 
     }
 
+    Value fmab(const Value& a, const Value& b, const Value& c){ 
+        Tensor y = Tensor::matmul(a.val(), b.val())+c.val(); 
+        auto n = std::make_shared<Node>(y, a.node->requires_grad || b.node->requires_grad || c.node->requires_grad, Op::FMA, "fmab"); 
+        n->inputs = {a.node, b.node, c.node}; ag::debug::on_node_created(n); 
+        return Value(n); 
+    }
+
+
+    Value attention(const Value& a, const Value& b, const Value& c, const Value& d){ 
+    Tensor q = Tensor::matmul(a.val(), b.val()); 
+    Tensor k = Tensor::matmul(a.val(), c.val()); 
+    Tensor v = Tensor::matmul(a.val(), d.val());
+    Tensor g = Tensor::matmul(q, Tensor::transpose(k)*(1.f/sqrt(float(k.cols())))) ;
+    Tensor s = Tensor::softmax_row(g);
+    Tensor y = Tensor::matmul(s, v);
+    auto n = std::make_shared<Node>(y, a.node->requires_grad || b.node->requires_grad || c.node->requires_grad || d.node->requires_grad, Op::Attention, "attention"); 
+    n->inputs = {a.node, b.node, c.node, d.node};
+    n->tape.resize(4);
+    n->tape={std::make_shared<Tensor>(q), std::make_shared<Tensor>(k), std::make_shared<Tensor>(v), std::make_shared<Tensor>(s)};
+    ag::debug::on_node_created(n); 
+    return Value(n); 
+    }
+
+
+    Value alibiatt(const Value& a, const Value& b, const Value& c, const Value& d, float m) { 
+    Tensor q = Tensor::matmul(a.val(), b.val()); 
+    Tensor k = Tensor::matmul(a.val(), c.val()); 
+    Tensor v = Tensor::matmul(a.val(), d.val());
+    
+    Tensor logits = Tensor::matmul(q, Tensor::transpose(k) * (1.f / sqrt(float(k.cols()))));
+    Tensor bias   = Tensor::alibi(logits.rows(), logits.cols(), m);
+    Tensor g      = logits + bias;
+
+    Tensor s = Tensor::softmax_row(g);
+    Tensor y = Tensor::matmul(s, v);
+
+    auto n = std::make_shared<Node>(
+        y, a.node->requires_grad || b.node->requires_grad || c.node->requires_grad || d.node->requires_grad,
+        Op::AlibiAttention, "alibiattention"
+    ); 
+    n->inputs = {a.node, b.node, c.node, d.node};
+    n->tape.resize(4);
+    n->tape   = {std::make_shared<Tensor>(q), std::make_shared<Tensor>(k), 
+                 std::make_shared<Tensor>(v), std::make_shared<Tensor>(s)};
+    ag::debug::on_node_created(n); 
+    return Value(n); 
+}
+
+
+
+    Value swiglu(const Value& x, const Value& a, const Value& b, const Value& c, const Value& d){ 
+    Tensor y = Tensor::matmul(x.val(), Tensor::transpose(a.val()))+b.val(); 
+    debug::print_tensor("y",y);
+    Tensor q = y*Tensor::sigmoid(y); 
+    Tensor w = q*(Tensor::matmul(x.val(), Tensor::transpose(c.val())) + d.val());
+    auto n=std::make_shared<Node>(w, x.node->requires_grad || a.node->requires_grad || b.node->requires_grad || c.node->requires_grad || d.node->requires_grad, Op::SWIGLU, "swiglu"); 
+    n->inputs={x.node, a.node, b.node, c.node, d.node};
+    ag::debug::on_node_created(n); 
+    return Value(n);
+    }
+
+
+
+
+
+
+
     Value sum(const Value& x){ 
         Tensor y = Tensor::sum_all(x.val()); 
         auto n = std::make_shared<Node>(y, x.node->requires_grad, Op::Sum, "sum"); 
         n->inputs = {x.node}; 
         ag::debug::on_node_created(n);  
         return Value(n); 
+    }
+
+    Value transpose(const Value& x){ 
+        Tensor y = Tensor::transpose(x.val()); 
+        auto n=std::make_shared<Node>(y, x.node->requires_grad, Op::Transpose, "exp"); 
+        n->inputs={x.node}; 
+        ag::debug::on_node_created(n);  
+        return Value(n);
     }
 
     Value exp(const Value& x){ 
@@ -67,6 +159,15 @@ namespace ag {
     Value log(const Value& x){ 
         Tensor y = Tensor::log(x.val()); 
         auto n=std::make_shared<Node>(y, x.node->requires_grad, Op::Log, "log"); 
+        n->inputs={x.node}; 
+        ag::debug::on_node_created(n);  
+        return Value(n);
+    }
+
+
+    Value mish(const Value& x){ 
+        Tensor y = x.val() * Tensor::tanh( Tensor::softplus(x.val()) ); 
+        auto n=std::make_shared<Node>(y, x.node->requires_grad, Op::Mish, "mish"); 
         n->inputs={x.node}; 
         ag::debug::on_node_created(n);  
         return Value(n);
@@ -95,10 +196,28 @@ namespace ag {
         ag::debug::on_node_created(n);  
         return Value(n);
     }
+
+    Value gaus(const Value& x){ 
+        Tensor y = Tensor::exp(-1*x.val()*x.val()); 
+        auto n=std::make_shared<Node>(y, x.node->requires_grad, Op::Gaus, "gaus"); 
+        n->inputs={x.node}; 
+        ag::debug::on_node_created(n);  
+        return Value(n);
+    }
     
     Value gelu(const Value& x){ 
         Tensor y = Tensor::gelu_tanh(x.val()); 
         auto n=std::make_shared<Node>(y, x.node->requires_grad, Op::GELU, "gelu"); 
+        n->inputs={x.node}; 
+        ag::debug::on_node_created(n);  
+        return Value(n);
+    }
+
+
+
+    Value gcu(const Value& x){ 
+        Tensor y = x.val() * Tensor::cos(x.val());
+        auto n=std::make_shared<Node>(y, x.node->requires_grad, Op::GCU, "gcu"); 
         n->inputs={x.node}; 
         ag::debug::on_node_created(n);  
         return Value(n);
@@ -108,6 +227,24 @@ namespace ag {
         Tensor y = Tensor::sigmoid(x.val()); 
         y = y * x.val(); 
         auto n=std::make_shared<Node>(y, x.node->requires_grad, Op::SiLU, "silu"); 
+        n->inputs={x.node}; 
+        ag::debug::on_node_created(n);  
+        return Value(n);
+    }
+
+    Value parcon(const Value& x){ 
+        Tensor y = x.val()*(2*Tensor::ones_like(x.val())-x.val()); 
+
+        auto n=std::make_shared<Node>(y, x.node->requires_grad, Op::Parcon, "parcon"); 
+        n->inputs={x.node}; 
+        ag::debug::on_node_created(n);  
+        return Value(n);
+    }
+
+    Value lisht(const Value& x){ 
+        Tensor y = x.val()*Tensor::tanh(x.val()); 
+
+        auto n=std::make_shared<Node>(y, x.node->requires_grad, Op::Parcon, "parcon"); 
         n->inputs={x.node}; 
         ag::debug::on_node_created(n);  
         return Value(n);
@@ -138,11 +275,92 @@ namespace ag {
         ag::debug::on_node_created(n);  
         return Value(n);
     }
+
+    Value rms(const Value& x){ 
+Tensor z = Tensor::row_sum(x.val()*x.val()) * (1.f/x.val().cols());
+Tensor q = Tensor::sqrt(z + 1e-8f);
+Tensor y = x.val() / q;
+
+auto n = std::make_shared<Node>(y, x.node->requires_grad, Op::RMSNorm, "rmsnorm");
+n->tape.resize(2);
+n->tape[0] = std::make_shared<Tensor>(q); // denominator
+n->tape[1] = std::make_shared<Tensor>(y);   // normalized output
+n->inputs = {x.node};
+return Value(n);
+    }
+
+    Value realrms(const Value& x, float g){ 
+Tensor z = Tensor::row_sum(x.val()*x.val()) * (1.f/x.val().cols());
+Tensor q = Tensor::sqrt(z + 1e-8f);
+Tensor y = (x.val()) / q;
+        Value G = param(g*Tensor::ones_like(y), "g");
+
+auto n = std::make_shared<Node>(y*g, x.node->requires_grad || G.node->requires_grad, Op::RealRMSNorm, "realrmsnorm");
+n->tape.resize(2);
+n->tape[0] = std::make_shared<Tensor>(q); // denominator
+n->tape[1] = std::make_shared<Tensor>(y);   // normalized output
+n->inputs = {x.node, G.node};
+return Value(n);
+    }
+
+    Value laynor(const Value& x){ 
+        Tensor y = Tensor::row_sum(x.val())*(1.f/x.val().cols()); 
+      //  std::cout<<"q      "<<y<<std::endl;
+        Tensor vrc = Tensor::row_sum(((x.val() )- y)*((x.val() )- y))*(1.f/x.val().cols());
+      //  std::cout<<"q      "<<vrc<<std::endl;
+        Tensor q = ((x.val() )- y)/(Tensor::sqrt(vrc)+0.01);
+        
+        auto n=std::make_shared<Node>(q, x.node->requires_grad, Op::LayerNorm, "layernorm");
+      //  debug::print_tensor("q",q);
+        n->tape.resize(2);
+        n->tape[0] = std::make_shared<Tensor>(vrc);
+        n->tape[1] = std::make_shared<Tensor>(y);
+
+        n->inputs={x.node}; 
+        ag::debug::on_node_created(n);  
+        return Value(n);
+    }
+
+    Value relaynor(const Value& x, float b, float g){ 
+        Tensor y = Tensor::row_sum(x.val())*(1.f/x.val().cols()); 
+      //  std::cout<<"q      "<<y<<std::endl;
+        Tensor vrc = Tensor::row_sum(((x.val() )- y)*((x.val() )- y))*(1.f/x.val().cols());
+      //  std::cout<<"q      "<<vrc<<std::endl;
+        Tensor q = ((((x.val() )- y)/(Tensor::sqrt(vrc)+0.01)))   ;
+        Tensor qg = (q*g) + b;
+
+        Value B = param(b*Tensor::ones_like(qg), "b");
+        Value G = param(g*Tensor::ones_like(qg), "g");
+        
+        auto n=std::make_shared<Node>(q, x.node->requires_grad || B.node->requires_grad||G.node->requires_grad, Op::RealLayerNorm, "reallayernorm");
+      //  debug::print_tensor("q",q);
+        n->tape.resize(3);
+        n->tape[0] = std::make_shared<Tensor>(vrc);
+        n->tape[1] = std::make_shared<Tensor>(y);
+        n->tape[2] = std::make_shared<Tensor>(q);
+
+        n->inputs={x.node}; 
+        ag::debug::on_node_created(n);  
+        return Value(n);
+    }
     
     Value mean_all(const Value& x){ 
         Tensor y = Tensor::mean_all(x.val()); 
         auto n=std::make_shared<Node>(y, x.node->requires_grad, Op::MeanAll, "meanall"); 
         n->inputs={x.node}; 
+        ag::debug::on_node_created(n);  
+        return Value(n);
+    }
+
+    Value dyntanh(const Value& x, float a, float b, float g){ 
+        Tensor h = x.val()*a;
+        Tensor y = Tensor::tanh(h)*g + b; 
+        Value A = param(a*Tensor::ones_like(x.val()), "a");
+        Value B = param(b*Tensor::ones_like(x.val()), "b");
+        Value G = param(g*Tensor::ones_like(x.val()), "g");
+        auto n=std::make_shared<Node>(y, x.node->requires_grad|| A.node->requires_grad|| B.node->requires_grad||G.node->requires_grad, Op::MeanAll, "meanall"); 
+        n->inputs={x.node, A.node, B.node, G.node}; 
+        n->tape.push_back(std::make_shared<Tensor>(h));
         ag::debug::on_node_created(n);  
         return Value(n);
     }
@@ -161,6 +379,42 @@ namespace ag {
         n->inputs={z.node}; 
         ag::debug::on_node_created(n);  
         return Value(n);
+    }
+
+
+    Value mambassm(const Value& z, const Value& a, const Value& b, const Value& c, const Value& d){ 
+
+        if (z.node->tape.size()==0) {
+
+                    Tensor w = Tensor::matmul(z.val(), b.val()); 
+                    Tensor q = Tensor::matmul(w, c.val());
+                    Tensor y = (z.val()* d.val())+q;
+                    auto W = param(w, "w");
+        auto n=std::make_shared<Node>(y, W.node->requires_grad || z.node->requires_grad || a.node->requires_grad || b.node->requires_grad || c.node->requires_grad || d.node->requires_grad, Op::LogSumExpRow, "logsumexp_row"); 
+        n->inputs={z.node, a.node, b.node, c.node, d.node, W.node}; 
+            z.node->tape.push_back(std::make_shared<Tensor>(w));
+            z.node->inputs.push_back(W.node);
+                    ag::debug::on_node_created(n);  
+                    std::cout<<"Initialized SSM state"<<std::endl;
+return Value(n);
+        }
+        else
+        {
+
+Tensor w = Tensor::matmul(z.val(), b.val())+(z.node->inputs.back()->value); 
+                    Tensor q = Tensor::matmul(w, c.val());
+                    Tensor y = (z.val()* d.val())+q;
+                    auto W = param(w, "w");
+        auto n=std::make_shared<Node>(y,  W.node->requires_grad || z.node->requires_grad || a.node->requires_grad || b.node->requires_grad || c.node->requires_grad || d.node->requires_grad, Op::LogSumExpRow, "logsumexp_row"); 
+        n->inputs={z.node, a.node, b.node, c.node, d.node, W.node}; 
+        z.node->tape.push_back(std::make_shared<Tensor>(w));
+            z.node->inputs.push_back(W.node);
+                    ag::debug::on_node_created(n);  
+                    std::cout<<"SSM step"<<std::endl;
+return Value(n);
+        }
+
+        
     }
 
 
@@ -183,6 +437,7 @@ namespace ag {
         return Value(n);
     }
 
+
     Value kldivergence(const Value& logits, const Value& onehot){
     // Stable CE = mean( -sum(onehot * (logits - logsumexp_row(logits))) )
         Tensor Z = logits.val();
@@ -203,49 +458,35 @@ namespace ag {
         return Value(n);
     }
 
-    // --- Transpose (new op) ---
-    Value transpose(const Value& x){
-        Tensor y = Tensor::transpose(x.val());
-        auto n = std::make_shared<Node>(y, x.node->requires_grad, Op::Transpose, "transpose");
-        n->inputs = { x.node };
-        ag::debug::on_node_created(n);
-        return Value(n);
-    }
+    Value mse_loss(const Value& pred, const Value& target) {
+    Tensor diff = pred.val() - target.val();
+    Tensor sq   = diff * diff;               // elementwise
+    Tensor s    = Tensor::sum_all(sq);                   // scalar [1,1]
+    int B = pred.shape().first, C = pred.shape().second;
+    Tensor scale = Tensor::ones(1,1);
+    scale(0,0) = 1.0f / float(B * C);
+    Tensor loss = s * scale;                 // broadcast scalar
+    auto n = std::make_shared<Node>(loss, pred.node->requires_grad || target.node->requires_grad, Op::MSELoss, "mseloss");
+    n->inputs = {pred.node, target.node};
+        ag::debug::on_node_created(n);  
+    return Value(n);                 // broadcast scalar
+}
 
-    // --- Scaled Dot-Product Attention (composed, no new fused op) ---
-    // Q:[B,D], K:[C,D], V:[C,E], optional mask:[B,C]; scale ~ 1/sqrt(D)
-    Value sdpa(const Value& Q,
-            const Value& K,
-            const Value& V,
-            const Value* mask,
-            float scale) {
-        // S = (Q @ K^T) * scale
-        Value KT = transpose(K);
-        Value S  = matmul(Q, KT);
-        if (scale != 1.0f) {
-            Tensor sT(1,1); sT(0,0) = scale;
-            Value sC = constant(sT, "scale");
-            S = mul(S, sC); // broadcast scalar
-        }
 
-        // mask fill: S = mask*S + (1-mask)*(-1e9)
-        if (mask) {
-            // ones like mask
-            Tensor onesT = Tensor::ones_like(mask->val());
-            Value Ones   = constant(onesT, "ones");
-            // 1 - mask
-            Value invM   = sub(Ones, *mask);
-            // negInf scalar
-            Tensor negInfT(1,1); negInfT(0,0) = -1e9f;
-            Value NegInf = constant(negInfT, "neg_inf");
-            // combine
-            S = add( mul(*mask, S), mul(invM, NegInf) );
-        }
+    Value mae_loss(const Value& pred, const Value& target) {
+    Tensor diff = pred.val() - target.val();
+    Tensor sq   = Tensor::abs(diff);               // elementwise
+    Tensor s    = Tensor::sum_all(sq);                   // scalar [1,1]
+    int B = pred.shape().first, C = pred.shape().second;
+    Tensor scale = Tensor::ones(1,1);
+    scale(0,0) = 1.0f / float(B * C);
+    Tensor loss = s * scale;                 // broadcast scalar
+    auto n = std::make_shared<Node>(loss, pred.node->requires_grad || target.node->requires_grad, Op::MAELoss, "maeloss");
+    n->inputs = {pred.node, target.node};
+        ag::debug::on_node_created(n);  
+    return Value(n);                 // broadcast scalar
+}
 
-        // P = softmax_row(S), O = P @ V
-        Value P = softmax_row(S);
-        Value O = matmul(P, V);
-        return O;
-    }
+
 
 } // namespace ag

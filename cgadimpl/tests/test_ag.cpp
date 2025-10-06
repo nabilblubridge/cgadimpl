@@ -77,6 +77,10 @@
 // }
 #include <iostream>
 #include "ad/ag_all.hpp"
+#include "optim.hpp"
+#include <random>
+#include <iomanip>
+using namespace ag;
 
 
 int main(){
@@ -87,15 +91,44 @@ Tensor B = Tensor::randn(3,2);
 auto a = param(A, "A");
 auto b = param(B, "B");
 
+Tensor Yt(2, 2);
+    std::mt19937 gen(42);
+    std::uniform_int_distribution<int> pick(0, 2 - 1);
+    for (int i = 0; i < 2; ++i) {
+        int k = pick(gen);
+        for (int j = 0; j < 2; ++j) Yt(i, j) = (j == k) ? 1.f : 0.f;
+    }
+    Value W = constant(Yt, "Y");
+
 
 auto bias = param(Tensor::zeros(1,2), "bias");
-auto y = sum(relu(matmul(a,b) + bias)); // scalar, tests broadcasting [B,2] + [1,2]
 
-
+for(int i=0;i<10;i++){
+    auto q = (matmul(a,b) + bias); // [2,2]
+    auto y = kldivergence((q + bias), W); // scalar, tests broadcasting [B,2] + [1,2]
+std::cout << "y = " << y.val()
+<<","<< endl<< "A = " << a.val()
+<<","<< endl<< "B = " << b.val()<<","<< endl
+<< "bias = " << bias.val() << endl<< "q = " << q.val() << endl;
+std::cout << "y grad " << y.grad() << endl;
+std::cout << "dL/dA[0,0] = " << a.grad()
+<<","<< endl<< "dL/dB[0,0] = " << b.grad()<<","<< endl
+<< "dL/dbias[0,0] = " << bias.grad() << endl<< "dL/dq = " << q.grad() << endl;
 zero_grad(y);
 backward(y);
-std::cout << "y = " << y.val().sum_scalar() << endl;
-std::cout << "dL/dA[0,0] = " << a.grad()(0,0)
-<<","<< endl<< "dL/dB[0,0] = " << b.grad()(0,0)<<","<< endl
-<< "dL/dbias[0,0] = " << bias.grad()(0,0) << endl;
+SGD(y);
+
+
+std::cout << "y = " << y.val()
+<<","<< endl<< "A = " << a.val()
+<<","<< endl<< "B = " << b.val()<<","<< endl
+<< "bias = " << bias.val() << endl<< "q = " << q.val() << endl;
+std::cout << "y grad " << y.grad() << endl;
+std::cout << "dL/dA[0,0] = " << a.grad()
+<<","<< endl<< "dL/dB[0,0] = " << b.grad()<<","<< endl
+<< "dL/dbias[0,0] = " << bias.grad() << endl<< "dL/dq = " << q.grad() << endl;
+
+
+
+}
 }

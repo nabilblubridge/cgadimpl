@@ -4,11 +4,16 @@
 *.log
 *.tmp
 # *.a
+./benchmark/
 ./build/
 build/
 ./dumps/
 dumps/
 bin/
+./bin/
+././bin/
+./lib/
+././lib/
 lib/
 out/
 ././dumps/
@@ -16,10 +21,11 @@ obj/
 ./obj/
 ././obj/
 ./build-*/
-build-*/
+build/
+./build/
 ./.vscode/
 .vscode/
 *.exe
 *.dll
 *.pdb
-*.class     
+*.class         

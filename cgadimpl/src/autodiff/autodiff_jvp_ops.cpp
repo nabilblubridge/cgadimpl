@@ -74,6 +74,73 @@ Tensor jvp_MatMul(Node* n, const std::function<const Tensor&(Node*)>& t){
     Node* A=n->inputs[0].get(); Node* B=n->inputs[1].get();
     return Tensor::matmul(T(t,A), B->value) + Tensor::matmul(A->value, T(t,B));
 }
+Tensor jvp_FMA(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_Attention(Node* n, const std::function<const Tensor
+    &(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_MSELoss(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_MAELoss(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_GCU(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_Parcon(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_LiSHT(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_Transpose(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_SWIGLU(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_Mish(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+Tensor jvp_Gaus(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_LayerNorm(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_RMSNorm(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_Dyntanh(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}   
+
+Tensor jvp_RealLayerNorm(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+} 
+
+Tensor jvp_RealRMSNorm(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_AlibiAttention(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
 
 // ---- reductions ----
 Tensor jvp_Sum(Node* n, const std::function<const Tensor&(Node*)>& t){
@@ -114,17 +181,14 @@ Tensor jvp_CeWithLogits(Node* n, const std::function<const Tensor&(Node*)>& t){
     float dotY = (gY * t(Y)).sum_scalar();
     Tensor out(1,1); out(0,0) = dotZ + dotY; return out;
 }
-Tensor jvp_Leaf(Node*, const std::function<const Tensor&(Node*)>&){
-    return Tensor(); // unused
-}
+
 Tensor jvp_KLDivergence(Node* n, const std::function<const Tensor&(Node*)>& t){
     // leave it
     return Tensor();
 }
 
-Tensor jvp_Transpose(Node* n, const std::function<const Tensor&(Node*)>& tangent_of){
-    const Tensor& jx = tangent_of(n->inputs[0].get());
-    return Tensor::transpose(jx);
+Tensor jvp_Leaf(Node*, const std::function<const Tensor&(Node*)>&){
+    return Tensor(); // unused
 }
 
 } // anon

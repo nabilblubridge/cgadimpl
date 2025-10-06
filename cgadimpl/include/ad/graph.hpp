@@ -18,7 +18,7 @@ Tensor value; // forward value
 Tensor grad; // same shape as value
 bool requires_grad{false};
 const char* debug_name{""};
-
+std::vector<std::shared_ptr<Tensor>> tape;// optional: for ops that need to save intermediates for backward
 
 Node();
 Node(const Tensor& v, bool rg, Op op_, const char* nm="");
@@ -44,7 +44,7 @@ Value param (const Tensor& v, const char* name="param");
 // Topological order from root (parents before child)
 std::vector<Node*> topo_from(Node* root);
 
-
+    
 // ---- Lightweight trace→compile→replay (CPU) ----
 namespace jit {
 
