@@ -13,6 +13,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/ag.dir/src/core/schema.cpp.o.d"
   "CMakeFiles/ag.dir/src/nn/nn.cpp.o"
   "CMakeFiles/ag.dir/src/nn/nn.cpp.o.d"
+  "CMakeFiles/ag.dir/src/optimizer/optim.cpp.o"
+  "CMakeFiles/ag.dir/src/optimizer/optim.cpp.o.d"
   "CMakeFiles/ag.dir/src/tensor/tensor.cpp.o"
   "CMakeFiles/ag.dir/src/tensor/tensor.cpp.o.d"
   "CMakeFiles/ag.dir/src/tools/debug.cpp.o"

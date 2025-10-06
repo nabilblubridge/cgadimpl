@@ -181,10 +181,24 @@ CMakeFiles/ag.dir/src/nn/nn.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/ag.dir/src/nn/nn.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ble-bridge022/Desktop/grishma/implementations/cgadimpl/src/nn/nn.cpp -o CMakeFiles/ag.dir/src/nn/nn.cpp.s
 
+CMakeFiles/ag.dir/src/optimizer/optim.cpp.o: CMakeFiles/ag.dir/flags.make
+CMakeFiles/ag.dir/src/optimizer/optim.cpp.o: ../src/optimizer/optim.cpp
+CMakeFiles/ag.dir/src/optimizer/optim.cpp.o: CMakeFiles/ag.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ble-bridge022/Desktop/grishma/implementations/cgadimpl/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/ag.dir/src/optimizer/optim.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/ag.dir/src/optimizer/optim.cpp.o -MF CMakeFiles/ag.dir/src/optimizer/optim.cpp.o.d -o CMakeFiles/ag.dir/src/optimizer/optim.cpp.o -c /home/ble-bridge022/Desktop/grishma/implementations/cgadimpl/src/optimizer/optim.cpp
+
+CMakeFiles/ag.dir/src/optimizer/optim.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/ag.dir/src/optimizer/optim.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ble-bridge022/Desktop/grishma/implementations/cgadimpl/src/optimizer/optim.cpp > CMakeFiles/ag.dir/src/optimizer/optim.cpp.i
+
+CMakeFiles/ag.dir/src/optimizer/optim.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/ag.dir/src/optimizer/optim.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ble-bridge022/Desktop/grishma/implementations/cgadimpl/src/optimizer/optim.cpp -o CMakeFiles/ag.dir/src/optimizer/optim.cpp.s
+
 CMakeFiles/ag.dir/src/tools/debug.cpp.o: CMakeFiles/ag.dir/flags.make
 CMakeFiles/ag.dir/src/tools/debug.cpp.o: ../src/tools/debug.cpp
 CMakeFiles/ag.dir/src/tools/debug.cpp.o: CMakeFiles/ag.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ble-bridge022/Desktop/grishma/implementations/cgadimpl/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/ag.dir/src/tools/debug.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ble-bridge022/Desktop/grishma/implementations/cgadimpl/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/ag.dir/src/tools/debug.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/ag.dir/src/tools/debug.cpp.o -MF CMakeFiles/ag.dir/src/tools/debug.cpp.o.d -o CMakeFiles/ag.dir/src/tools/debug.cpp.o -c /home/ble-bridge022/Desktop/grishma/implementations/cgadimpl/src/tools/debug.cpp
 
 CMakeFiles/ag.dir/src/tools/debug.cpp.i: cmake_force
@@ -198,7 +212,7 @@ CMakeFiles/ag.dir/src/tools/debug.cpp.s: cmake_force
 CMakeFiles/ag.dir/src/tools/export_hlo.cpp.o: CMakeFiles/ag.dir/flags.make
 CMakeFiles/ag.dir/src/tools/export_hlo.cpp.o: ../src/tools/export_hlo.cpp
 CMakeFiles/ag.dir/src/tools/export_hlo.cpp.o: CMakeFiles/ag.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ble-bridge022/Desktop/grishma/implementations/cgadimpl/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/ag.dir/src/tools/export_hlo.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ble-bridge022/Desktop/grishma/implementations/cgadimpl/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/ag.dir/src/tools/export_hlo.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/ag.dir/src/tools/export_hlo.cpp.o -MF CMakeFiles/ag.dir/src/tools/export_hlo.cpp.o.d -o CMakeFiles/ag.dir/src/tools/export_hlo.cpp.o -c /home/ble-bridge022/Desktop/grishma/implementations/cgadimpl/src/tools/export_hlo.cpp
 
 CMakeFiles/ag.dir/src/tools/export_hlo.cpp.i: cmake_force
@@ -219,6 +233,7 @@ ag_OBJECTS = \
 "CMakeFiles/ag.dir/src/autodiff/autodiff_vjp_ops.cpp.o" \
 "CMakeFiles/ag.dir/src/tensor/tensor.cpp.o" \
 "CMakeFiles/ag.dir/src/nn/nn.cpp.o" \
+"CMakeFiles/ag.dir/src/optimizer/optim.cpp.o" \
 "CMakeFiles/ag.dir/src/tools/debug.cpp.o" \
 "CMakeFiles/ag.dir/src/tools/export_hlo.cpp.o"
 
@@ -233,11 +248,12 @@ lib/libag.a: CMakeFiles/ag.dir/src/autodiff/autodiff_jvp_ops.cpp.o
 lib/libag.a: CMakeFiles/ag.dir/src/autodiff/autodiff_vjp_ops.cpp.o
 lib/libag.a: CMakeFiles/ag.dir/src/tensor/tensor.cpp.o
 lib/libag.a: CMakeFiles/ag.dir/src/nn/nn.cpp.o
+lib/libag.a: CMakeFiles/ag.dir/src/optimizer/optim.cpp.o
 lib/libag.a: CMakeFiles/ag.dir/src/tools/debug.cpp.o
 lib/libag.a: CMakeFiles/ag.dir/src/tools/export_hlo.cpp.o
 lib/libag.a: CMakeFiles/ag.dir/build.make
 lib/libag.a: CMakeFiles/ag.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/ble-bridge022/Desktop/grishma/implementations/cgadimpl/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Linking CXX static library lib/libag.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/ble-bridge022/Desktop/grishma/implementations/cgadimpl/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Linking CXX static library lib/libag.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/ag.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/ag.dir/link.txt --verbose=$(VERBOSE)
 
