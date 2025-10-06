@@ -110,7 +110,8 @@ Tensor G = Tensor::randn(2,2);
 Tensor H = Tensor::randn(2,2);
 Tensor I = Tensor::randn(2,2);
 Tensor J = Tensor::randn(2,2);
-Tensor K = Tensor::randn(2,1);
+Tensor K = Tensor::randn(2,2);
+Tensor L = Tensor::randn(2,2);
 
 auto a = param(A, "A");
 auto b = param(B, "B");
@@ -123,37 +124,71 @@ auto h = param(H, "H");
 auto i = param(I, "I");
 auto j = param(J, "J");
 auto k = param(K, "K");
+auto l = param(L, "L");
 
 
-auto q = alibiatt(realrms(a, 0.03), b, c, d, (0.125))+a; // scalar, tests broadcasting [B,2] + [1,2]
-auto p = swiglu(realrms(q, 0.02), e, f, g, h)+q;
-auto y = softmax_row((realrms(p, 0.01), i, k))+p;
+auto y = sum(softmax_row(fmab(rms(swiglu(rms(alibiatt(rms(a), b, c, d, 1) + a), e, f, g, h) + (alibiatt(rms(a), b, c, d, 1) + a)), i, k)));
 
-std::cout << "y = " << y.val() << endl;
-std::cout << "dL/dA = " << a.grad()
-<<","<< endl<< "dL/dB = " << b.grad()<<","<< endl
-<< "dL/dC = " << c.grad()<<","<< endl
-<< "dL/dD = " << d.grad() << endl;
-std::cout << "A = " << a.val()
-<<","<< endl<< "B = " << b.val()<<","<< endl
-<< "C = " << c.val()<<","<< endl
-<< "D = " << d.val() << endl;
+// --- BEFORE backward ---
+std::cout << "Before backward:" << std::endl;
+
+std::cout << "y = " << y.val() << std::endl;
+
+std::cout << "dL/dA = " << a.grad() << std::endl;
+std::cout << "dL/dB = " << b.grad() << std::endl;
+std::cout << "dL/dC = " << c.grad() << std::endl;
+std::cout << "dL/dD = " << d.grad() << std::endl;
+std::cout << "dL/dE = " << e.grad() << std::endl;
+std::cout << "dL/dF = " << f.grad() << std::endl;
+std::cout << "dL/dG = " << g.grad() << std::endl;
+std::cout << "dL/dH = " << h.grad() << std::endl;
+std::cout << "dL/dI = " << i.grad() << std::endl;
+std::cout << "dL/dK = " << k.grad() << std::endl;
+
+std::cout << "A = " << a.val() << std::endl;
+std::cout << "B = " << b.val() << std::endl;
+std::cout << "C = " << c.val() << std::endl;
+std::cout << "D = " << d.val() << std::endl;
+std::cout << "E = " << e.val() << std::endl;
+std::cout << "F = " << f.val() << std::endl;
+std::cout << "G = " << g.val() << std::endl;
+std::cout << "H = " << h.val() << std::endl;
+std::cout << "I = " << i.val() << std::endl;
+std::cout << "K = " << k.val() << std::endl;
 
 zero_grad(y);
 backward(y);
 
+// --- AFTER backward ---
+std::cout << "\nAfter backward:" << std::endl;
 
-std::cout << "y = " << y.val() << endl;
-std::cout << "dL/dA = " << a.grad()
-<<","<< endl<< "dL/dB = " << b.grad()<<","<< endl
-<< "dL/dC = " << c.grad()<<","<< endl
-<< "dL/dD = " << d.grad() << endl;
-std::cout << "A = " << a.val()
-<<","<< endl<< "B = " << b.val()<<","<< endl
-<< "C = " << c.val()<<","<< endl
-<< "D = " << d.val() << endl;
+std::cout << "y = " << y.val() << std::endl;
 
-zero_grad(y);
+std::cout << "dL/dA = " << a.grad() << std::endl;
+std::cout << "dL/dB = " << b.grad() << std::endl;
+std::cout << "dL/dC = " << c.grad() << std::endl;
+std::cout << "dL/dD = " << d.grad() << std::endl;
+std::cout << "dL/dE = " << e.grad() << std::endl;
+std::cout << "dL/dF = " << f.grad() << std::endl;
+std::cout << "dL/dG = " << g.grad() << std::endl;
+std::cout << "dL/dH = " << h.grad() << std::endl;
+std::cout << "dL/dI = " << i.grad() << std::endl;
+std::cout << "dL/dK = " << k.grad() << std::endl;
+
+std::cout << "A = " << a.val() << std::endl;
+std::cout << "B = " << b.val() << std::endl;
+std::cout << "C = " << c.val() << std::endl;
+std::cout << "D = " << d.val() << std::endl;
+std::cout << "E = " << e.val() << std::endl;
+std::cout << "F = " << f.val() << std::endl;
+std::cout << "G = " << g.val() << std::endl;
+std::cout << "H = " << h.val() << std::endl;
+std::cout << "I = " << i.val() << std::endl;
+std::cout << "K = " << k.val() << std::endl;
+
+std::cout << "\n\n--- Gradients zeroed for next pass ---\n\n";
+
+
 std::cout << " \n \n \n";
 
 

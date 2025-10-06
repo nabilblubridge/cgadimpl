@@ -22,7 +22,7 @@ OP(LogSumExpRow,1,  "logsumexp_row")
 OP(CeWithLogits,2,  "ce_with_logits")
 OP(KLDivergence,2,  "kldivergence")
 OP(FMA,       3,    "fmab") // fused multiply-add
-OP(Attention,       4,    "attention") // attention
+OP(Attention,       4,    "attention") // attention // verified it works in backward and forward
 OP(MSELoss,       2,    "mseloss") // mse loss
 OP(MAELoss,       2,    "maeloss") // mae loss
 OP(GCU,       1,    "gcu") // Growing Cosine Unit
@@ -31,11 +31,12 @@ OP(Gaus,      1,    "gaus") // gaussian activation
 OP(Parcon,      1,    "parcon") 
 OP(LiSHT,      1,    "lisht") 
 OP(Transpose,      1,    "transpose") 
-OP(SWIGLU,      1,    "swiglu") 
+OP(SWIGLU,      1,    "swiglu") // verified it works in backward and forward
 OP(LayerNorm,      1,    "layernorm") 
-OP(RMSNorm,      1,    "rmsnorm") 
-OP(Dyntanh,      4,    "dyntanh") 
+OP(RMSNorm,      1,    "rmsnorm") // verified it works in backward and forward
+OP(Dyntanh,      4,    "dyntanh")  // verified it works in backward and forward
 OP(RealLayerNorm,      4,    "reallayernorm") 
-OP(AlibiAttention,      3,    "alibiattention")
-OP(RealRMSNorm,      1,    "rmsnorm")
+OP(AlibiAttention,      3,    "alibiattention") // verified it works in backward and forward
+OP(RealRMSNorm,      1,    "rmsnorm") // verified it works in backward and forward
+OP(MOE,      3,    "moe") // mixture of experts with weights and bias
 

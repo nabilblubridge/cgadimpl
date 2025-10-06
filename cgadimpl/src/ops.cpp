@@ -74,10 +74,10 @@ namespace ag {
 
 
     Value attention(const Value& a, const Value& b, const Value& c, const Value& d){ 
-    Tensor q = Tensor::matmul(a.val(), b.val()); 
-    Tensor k = Tensor::matmul(a.val(), c.val()); 
-    Tensor v = Tensor::matmul(a.val(), d.val());
-    Tensor g = Tensor::matmul(q, Tensor::transpose(k)*(1.f/sqrt(float(k.cols())))) ;
+    Tensor q = Tensor::matmul(a.val(), Tensor::transpose(b.val())); 
+    Tensor k = Tensor::matmul(a.val(), Tensor::transpose(c.val())); 
+    Tensor v = Tensor::matmul(a.val(), Tensor::transpose(d.val()));
+    Tensor g = Tensor::matmul(q, Tensor::transpose(k))*(1.f/sqrt(float(k.cols()))) ;
     Tensor s = Tensor::softmax_row(g);
     Tensor y = Tensor::matmul(s, v);
     auto n = std::make_shared<Node>(y, a.node->requires_grad || b.node->requires_grad || c.node->requires_grad || d.node->requires_grad, Op::Attention, "attention"); 
@@ -90,9 +90,9 @@ namespace ag {
 
 
     Value alibiatt(const Value& a, const Value& b, const Value& c, const Value& d, float m) { 
-    Tensor q = Tensor::matmul(a.val(), b.val()); 
-    Tensor k = Tensor::matmul(a.val(), c.val()); 
-    Tensor v = Tensor::matmul(a.val(), d.val());
+    Tensor q = Tensor::matmul(a.val(), Tensor::transpose(b.val())); 
+    Tensor k = Tensor::matmul(a.val(), Tensor::transpose(c.val())); 
+    Tensor v = Tensor::matmul(a.val(), Tensor::transpose(d.val()));
     
     Tensor logits = Tensor::matmul(q, Tensor::transpose(k) * (1.f / sqrt(float(k.cols()))));
     Tensor bias   = Tensor::alibi(logits.rows(), logits.cols(), m);
@@ -352,14 +352,51 @@ return Value(n);
         return Value(n);
     }
 
+    Value moewe(const Value& x, const Value& w, const Value& b){ 
+        Tensor y = Tensor::softmax_row(Tensor::matmul(x.val(), Tensor::transpose(w.val())) + b.val()); 
+        auto n=std::make_shared<Node>(y, x.node->requires_grad, Op::MOE, "moe"); 
+        n->inputs={x.node}; 
+        ag::debug::on_node_created(n);  
+        return Value(n);
+    }
+
+    // std::vector<std::shared_ptr<Node>> valten(const std::vector<Value>& x, const Value& w){ 
+    //     std::vector<Tensor> p;
+    //     for (int i = 0; i < x.size(); i++) {
+    //     p[i]=x[i].val();
+    // }
+
+
+    // Tensor y = Tensor::dmul(p, w.val()); 
+
+    // std::vector<std::shared_ptr<Node>> t;
+
+    // for (int i = 0; i < x.size(); i++) {
+    //     auto n=std::make_shared<Node>(y, x[i].node->requires_grad, Op::MOE, "moe"); 
+    //     t.push_back(n);
+    // }
+    //     return t;
+    // }
+
+  
+
+  
+
     Value dyntanh(const Value& x, float a, float b, float g){ 
         Tensor h = x.val()*a;
         Tensor y = Tensor::tanh(h)*g + b; 
-        Value A = param(a*Tensor::ones_like(x.val()), "a");
-        Value B = param(b*Tensor::ones_like(x.val()), "b");
-        Value G = param(g*Tensor::ones_like(x.val()), "g");
-        auto n=std::make_shared<Node>(y, x.node->requires_grad|| A.node->requires_grad|| B.node->requires_grad||G.node->requires_grad, Op::MeanAll, "meanall"); 
+       // std::cout<<"a="<<a<<",b="<<b<<",g="<<g<<std::endl;
+        Value A = param((a*Tensor::ones_like(x.val())), "a");
+        Value B = param((b*Tensor::ones_like(x.val())), "b");
+        Value G = param((g*Tensor::ones_like(x.val())), "g");
+        auto n=std::make_shared<Node>(y, x.node->requires_grad|| A.node->requires_grad|| B.node->requires_grad||G.node->requires_grad, Op::Dyntanh, "dyntanh"); 
         n->inputs={x.node, A.node, B.node, G.node}; 
+        // debug::print_tensor("h",h);
+        // debug::print_tensor("y",y);
+        // debug::print_tensor("x",x.val());
+        // debug::print_tensor("a",A.val());
+        // debug::print_tensor("b",B.val());
+        // debug::print_tensor("g",G.val());   
         n->tape.push_back(std::make_shared<Tensor>(h));
         ag::debug::on_node_created(n);  
         return Value(n);

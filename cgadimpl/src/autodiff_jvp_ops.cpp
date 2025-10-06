@@ -30,6 +30,10 @@ Tensor jvp_Exp(Node* n, const std::function<const Tensor&(Node*)>& t){
 Tensor jvp_Log(Node* n, const std::function<const Tensor&(Node*)>& t){
     Node* X=n->inputs[0].get(); return T(t,X) / X->value;
 }
+
+Tensor jvp_MOE(Node* n, const std::function<const Tensor&(Node*)>& t){
+    Node* X=n->inputs[0].get(); return T(t,X) * (Tensor::cos(X->value)-(X->value*Tensor::sin(X->value)));
+}
 Tensor jvp_Tanh(Node* n, const std::function<const Tensor&(Node*)>& t){
     Node* X=n->inputs[0].get(); Tensor th=n->value, one=Tensor::ones_like(th);
     return T(t,X) * (one - th*th);

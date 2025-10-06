@@ -198,17 +198,17 @@ void vjp_Attention(Node* n, const Tensor& gy){
     Tensor dL_dq = Tensor::matmul(dL_dg, k);
     Tensor dL_dk = Tensor::matmul(Tensor::transpose(dL_dg), q);
 
-    // q = A B
-    Tensor dL_dA_q = Tensor::matmul(dL_dq, Tensor::transpose(B->value));
-    Tensor dL_dB   = Tensor::matmul(Tensor::transpose(A->value), dL_dq)* scale;;
+// q = A B^T
+Tensor dL_dA_q = Tensor::matmul(dL_dq, B->value) * scale;
+Tensor dL_dB   = Tensor::matmul(Tensor::transpose(dL_dq), A->value) * scale;
 
-    // k = A C
-    Tensor dL_dA_k = Tensor::matmul(dL_dk, Tensor::transpose(C->value));
-    Tensor dL_dC   = Tensor::matmul(Tensor::transpose(A->value), dL_dk)* scale;
+// k = A C^T
+Tensor dL_dA_k = Tensor::matmul(dL_dk, C->value) * scale;
+Tensor dL_dC   = Tensor::matmul(Tensor::transpose(dL_dk), A->value) * scale;
 
-    // v = A D
-    Tensor dL_dA_v = Tensor::matmul(dL_dv, Tensor::transpose(D->value));
-    Tensor dL_dD   = Tensor::matmul(Tensor::transpose(A->value), dL_dv);
+// v = A D^T
+Tensor dL_dA_v = Tensor::matmul(dL_dv, D->value);
+Tensor dL_dD   = Tensor::matmul(Tensor::transpose(dL_dv), A->value);
 
     // combine A contributions
     Tensor dL_dA = dL_dA_q + dL_dA_k + dL_dA_v;
@@ -219,11 +219,12 @@ void vjp_Attention(Node* n, const Tensor& gy){
     if (C->requires_grad) C->grad.add_(dL_dC);
     if (D->requires_grad) D->grad.add_(dL_dD);
 
+
 }
 
 
 void vjp_AlibiAttention(Node* n, const Tensor& gy){
-    Node* A = n->inputs[0].get();
+        Node* A = n->inputs[0].get();
     Node* B = n->inputs[1].get();
     Node* C = n->inputs[2].get();
     Node* D = n->inputs[3].get();
@@ -251,17 +252,17 @@ void vjp_AlibiAttention(Node* n, const Tensor& gy){
     Tensor dL_dq = Tensor::matmul(dL_dg, k);
     Tensor dL_dk = Tensor::matmul(Tensor::transpose(dL_dg), q);
 
-    // q = A B
-    Tensor dL_dA_q = Tensor::matmul(dL_dq, Tensor::transpose(B->value));
-    Tensor dL_dB   = Tensor::matmul(Tensor::transpose(A->value), dL_dq)* scale;;
+// q = A B^T
+Tensor dL_dA_q = Tensor::matmul(dL_dq, B->value) * scale;
+Tensor dL_dB   = Tensor::matmul(Tensor::transpose(dL_dq), A->value) * scale;
 
-    // k = A C
-    Tensor dL_dA_k = Tensor::matmul(dL_dk, Tensor::transpose(C->value));
-    Tensor dL_dC   = Tensor::matmul(Tensor::transpose(A->value), dL_dk)* scale;
+// k = A C^T
+Tensor dL_dA_k = Tensor::matmul(dL_dk, C->value) * scale;
+Tensor dL_dC   = Tensor::matmul(Tensor::transpose(dL_dk), A->value) * scale;
 
-    // v = A D
-    Tensor dL_dA_v = Tensor::matmul(dL_dv, Tensor::transpose(D->value));
-    Tensor dL_dD   = Tensor::matmul(Tensor::transpose(A->value), dL_dv);
+// v = A D^T
+Tensor dL_dA_v = Tensor::matmul(dL_dv, D->value);
+Tensor dL_dD   = Tensor::matmul(Tensor::transpose(dL_dv), A->value);
 
     // combine A contributions
     Tensor dL_dA = dL_dA_q + dL_dA_k + dL_dA_v;
@@ -271,6 +272,23 @@ void vjp_AlibiAttention(Node* n, const Tensor& gy){
     if (B->requires_grad) B->grad.add_(dL_dB);
     if (C->requires_grad) C->grad.add_(dL_dC);
     if (D->requires_grad) D->grad.add_(dL_dD);
+
+}
+
+void vjp_MOE(Node* n, const Tensor& gy){
+    Node* X = n->inputs[0].get();
+    Node* W = n->inputs[1].get();
+    Node* B = n->inputs[2].get();
+
+    Tensor y = Tensor::matmul(X->value, Tensor::transpose(W->value)) + B->value; 
+
+    Tensor dL_dB = gy;
+    Tensor dL_dW = Tensor::matmul(Tensor::transpose(gy), X->value);
+    Tensor dL_dX = Tensor::matmul(gy, W->value);
+
+    if (X->requires_grad) X->grad.add_(dL_dX);
+    if (W->requires_grad) W->grad.add_(dL_dW);
+    if (B->requires_grad) B->grad.add_(dL_dB);
 
 }
 
@@ -426,13 +444,24 @@ void vjp_Dyntanh(Node* n, const Tensor& gy){
     Node* A = n->inputs[1].get(); 
     Node* B = n->inputs[2].get(); 
     Node* G = n->inputs[3].get();
+    n->value;
 
 
 
         if (X->requires_grad) X->grad.add_(gy*Tensor::sech(X->value*A->value)*Tensor::sech(X->value*A->value)*A->value*G->value); 
-    if (A->requires_grad) A->grad.add_(gy*Tensor::sech(X->value*A->value)*Tensor::sech(X->value*A->value)*X->value*G->value);
-    if (B->requires_grad) B->grad.add_(gy);
-    if (G->requires_grad) G->grad.add_(gy*Tensor::tanh(*(n->tape.back()))   );
+    if (A->requires_grad) A->grad.floadd_(Tensor::sum_all(gy*Tensor::sech(X->value*A->value)*Tensor::sech(X->value*A->value)*X->value*G->value));
+    if (B->requires_grad) B->grad.floadd_(Tensor::sum_all(gy));
+    if (G->requires_grad) G->grad.floadd_(Tensor::sum_all(gy*Tensor::tanh(*(n->tape.back())) )  );
+
+
+    // debug::print_tensor("Xgrad",X->grad);
+    // debug::print_tensor("Agrad",A->grad);
+    // debug::print_tensor("Bgrad",B->grad);
+    // debug::print_tensor("Ggrad",G->grad);   
+    // debug::print_tensor("Xval",X->value);
+    // debug::print_tensor("Aval",A->value);
+    // debug::print_tensor("Gval",G->value);
+    // debug::print_tensor("Bval",B->value);
 }
 
 // ----- reductions -----

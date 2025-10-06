@@ -73,6 +73,11 @@ for(std::size_t i=0;i<d.size();++i) d[i]+=g.d[i];
 return *this;
 }
 
+Tensor& Tensor::floadd_(const Tensor& g){
+for(std::size_t i=0;i<d.size();++i) d[i]+=g.d[i];
+return *this;
+}
+
 
 float Tensor::sum_scalar() const { float s=0.f; for(float x: d) s+=x; return s; }
 Tensor Tensor::sum_all(const Tensor& X){ Tensor y(1,1); y(0,0) = X.sum_scalar(); return y; }
@@ -105,6 +110,17 @@ for(int i=0;i<R;++i){ int ia = pick(i,a.r), ib = pick(i,b.r);
     }
 }
 return y; }
+
+
+
+
+
+
+
+
+
+
+
 Tensor operator-(const Tensor& x){ Tensor y(x.r,x.c); for(std::size_t i=0;i<x.d.size();++i) y.d[i] = -x.d[i]; return y; }
 // ...existing code...
 Tensor operator*(const Tensor& a, float s){ Tensor y(a.r,a.c); for(std::size_t i=0;i<a.d.size();++i) y.d[i]=a.d[i]*s; return y; }
@@ -118,7 +134,15 @@ Tensor Tensor::relu_mask(const Tensor& x){ Tensor m(x.r,x.c); for(std::size_t i=
 Tensor Tensor::abs(const Tensor& x){ Tensor m(x.r,x.c); for(std::size_t i=0;i<x.d.size();++i) m.d[i] = x.d[i] >= 0.f ? x.d[i] : -x.d[i]; return m; }
 Tensor Tensor::sign(const Tensor& x){ Tensor m(x.r,x.c); for(std::size_t i=0;i<x.d.size();++i) m.d[i] = x.d[i] >= 0.f ? 1.f : -1.f; return m; }
 
+// Tensor dmul(const std::vector<Tensor>a, const Tensor& b) {
 
+//     Tensor y(a.size(), b.cols());
+    
+//     for (int i = 0; i < a.size(); i++) {
+//         y=y+(a[i]*b);
+//     }
+//     return y;
+// }
 
 Tensor Tensor::transpose(const Tensor& x){ Tensor y(x.c, x.r); for(int i=0;i<x.r;++i) for(int j=0;j<x.c;++j) y(j,i)=x(i,j); return y; }
 Tensor Tensor::alibi(int rows, int cols, float m) {
@@ -139,6 +163,9 @@ for(int i=0;i<G.r;++i){ int oi = (like.r==1?0:i);
 }
 return out;
 }
+
+
+
 
 
 Tensor Tensor::matmul(const Tensor& A, const Tensor& B){ if(A.c!=B.r) throw std::runtime_error("matmul: inner dim mismatch"); Tensor Y(A.r, B.c);

@@ -73,6 +73,8 @@ static Tensor reduce_to(const Tensor& G, const Tensor& like);
 static Tensor floten(float q);
 static Tensor alibi(int rows, int cols, float m); // m = slope factor
 
+static Tensor dmul(const std::vector<Tensor>a, const Tensor& b);
+
 // elementwise unary
 static Tensor exp(const Tensor& x);
 static Tensor log(const Tensor& x);
@@ -97,6 +99,8 @@ friend Tensor operator/(const Tensor& a, const Tensor& b);
 // rowwise reductions (produce [R,1])
 static Tensor row_sum(const Tensor& X);
 static Tensor row_max(const Tensor& X);
+
+Tensor& floadd_(const Tensor& g);
 
 
 // softmax family (rowwise)

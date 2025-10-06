@@ -54,6 +54,10 @@ Value logsumexp_row(const Value& z); // [B,C] -> [B,1]
 Value laynor(const Value& x);
 Value alibiatt(const Value& a, const Value& b, const Value& c, const Value& d, float m); // m = max seq len
 
+Value moewe(const Value& x, const Value& w, const Value& b);
+
+Value moesu(const std::vector<Value>& x, const Value& w); // mixture of experts with shared weights and bias
+
 // composite loss (one-hot targets)
 Value cross_entropy_with_logits(const Value& logits, const Value& onehot);
 Value kldivergence(const Value& logits, const Value& onehot);
