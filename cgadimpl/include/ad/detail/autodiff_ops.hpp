@@ -3,6 +3,7 @@
 #include "ad/graph.hpp"
 #include "ad/schema.hpp"
 #include "tensor.hpp"
+#include "ad/kernels_api.hpp"
 
 namespace ag {
 
