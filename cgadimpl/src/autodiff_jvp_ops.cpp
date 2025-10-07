@@ -47,6 +47,10 @@ Tensor jvp_RELUAtt(Node* n, const std::function<const Tensor&(Node*)>& t){
     return Tensor();
 }
 
+Tensor jvp_SigAtt(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
 
 
 

@@ -143,6 +143,29 @@ Value reluatt(const Value& a, const Value& b, const Value& c, const Value& d){
     }
 
 
+    Value sigatt(const Value& a, const Value& b, const Value& c, const Value& d){ 
+    Tensor q = Tensor::matmul(a.val(), Tensor::transpose(b.val())); 
+    Tensor k = Tensor::matmul(a.val(), Tensor::transpose(c.val())); 
+    Tensor v = Tensor::matmul(a.val(), Tensor::transpose(d.val()));
+    Tensor g = Tensor::matmul(q, Tensor::transpose(k))*(1.f/sqrt(float(k.cols()))) ;
+    Tensor s = Tensor::sigmoid(g);
+    Tensor y = Tensor::matmul(s, v);
+    debug::print_tensor("q",q);
+    debug::print_tensor("k",k);
+    debug::print_tensor("v",v);
+    debug::print_tensor("g",g);
+    debug::print_tensor("s",s);
+    debug::print_tensor("y",y);
+    auto n = std::make_shared<Node>(y, a.node->requires_grad || b.node->requires_grad || c.node->requires_grad || d.node->requires_grad, Op::SigAtt, "sigatt"); 
+    n->inputs = {a.node, b.node, c.node, d.node};
+    n->tape.resize(4);
+    n->tape={std::make_shared<Tensor>(q), std::make_shared<Tensor>(k), std::make_shared<Tensor>(v), std::make_shared<Tensor>(s)};
+    ag::debug::on_node_created(n); 
+    return Value(n); 
+    }
+
+
+
 
 
     Value swiglu(const Value& x, const Value& a, const Value& b, const Value& c, const Value& d){ 

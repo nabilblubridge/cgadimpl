@@ -40,4 +40,4 @@ OP(AlibiAttention,      3,    "alibiattention") // verified it works in backward
 OP(RealRMSNorm,      1,    "rmsnorm") // verified it works in backward and forward
 OP(MOE,      3,    "moe") // mixture of experts with weights and bias
 OP(RELUAtt,     4,    "reluatt") // relu attention
-
+OP(SigAtt,    4,    "sigatt") // sigmoid attention

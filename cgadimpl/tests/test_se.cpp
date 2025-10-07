@@ -123,7 +123,7 @@ auto d = param(D, "D");
 
 
 
-auto y = reluatt(a, b, c, d); // scalar, tests broadcasting [B,2] + [1,2]
+auto y = sigatt(a, b, c, d); // scalar, tests broadcasting [B,2] + [1,2]
 std::cout << "y = " << y.val() << endl;
 std::cout << "dL/dA = " << a.grad()
 <<","<< endl<< "dL/dB = " << b.grad()<<","<< endl

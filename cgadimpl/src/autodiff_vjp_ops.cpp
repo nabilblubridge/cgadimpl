@@ -279,6 +279,61 @@ Tensor dL_dD   = Tensor::matmul(Tensor::transpose(dL_dv), A->value);
 }
 
 
+void vjp_SigAtt(Node* n, const Tensor& gy){
+    Node* A = n->inputs[0].get();
+    Node* B = n->inputs[1].get();
+    Node* C = n->inputs[2].get();
+    Node* D = n->inputs[3].get();
+    
+    Tensor q = n->tape[0] ? *n->tape[0] : Tensor();
+    Tensor k = n->tape[1] ? *n->tape[1] : Tensor();
+    Tensor v = n->tape[2] ? *n->tape[2] : Tensor();
+    float scale = 1.0f / std::sqrt(float(k.cols()));
+    Tensor s = n->tape[3] ? *n->tape[3] : Tensor();
+
+    // ---- Backprop chain ----
+
+    // y = s v
+    Tensor dL_ds = Tensor::matmul(gy, Tensor::transpose(v));   // [B x B]
+    Tensor dL_dv = Tensor::matmul(Tensor::transpose(s), gy);   // [A x D]
+
+    // s = softmax(g)
+    Tensor dL_dg; 
+    {
+        Tensor dot = ( s * (Tensor::ones_like(s)-s))* dL_ds;
+        
+        dL_dg = dot;
+    }
+
+    // g = q k^T
+    Tensor dL_dq = Tensor::matmul(dL_dg, k);
+    Tensor dL_dk = Tensor::matmul(Tensor::transpose(dL_dg), q);
+
+// q = A B^T
+Tensor dL_dA_q = Tensor::matmul(dL_dq, B->value) * scale;
+Tensor dL_dB   = Tensor::matmul(Tensor::transpose(dL_dq), A->value) * scale;
+
+// k = A C^T
+Tensor dL_dA_k = Tensor::matmul(dL_dk, C->value) * scale;
+Tensor dL_dC   = Tensor::matmul(Tensor::transpose(dL_dk), A->value) * scale;
+
+// v = A D^T
+Tensor dL_dA_v = Tensor::matmul(dL_dv, D->value);
+Tensor dL_dD   = Tensor::matmul(Tensor::transpose(dL_dv), A->value);
+
+    // combine A contributions
+    Tensor dL_dA = dL_dA_q + dL_dA_k + dL_dA_v;
+
+    // ---- Accumulate ----
+    if (A->requires_grad) A->grad.add_(dL_dA);
+    if (B->requires_grad) B->grad.add_(dL_dB);
+    if (C->requires_grad) C->grad.add_(dL_dC);
+    if (D->requires_grad) D->grad.add_(dL_dD);
+
+
+}
+
+
 void vjp_AlibiAttention(Node* n, const Tensor& gy){
         Node* A = n->inputs[0].get();
     Node* B = n->inputs[1].get();
