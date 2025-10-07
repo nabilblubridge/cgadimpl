@@ -93,10 +93,17 @@ namespace ag {
     Tensor q = Tensor::matmul(a.val(), Tensor::transpose(b.val())); 
     Tensor k = Tensor::matmul(a.val(), Tensor::transpose(c.val())); 
     Tensor v = Tensor::matmul(a.val(), Tensor::transpose(d.val()));
+    debug::print_tensor("a", a.val());
+    debug::print_tensor("b", b.val());
+    debug::print_tensor("c", c.val());
+    debug::print_tensor("d", d.val());
     
     Tensor logits = Tensor::matmul(q, Tensor::transpose(k) * (1.f / sqrt(float(k.cols()))));
+    debug::print_tensor("logits", logits);
     Tensor bias   = Tensor::alibi(logits.rows(), logits.cols(), m);
     Tensor g      = logits + bias;
+    debug::print_tensor("bias", bias);
+    debug::print_tensor("g", g);
 
     Tensor s = Tensor::softmax_row(g);
     Tensor y = Tensor::matmul(s, v);
@@ -140,9 +147,10 @@ Value reluatt(const Value& a, const Value& b, const Value& c, const Value& d){
 
     Value swiglu(const Value& x, const Value& a, const Value& b, const Value& c, const Value& d){ 
     Tensor y = Tensor::matmul(x.val(), Tensor::transpose(a.val()))+b.val(); 
-    debug::print_tensor("y",y);
+    debug::print_tensor("yswi",Tensor::matmul(x.val(), Tensor::transpose(a.val())));
     Tensor q = y*Tensor::sigmoid(y); 
     Tensor w = q*(Tensor::matmul(x.val(), Tensor::transpose(c.val())) + d.val());
+    debug::print_tensor("wswi",w);
     auto n=std::make_shared<Node>(w, x.node->requires_grad || a.node->requires_grad || b.node->requires_grad || c.node->requires_grad || d.node->requires_grad, Op::SWIGLU, "swiglu"); 
     n->inputs={x.node, a.node, b.node, c.node, d.node};
     ag::debug::on_node_created(n); 

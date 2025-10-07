@@ -291,6 +291,10 @@ void vjp_AlibiAttention(Node* n, const Tensor& gy){
     float scale = 1.0f / std::sqrt(float(k.cols()));
     Tensor s = n->tape[3] ? *n->tape[3] : Tensor();
 
+    debug::print_tensor("q",q);
+    debug::print_tensor("k",k);
+    debug::print_tensor("v",v);
+
     // ---- Backprop chain ----
 
     // y = s v

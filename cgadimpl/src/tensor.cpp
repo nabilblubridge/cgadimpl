@@ -149,7 +149,8 @@ Tensor Tensor::alibi(int rows, int cols, float m) {
     Tensor bias(rows, cols);
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            bias(i,j) = m * -(i - j);
+            if (j <= i)
+            {bias(i,j) = m * -(i - j);}
         }
     }
     return bias;
