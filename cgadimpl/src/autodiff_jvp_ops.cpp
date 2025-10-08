@@ -92,7 +92,13 @@ Tensor jvp_MatMul(Node* n, const std::function<const Tensor&(Node*)>& t){
     return Tensor::matmul(T(t,A), B->value) + Tensor::matmul(A->value, T(t,B));
 }
 Tensor jvp_FMA(Node* n, const std::function<const Tensor&(Node*)>& t){
-    return Tensor();
+        Node* A=n->inputs[0].get(); Node* B=n->inputs[1].get(); 
+    return Tensor::matmul(T(t,A), Tensor::transpose( B->value)) + Tensor::matmul(A->value, T(t,B))+ T(t,n->inputs[2].get());
+}
+
+Tensor jvp_Linear(Node* n, const std::function<const Tensor&(Node*)>& t){
+        Node* A=n->inputs[0].get(); Node* B=n->inputs[1].get(); 
+    return Tensor::matmul(T(t,A), B->value) + Tensor::matmul(A->value, T(t,B))+ T(t,n->inputs[2].get());
 }
 
 Tensor jvp_Attention(Node* n, const std::function<const Tensor
@@ -101,11 +107,29 @@ Tensor jvp_Attention(Node* n, const std::function<const Tensor
 }
 
 Tensor jvp_MSELoss(Node* n, const std::function<const Tensor&(Node*)>& t){
-    return Tensor();
+    Node* Z = n->inputs[0].get();
+    Node* Y = n->inputs[1].get();
+    int B = Z->value.rows(), C = Z->value.cols();
+    Tensor diff = Z->value - Y->value;
+    Tensor gZ = diff * (2.0f / float(B * C));
+    Tensor gY = -diff * (2.0f / float(B * C));
+    float dotY = (gY * t(Y)).sum_scalar();
+        float dotZ = (gZ * t(Z)).sum_scalar();
+
+    Tensor out(1,1); out(0,0) = dotZ + dotY; return out;
 }
 
 Tensor jvp_MAELoss(Node* n, const std::function<const Tensor&(Node*)>& t){
-    return Tensor();
+    Node* Z = n->inputs[0].get();
+    Node* Y = n->inputs[1].get();
+    int B = Z->value.rows(), C = Z->value.cols();
+    Tensor diff = Tensor::sign(Z->value - Y->value);
+    Tensor gZ = diff * (1.0f / float(B * C));
+    Tensor gY = -diff * (1.0f / float(B * C));
+    float dotY = (gY * t(Y)).sum_scalar();
+        float dotZ = (gZ * t(Z)).sum_scalar();
+
+    Tensor out(1,1); out(0,0) = dotZ + dotY; return out;
 }
 
 Tensor jvp_GCU(Node* n, const std::function<const Tensor&(Node*)>& t){
@@ -207,8 +231,15 @@ Tensor jvp_CeWithLogits(Node* n, const std::function<const Tensor&(Node*)>& t){
 }
 
 Tensor jvp_KLDivergence(Node* n, const std::function<const Tensor&(Node*)>& t){
-    // leave it
-    return Tensor();
+    Node* Z=n->inputs[0].get(); Node* Y=n->inputs[1].get(); int B=Z->value.rows();
+    Tensor sm = Tensor::softmax_row(Z->value);
+    Tensor gZ = (sm - Y->value) * (1.0f/float(B));
+    float dotZ = (gZ * t(Z)).sum_scalar();
+    Tensor lse = Tensor::logsumexp_row(Z->value);
+    Tensor lsm = Z->value - lse;
+    Tensor gY  = (Tensor::log(Y->value) + Tensor::ones_like(Y->value) - lsm) * (1.0f / float(B));
+    float dotY = (gY * t(Y)).sum_scalar();
+    Tensor out(1,1); out(0,0) = dotZ + dotY; return out;
 }
 
 Tensor jvp_Leaf(Node*, const std::function<const Tensor&(Node*)>&){

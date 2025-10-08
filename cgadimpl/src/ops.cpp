@@ -73,6 +73,14 @@ namespace ag {
     }
 
 
+        Value linear(const Value& a, const Value& b, const Value& c){ 
+        Tensor y = Tensor::matmul(a.val(), Tensor::transpose(b.val()))+c.val(); 
+        auto n = std::make_shared<Node>(y, a.node->requires_grad || b.node->requires_grad || c.node->requires_grad, Op::Linear, "linear"); 
+        n->inputs = {a.node, b.node, c.node}; ag::debug::on_node_created(n); 
+        return Value(n); 
+    }
+
+
     Value attention(const Value& a, const Value& b, const Value& c, const Value& d){ 
     Tensor q = Tensor::matmul(a.val(), Tensor::transpose(b.val())); 
     Tensor k = Tensor::matmul(a.val(), Tensor::transpose(c.val())); 

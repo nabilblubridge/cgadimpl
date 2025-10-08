@@ -57,6 +57,7 @@ Value alibiatt(const Value& a, const Value& b, const Value& c, const Value& d, f
 Value moewe(const Value& x, const Value& w, const Value& b);
 
 Value moesu(const std::vector<Value>& x, const Value& w); // mixture of experts with shared weights and bias
+Value linear(const Value& a, const Value& b, const Value& c);
 
 // composite loss (one-hot targets)
 Value cross_entropy_with_logits(const Value& logits, const Value& onehot);

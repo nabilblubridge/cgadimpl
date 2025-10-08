@@ -35,6 +35,19 @@ void vjp_FMA(Node* n, const Tensor& gy){
     if (C->requires_grad) C->grad.add_( rt(gy, C->value) );
 }
 
+
+void vjp_Linear(Node* n, const Tensor& gy){
+    Node* A = n->inputs[0].get(); Node* B = n->inputs[1].get(); Node* C = n->inputs[2].get();
+    debug::print_tensor("gy",gy);
+
+
+        if (A->requires_grad) A->grad.floadd_( Tensor::matmul(gy, Tensor::transpose(B->value)) );
+        debug::print_tensor("gy",gy);
+    if (B->requires_grad) B->grad.floadd_( Tensor::matmul((A->value), gy) );
+    debug::print_tensor("gy",gy);
+    if (C->requires_grad) C->grad.floadd_( rt(gy, C->value) );
+}
+
 void vjp_LayerNorm(Node* n, const Tensor& gy){
 
     Node* x = n->inputs[0].get();
