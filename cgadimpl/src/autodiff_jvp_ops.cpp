@@ -109,7 +109,7 @@ Tensor jvp_MAELoss(Node* n, const std::function<const Tensor&(Node*)>& t){
 }
 
 Tensor jvp_GCU(Node* n, const std::function<const Tensor&(Node*)>& t){
-    return Tensor();
+    Node* X=n->inputs[0].get(); return T(t,X) *  (Tensor::cos(X->value)-(X->value*Tensor::sin(X->value)));
 }
 
 Tensor jvp_Parcon(Node* n, const std::function<const Tensor&(Node*)>& t){
@@ -121,7 +121,7 @@ Tensor jvp_LiSHT(Node* n, const std::function<const Tensor&(Node*)>& t){
 }
 
 Tensor jvp_Transpose(Node* n, const std::function<const Tensor&(Node*)>& t){
-    return Tensor();
+    Node* X=n->inputs[0].get(); return Tensor::transpose(T(t,X));
 }
 
 Tensor jvp_SWIGLU(Node* n, const std::function<const Tensor&(Node*)>& t){
@@ -129,10 +129,10 @@ Tensor jvp_SWIGLU(Node* n, const std::function<const Tensor&(Node*)>& t){
 }
 
 Tensor jvp_Mish(Node* n, const std::function<const Tensor&(Node*)>& t){
-    return Tensor();
+    Node* X=n->inputs[0].get(); return T(t,X) *(Tensor::tanh( Tensor::softplus(X->value) )-(  (X->value*Tensor::sigmoid(X->value))  / (Tensor::cosh( Tensor::softplus(X->value)*Tensor::cosh( Tensor::softplus(X->value) ))    )            ));
 }
 Tensor jvp_Gaus(Node* n, const std::function<const Tensor&(Node*)>& t){
-    return Tensor();
+     Node* X=n->inputs[0].get(); return T(t,X) * -2*X->value*Tensor::exp(-1*X->value*X->value);
 }
 
 Tensor jvp_LayerNorm(Node* n, const std::function<const Tensor&(Node*)>& t){
@@ -140,7 +140,14 @@ Tensor jvp_LayerNorm(Node* n, const std::function<const Tensor&(Node*)>& t){
 }
 
 Tensor jvp_RMSNorm(Node* n, const std::function<const Tensor&(Node*)>& t){
-    return Tensor();
+    Node* X = n->inputs[0].get();
+    Tensor rms = *n->tape[0];
+    Tensor y   = *n->tape[1];   // normalized x
+
+    // upstream dot
+    Tensor dot = Tensor::row_sum(T(t,X) * y);  // [batch x 1]
+
+   return  (T(t,X) / rms) - (y * dot / (rms*X->value.cols()));
 }
 
 Tensor jvp_Dyntanh(Node* n, const std::function<const Tensor&(Node*)>& t){
