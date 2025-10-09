@@ -1,6 +1,7 @@
 #include "ad/autodiff_ops.hpp"
 #include <cmath>
 #include "ad/debug.hpp"
+#include "ad/ops.hpp"
 
 namespace ag {
 namespace {
@@ -427,6 +428,8 @@ void vjp_SWIGLU(Node* n, const Tensor& gy){
     Node* B = n->inputs[2].get();
     Node* C = n->inputs[3].get();
     Node* D = n->inputs[4].get();
+
+    auto Q = add((Value)n->inputs[2], Value{n->inputs[3]});
 
     Tensor y = Tensor::matmul(X->value, Tensor::transpose(A->value)) + B->value;
     Tensor q = y * Tensor::sigmoid(y);
