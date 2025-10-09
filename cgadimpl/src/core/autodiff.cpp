@@ -1,9 +1,10 @@
 // src/autodiff.cpp
 #include <unordered_map>
+#include <stdexcept>
 #include "ad/autodiff.hpp"
 #include "ad/detail/autodiff_ops.hpp"
 #include "ad/debug.hpp"
-
+#include <ad/checkpoint.hpp>
 namespace ag {
 
 void zero_grad(const Value& root){
@@ -29,6 +30,11 @@ void backward(const Value& root, const Tensor* grad_seed){
 
         ag::debug::on_backprop_step(n, gy); // (optional) prints one line per node
 
+        if (n->is_checkpoint && n->value.size() == 0) {
+        if (!ag::checkpoint_impl::recompute_subgraph(n->shared_from_this())) {
+            throw std::runtime_error("autodiff: failed to recompute checkpointed node during backward");
+        }
+        }
         VjpFn fn = vjp_lookup(n->op);
         if (fn) fn(n, gy); // handler accumulates into parents
     }
