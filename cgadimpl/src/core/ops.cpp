@@ -16,27 +16,27 @@ namespace ag {
 
 
     Value add(const Value& a, const Value& b){ 
-        return Value(add(a.node, b.node)); 
+        return Value(add_nodeops(a.node, b.node)); 
     }
 
     Value sub(const Value& a, const Value& b){ 
         
-        return Value(sub(a.node, b.node)); 
+        return Value(sub_nodeops(a.node, b.node)); 
     }
 
 
 
     Value mul(const Value& a, const Value& b){ 
-        return Value(mul(a.node, b.node)); 
+        return Value(mul_nodeops(a.node, b.node)); 
     }
 
     Value flomul(const Value& a, float b){ 
-        return Value(flomul(a.node, b));
+        return Value(flomul_nodeops(a.node, b));
     }
 
     Value relu(const Value& x){ 
       
-        return Value(relu(x.node));
+        return Value(relu_nodeops(x.node));
     }
 
 
@@ -44,27 +44,27 @@ namespace ag {
 
 
     Value matmul(const Value& a, const Value& b){ 
-         return Value(matmul(a.node, b.node)); 
+         return Value(matmul_nodeops(a.node, b.node)); 
     }
 
     Value fmab(const Value& a, const Value& b, const Value& c){ 
-        return Value(fmab(a.node, b.node, c.node)); 
+        return Value(fmab_nodeops(a.node, b.node, c.node)); 
     }
 
 
     Value attention(const Value& a, const Value& b, const Value& c, const Value& d){ 
-    return Value(attention(a.node, b.node, c.node, d.node));
+    return Value(attention_nodeops(a.node, b.node, c.node, d.node));
     }
 
 
     Value alibiatt(const Value& a, const Value& b, const Value& c, const Value& d, float m) { 
-    return Value(alibiatt(a.node, b.node, c.node, d.node, m));
+    return Value(alibiatt_nodeops(a.node, b.node, c.node, d.node, m));
 }
 
 
 
     Value swiglu(const Value& x, const Value& a, const Value& b, const Value& c, const Value& d){ 
-    return Value(swiglu(x.node, a.node, b.node, c.node, d.node));
+    return Value(swiglu_nodeops(x.node, a.node, b.node, c.node, d.node));
     }
 
 
@@ -74,135 +74,135 @@ namespace ag {
 
 
     Value sum(const Value& x){ 
-        return Value(ag::sum(x.node));
+        return Value(ag::sum_nodeops(x.node));
     }
 
     Value transpose(const Value& x){ 
-        return Value(transpose(x.node));
+        return Value(transpose_nodeops(x.node));
     }
 
     Value exp(const Value& x){ 
-        return Value(exp(x.node));
+        return Value(exp_nodeops(x.node));
     }
     
     Value log(const Value& x){ 
-        return Value(log(x.node));
+        return Value(log_nodeops(x.node));
     }
 
 
     Value mish(const Value& x){ 
-        return Value(mish(x.node));
+        return Value(mish_nodeops(x.node));
     }
     
     Value tanh(const Value& x){ 
-        return Value(tanh(x.node));
+        return Value(tanh_nodeops(x.node));
     }
     
     Value sigmoid(const Value& x){ 
-        return Value(sigmoid(x.node));
+        return Value(sigmoid_nodeops(x.node));
     }
     
     Value softplus(const Value& x){ 
-        return Value(softplus(x.node));
+        return Value(softplus_nodeops(x.node));
     }
 
     Value gaus(const Value& x){ 
-        return Value(gaus(x.node));
+        return Value(gaus_nodeops(x.node));
     }
     
     Value gelu(const Value& x){ 
-        return Value(gelu(x.node));
+        return Value(gelu_nodeops(x.node));
     }
 
 
 
     Value gcu(const Value& x){ 
-        return Value(gcu(x.node));
+        return Value(gcu_nodeops(x.node));
     }
     
     Value silu(const Value& x){ 
-        return Value(silu(x.node));
+        return Value(silu_nodeops(x.node));
     }
 
     Value parcon(const Value& x){ 
-        return Value(parcon(x.node));
+        return Value(parcon_nodeops(x.node));
     }
 
     Value lisht(const Value& x){ 
-        return Value(lisht(x.node));
+        return Value(lisht_nodeops(x.node));
     }
     
     Value leaky_relu(const Value& x, float alpha){ 
-        return Value(leaky_relu(x.node, alpha));
+        return Value(leaky_relu_nodeops(x.node, alpha));
     }
 
 
     Value rowsum(const Value& x){ 
-        return Value(rowsum(x.node));
+        return Value(rowsum_nodeops(x.node));
     }
     
     Value rowmax(const Value& x){ 
-        return Value(rowmax(x.node));
+        return Value(rowmax_nodeops(x.node));
     }
 
     Value rms(const Value& x){ 
-return Value(rms(x.node));
+return Value(rms_nodeops(x.node));
     }
 
     Value realrms(const Value& x, float g){ 
-return Value(realrms(x.node, g));
+return Value(realrms_nodeops(x.node, g));
     }
 
     Value laynor(const Value& x){ 
-        return Value(laynor(x.node));
+        return Value(laynor_nodeops(x.node));
     }
 
     Value relaynor(const Value& x, float b, float g){ 
-        return Value(relaynor(x.node, b, g));
+        return Value(relaynor_nodeops(x.node, b, g));
     }
     
     Value mean_all(const Value& x){ 
-        return Value(mean_all(x.node));
+        return Value(mean_all_nodeops(x.node));
     }
 
     Value dyntanh(const Value& x, float a, float b, float g){ 
-        return Value(dyntanh(x.node, a, b, g));
+        return Value(dyntanh_nodeops(x.node, a, b, g));
     }
     
     Value softmax_row(const Value& z){ 
-        return Value(softmax_row(z.node));
+        return Value(softmax_row_nodeops(z.node));
     }
     
     Value logsumexp_row(const Value& z){ 
-        return Value(logsumexp_row(z.node));
+        return Value(logsumexp_row_nodeops(z.node));
     }
 
 
     Value mambassm(const Value& z, const Value& a, const Value& b, const Value& c, const Value& d){ 
 
-        return Value(mambassm(z.node, a.node, b.node, c.node, d.node));
+        return Value(mambassm_nodeops(z.node, a.node, b.node, c.node, d.node));
 
         
     }
 
 
     Value cross_entropy_with_logits(const Value& logits, const Value& onehot){
-    // Stable CE = mean( -sum(onehot * (logits - logsumexp_row(logits))) )
-        return Value(cross_entropy_with_logits(logits.node, onehot.node));
+    // Stable CE = mean( -sum(onehot * _nodeops(logits - logsumexp_row_nodeops(logits))) )
+        return Value(cross_entropy_with_logits_nodeops(logits.node, onehot.node));
     }
 
 
     Value kldivergence(const Value& logits, const Value& onehot){
-        return Value(kldivergence(logits.node, onehot.node));
+        return Value(kldivergence_nodeops(logits.node, onehot.node));
     }
 
     Value mse_loss(const Value& pred, const Value& target) {
-    return Value(mse_loss(pred.node, target.node));
+    return Value(mse_loss_nodeops(pred.node, target.node));
 }
 
 
     Value mae_loss(const Value& pred, const Value& target) {
-    return Value(mae_loss(pred.node, target.node));
+    return Value(mae_loss_nodeops(pred.node, target.node));
 }
 
 Tensor forward_eval_node(const std::shared_ptr<Node> &node) {
@@ -275,6 +275,7 @@ Tensor forward_eval_node(const std::shared_ptr<Node> &node) {
             throw std::runtime_error("forward_eval_node: unsupported op for recompute");
     }
 }
+
 
 // ------------------------------------------------------------
 // Small adapter so checkpoint.cpp (which uses Node*) can link.

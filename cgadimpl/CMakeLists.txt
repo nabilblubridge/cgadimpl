@@ -204,6 +204,7 @@ else()
     src/nn/nn.cpp
     src/optimizer/optim.cpp
     src/tools/kernels_loader.cpp
+    src/core/nodeops.cpp
   )
 endif()
 
