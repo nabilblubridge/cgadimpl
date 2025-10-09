@@ -56,7 +56,7 @@ Value mean_all(const Value& x); // scalar
 Value softmax_row(const Value& z); // [B,C] -> [B,C]
 Value logsumexp_row(const Value& z); // [B,C] -> [B,1]
 Value laynor(const Value& x);
-Value alibiatt(const Value& a, const Value& b, const Value& c, const Value& d, float m); // m = max seq len
+Value alibiatt(const Value& a, const Value& b, const Value& c, const Value& d, float& m); // m = max seq len
 
 // composite loss (one-hot targets)
 Value cross_entropy_with_logits(const Value& logits, const Value& onehot);

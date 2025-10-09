@@ -11,7 +11,7 @@
 namespace ag {
 
 
-    std::shared_ptr<Node> add_nodeops(std::shared_ptr<Node>& a, std::shared_ptr<Node> b){ 
+    std::shared_ptr<Node> add_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b){ 
         Tensor y = a->value + b->value; 
         auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad, Op::Add, "+"); 
         n->inputs = {a, b}; 
@@ -108,7 +108,7 @@ namespace ag {
     }
 
 
-    std::shared_ptr<Node> alibiatt_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d, float m) { 
+    std::shared_ptr<Node> alibiatt_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d, float& m) { 
     Tensor q = Tensor::matmul(a->value, b->value); 
     Tensor k = Tensor::matmul(a->value, c->value); 
     Tensor v = Tensor::matmul(a->value, d->value);
@@ -308,7 +308,7 @@ n->inputs = {x};
 return n;
     }
 
-    std::shared_ptr<Node> realrms_nodeops(const std::shared_ptr<Node>& x, float g){ 
+    std::shared_ptr<Node> realrms_nodeops(const std::shared_ptr<Node>& x, float& g){ 
 Tensor z = Tensor::row_sum(x->value*x->value) * (1.f/x->value.cols());
 Tensor q = Tensor::sqrt(z + 1e-8f);
 Tensor y = (x->value) / q;
@@ -437,7 +437,7 @@ return n;
     }
 
 
-     std::shared_ptr<Node> cross_entropy_with_logits(const std::shared_ptr<Node>& logits,const std::shared_ptr<Node>& onehot){
+     std::shared_ptr<Node> cross_entropy_with_logits_nodeops(const std::shared_ptr<Node>& logits,const std::shared_ptr<Node>& onehot){
     // Stable CE = mean( -sum(onehot * (logits - logsumexp_row(logits))) )
         Tensor Z = logits->value;
         Tensor Y = onehot->value;
@@ -457,7 +457,7 @@ return n;
     }
 
 
-    std::shared_ptr<Node> kldivergence(const std::shared_ptr<Node>& logits,const std::shared_ptr<Node>& onehot){
+    std::shared_ptr<Node> kldivergence_nodeops(const std::shared_ptr<Node>& logits,const std::shared_ptr<Node>& onehot){
     // Stable CE = mean( -sum(onehot * (logits - logsumexp_row(logits))) )
         Tensor Z = logits->value;
         Tensor Y = onehot->value;
