@@ -4,7 +4,7 @@
 #pragma once
 #include "ad/graph.hpp"
 #include "ad/checkpoint.hpp"
-
+#include "ad/nodeops.hpp"
 
 namespace ag {
 
