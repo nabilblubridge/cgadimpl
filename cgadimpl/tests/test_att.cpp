@@ -100,9 +100,9 @@ static inline ag::Value mse_loss(const ag::Value& pred, const ag::Value& target)
 int main(){
 using namespace std;
 using namespace ag;
-Tensor A = Tensor::randn(2,2);
+Tensor A = Tensor::randn(1,2);
 Tensor B = Tensor::randn(2,2);
-Tensor C = Tensor::randn(2,2);
+Tensor C = Tensor::randn(1,2);
 Tensor D = Tensor::randn(2,2);
 Tensor E = Tensor::randn(2,2);
 Tensor F = Tensor::randn(2,2);
@@ -127,9 +127,9 @@ auto k = param(K, "K");
 auto l = param(L, "L");
 
 
-auto q = alibiatt(rms(a), b, c, d, 0.125) + a; // scalar, tests broadcasting [B,2] + [1,2]
-auto p = swiglu(rms(q), e, f, g, h) + q;
-auto y = sum(fmab(rms(p), transpose(i), k));
+auto q = linear(a, b, c);
+auto p = q;
+auto y = q;
 
 // --- BEFORE backward ---
 std::cout << "Before backward:" << std::endl;

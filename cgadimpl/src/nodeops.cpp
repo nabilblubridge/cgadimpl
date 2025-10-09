@@ -1,20 +1,22 @@
 // =====================
-// file: src/ops.cpp
+// file: src/nodeops.cpp
 // =====================
 
 #include <iostream>
 #include "ad/ops.hpp"
 #include "ad/debug.hpp"
-#include "ad/nodeops.hpp"
 #include <math.h>
 
 
 namespace ag {
 
 
-    Value add(const Value& a, const Value& b){ 
-        
-        return Value(nodeadd(a.node, b.node)); 
+    Node nodeadd(const Node& a, const Node& b){ 
+        Tensor y = a.value + b.value; 
+        auto n = std::make_shared<Node>(y, a.requires_grad || b.requires_grad, Op::Add, "+"); 
+        n->inputs = {&a, &b}; 
+        ag::debug::on_node_created(n); 
+        return *n; 
     }
 
     Value sub(const Value& a, const Value& b){ 

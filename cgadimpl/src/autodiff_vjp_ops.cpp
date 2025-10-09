@@ -1,6 +1,7 @@
 #include "ad/autodiff_ops.hpp"
 #include <cmath>
 #include "ad/debug.hpp"
+#include "ad/ops.hpp"
 
 namespace ag {
 namespace {
@@ -33,6 +34,19 @@ void vjp_FMA(Node* n, const Tensor& gy){
         if (A->requires_grad) A->grad.add_( Tensor::matmul(gy, Tensor::transpose(B->value)) );
     if (B->requires_grad) B->grad.add_( Tensor::matmul(Tensor::transpose(A->value), gy) );
     if (C->requires_grad) C->grad.add_( rt(gy, C->value) );
+}
+
+
+void vjp_Linear(Node* n, const Tensor& gy){
+    Node* A = n->inputs[0].get(); Node* B = n->inputs[1].get(); Node* C = n->inputs[2].get();
+    debug::print_tensor("gy",gy);
+
+
+        if (A->requires_grad) A->grad.floadd_( Tensor::matmul(gy, Tensor::transpose(B->value)) );
+        debug::print_tensor("gy",gy);
+    if (B->requires_grad) B->grad.floadd_( Tensor::matmul((A->value), gy) );
+    debug::print_tensor("gy",gy);
+    if (C->requires_grad) C->grad.floadd_( rt(gy, C->value) );
 }
 
 void vjp_LayerNorm(Node* n, const Tensor& gy){
@@ -414,6 +428,8 @@ void vjp_SWIGLU(Node* n, const Tensor& gy){
     Node* B = n->inputs[2].get();
     Node* C = n->inputs[3].get();
     Node* D = n->inputs[4].get();
+
+    auto Q = add((Value)n->inputs[2], Value{n->inputs[3]});
 
     Tensor y = Tensor::matmul(X->value, Tensor::transpose(A->value)) + B->value;
     Tensor q = y * Tensor::sigmoid(y);
