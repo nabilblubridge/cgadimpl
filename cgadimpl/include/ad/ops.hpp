@@ -3,11 +3,14 @@
 // =====================
 #pragma once
 #include "ad/graph.hpp"
+#include "ad/checkpoint.hpp"
 
 
 namespace ag {
 
+struct CheckpointOptions;
 
+Value checkpoint(const Value &v, const CheckpointOptions &opts);
 
 Value add (const Value& a, const Value& b);
 Value sub (const Value& a, const Value& b);
@@ -62,6 +65,9 @@ Value fmab(const Value& a, const Value& b, const Value& c); // fused multiply-ad
 Value attention(const Value& a, const Value& b, const Value& c, const Value& d);
 Value mse_loss(const Value& pred, const Value& target);
 Value mae_loss(const Value& pred, const Value& target);
+
+
+Tensor forward_eval_node(Node* node);
 
 
 } // namespace ag
