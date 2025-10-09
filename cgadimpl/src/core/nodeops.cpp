@@ -11,7 +11,7 @@
 namespace ag {
 
 
-    std::shared_ptr<Node> nadd(std::shared_ptr<Node>& a, std::shared_ptr<Node> b){ 
+    std::shared_ptr<Node> add_nodeops(std::shared_ptr<Node>& a, std::shared_ptr<Node> b){ 
         Tensor y = a->value + b->value; 
         auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad, Op::Add, "+"); 
         n->inputs = {a, b}; 
@@ -19,7 +19,7 @@ namespace ag {
         return n; 
     }
 
-    std::shared_ptr<Node> sub(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b){ 
+    std::shared_ptr<Node> sub_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b){ 
         Tensor y = a->value - b->value; 
         auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad, Op::Sub, "-"); 
         n->inputs = {a, b}; 
@@ -29,7 +29,7 @@ namespace ag {
 
 
 
-    std::shared_ptr<Node> mul(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b){ 
+    std::shared_ptr<Node> mul_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b){ 
         Tensor y = a->value * b->value; 
         auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad, Op::Mul, "*"); 
         n->inputs = {a, b}; 
@@ -37,7 +37,7 @@ namespace ag {
         return n; 
     }
 
-    std::shared_ptr<Node> flomul(const std::shared_ptr<Node>& a, float b){ 
+    std::shared_ptr<Node> flomul_nodeops(const std::shared_ptr<Node>& a, float b){ 
         auto c = std::make_shared<Node>(b*Tensor::ones_like(a->value), false, Op::Leaf, "leaf");
         Tensor y = a->value * c->value; 
         auto n = std::make_shared<Node>(y, a->requires_grad || c->requires_grad, Op::Mul, "*"); 
@@ -46,7 +46,7 @@ namespace ag {
         return n; 
     }
 
-    std::shared_ptr<Node> relu(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> relu_nodeops(const std::shared_ptr<Node>& x){ 
         const Tensor& xin = x->value;
         Tensor y = Tensor::zeros_like(xin);
 
@@ -63,7 +63,7 @@ namespace ag {
 
 
 
-    std::shared_ptr<Node> matmul(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b){ 
+    std::shared_ptr<Node> matmul_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b){ 
          const Tensor& A = a->value;
          const Tensor& B = b->value;
 
@@ -84,7 +84,7 @@ namespace ag {
          return n;
     }
 
-    std::shared_ptr<Node> fmab(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c){ 
+    std::shared_ptr<Node> fmab_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c){ 
         Tensor y = Tensor::matmul(a->value, b->value)+c->value; 
         auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad || c->requires_grad, Op::FMA, "fmab"); 
         n->inputs = {a, b, c}; ag::debug::on_node_created(n); 
@@ -92,7 +92,7 @@ namespace ag {
     }
 
 
-    std::shared_ptr<Node> attention(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d){ 
+    std::shared_ptr<Node> attention_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d){ 
     Tensor q = Tensor::matmul(a->value, b->value); 
     Tensor k = Tensor::matmul(a->value, c->value); 
     Tensor v = Tensor::matmul(a->value, d->value);
@@ -108,7 +108,7 @@ namespace ag {
     }
 
 
-    std::shared_ptr<Node> alibiatt(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d, float m) { 
+    std::shared_ptr<Node> alibiatt_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d, float m) { 
     Tensor q = Tensor::matmul(a->value, b->value); 
     Tensor k = Tensor::matmul(a->value, c->value); 
     Tensor v = Tensor::matmul(a->value, d->value);
@@ -134,7 +134,7 @@ namespace ag {
 
 
 
-    std::shared_ptr<Node> swiglu(const std::shared_ptr<Node>& x, const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d){ 
+    std::shared_ptr<Node> swiglu_nodeops(const std::shared_ptr<Node>& x, const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d){ 
     Tensor y = Tensor::matmul(x->value, Tensor::transpose(a->value))+b->value; 
     debug::print_tensor("y",y);
     Tensor q = y*Tensor::sigmoid(y); 
@@ -151,7 +151,7 @@ namespace ag {
 
 
 
-    std::shared_ptr<Node> sum(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> sum_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = Tensor::sum_all(x->value); 
         auto n = std::make_shared<Node>(y, x->requires_grad, Op::Sum, "sum"); 
         n->inputs = {x}; 
@@ -159,7 +159,7 @@ namespace ag {
         return n; 
     }
 
-    std::shared_ptr<Node> transpose(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> transpose_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = Tensor::transpose(x->value); 
         auto n=std::make_shared<Node>(y, x->requires_grad, Op::Transpose, "exp"); 
         n->inputs={x}; 
@@ -167,7 +167,7 @@ namespace ag {
         return n;
     }
 
-    std::shared_ptr<Node> exp(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> exp_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = Tensor::exp(x->value); 
         auto n=std::make_shared<Node>(y, x->requires_grad, Op::Exp, "exp"); 
         n->inputs={x}; 
@@ -175,7 +175,7 @@ namespace ag {
         return n;
     }
     
-    std::shared_ptr<Node> log(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> log_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = Tensor::log(x->value); 
         auto n=std::make_shared<Node>(y, x->requires_grad, Op::Log, "log"); 
         n->inputs={x}; 
@@ -184,7 +184,7 @@ namespace ag {
     }
 
 
-    std::shared_ptr<Node> mish(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> mish_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = x->value * Tensor::tanh( Tensor::softplus(x->value) ); 
         auto n=std::make_shared<Node>(y, x->requires_grad, Op::Mish, "mish"); 
         n->inputs={x}; 
@@ -192,7 +192,7 @@ namespace ag {
         return n;
     }
     
-    std::shared_ptr<Node> tanh(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> tanh_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = Tensor::tanh(x->value); 
         auto n=std::make_shared<Node>(y, x->requires_grad, Op::Tanh, "tanh"); 
         n->inputs={x}; 
@@ -200,7 +200,7 @@ namespace ag {
         return n;
     }
     
-    std::shared_ptr<Node> sigmoid(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> sigmoid_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = Tensor::sigmoid(x->value); 
         auto n=std::make_shared<Node>(y, x->requires_grad, Op::Sigmoid, "sigmoid"); 
         n->inputs={x}; 
@@ -208,7 +208,7 @@ namespace ag {
         return n;
     }
     
-    std::shared_ptr<Node> softplus(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> softplus_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = Tensor::softplus(x->value); 
         auto n=std::make_shared<Node>(y, x->requires_grad, Op::Softplus, "softplus"); 
         n->inputs={x}; 
@@ -216,7 +216,7 @@ namespace ag {
         return n;
     }
 
-    std::shared_ptr<Node> gaus(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> gaus_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = Tensor::exp(-1*x->value*x->value); 
         auto n=std::make_shared<Node>(y, x->requires_grad, Op::Gaus, "gaus"); 
         n->inputs={x}; 
@@ -224,7 +224,7 @@ namespace ag {
         return n;
     }
     
-    std::shared_ptr<Node> gelu(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> gelu_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = Tensor::gelu_tanh(x->value); 
         auto n=std::make_shared<Node>(y, x->requires_grad, Op::GELU, "gelu"); 
         n->inputs={x}; 
@@ -234,7 +234,7 @@ namespace ag {
 
 
 
-    std::shared_ptr<Node> gcu(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> gcu_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = x->value * Tensor::cos(x->value);
         auto n=std::make_shared<Node>(y, x->requires_grad, Op::GCU, "gcu"); 
         n->inputs={x}; 
@@ -242,7 +242,7 @@ namespace ag {
         return n;
     }
     
-    std::shared_ptr<Node> silu(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> silu_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = Tensor::sigmoid(x->value); 
         y = y * x->value; 
         auto n=std::make_shared<Node>(y, x->requires_grad, Op::SiLU, "silu"); 
@@ -251,7 +251,7 @@ namespace ag {
         return n;
     }
 
-    std::shared_ptr<Node> parcon(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> parcon_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = x->value*(2*Tensor::ones_like(x->value)-x->value); 
 
         auto n=std::make_shared<Node>(y, x->requires_grad, Op::Parcon, "parcon"); 
@@ -260,7 +260,7 @@ namespace ag {
         return n;
     }
 
-    std::shared_ptr<Node> lisht(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> lisht_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = x->value*Tensor::tanh(x->value); 
 
         auto n=std::make_shared<Node>(y, x->requires_grad, Op::Parcon, "parcon"); 
@@ -269,7 +269,7 @@ namespace ag {
         return n;
     }
     
-    std::shared_ptr<Node> leaky_relu(const std::shared_ptr<Node>& x, float alpha){ 
+    std::shared_ptr<Node> leaky_relu_nodeops(const std::shared_ptr<Node>& x, float alpha){ 
         Tensor y = Tensor::leaky_relu(x->value, alpha); 
         Tensor aT(1,1); aT(0,0)=alpha; auto aC = constant(aT, "alpha"); 
         auto n=std::make_shared<Node>(y, x->requires_grad, Op::LeakyRelu, "leakyrelu");
@@ -279,7 +279,7 @@ namespace ag {
     }
 
 
-    std::shared_ptr<Node> rowsum(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> rowsum_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = Tensor::row_sum(x->value); 
         auto n=std::make_shared<Node>(y, x->requires_grad, Op::RowSum, "rowsum"); 
         n->inputs={x}; 
@@ -287,7 +287,7 @@ namespace ag {
         return n;
     }
     
-    std::shared_ptr<Node> rowmax(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> rowmax_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = Tensor::row_max(x->value); 
         auto n=std::make_shared<Node>(y, x->requires_grad, Op::RowMax, "rowmax"); 
         n->inputs={x}; 
@@ -295,7 +295,7 @@ namespace ag {
         return n;
     }
 
-    std::shared_ptr<Node> rms(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> rms_nodeops(const std::shared_ptr<Node>& x){ 
 Tensor z = Tensor::row_sum(x->value*x->value) * (1.f/x->value.cols());
 Tensor q = Tensor::sqrt(z + 1e-8f);
 Tensor y = x->value / q;
@@ -308,7 +308,7 @@ n->inputs = {x};
 return n;
     }
 
-    std::shared_ptr<Node> realrms(const std::shared_ptr<Node>& x, float g){ 
+    std::shared_ptr<Node> realrms_nodeops(const std::shared_ptr<Node>& x, float g){ 
 Tensor z = Tensor::row_sum(x->value*x->value) * (1.f/x->value.cols());
 Tensor q = Tensor::sqrt(z + 1e-8f);
 Tensor y = (x->value) / q;
@@ -322,7 +322,7 @@ n->inputs = {x, G};
 return n;
     }
 
-    std::shared_ptr<Node> laynor(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> laynor_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = Tensor::row_sum(x->value)*(1.f/x->value.cols()); 
       //  std::cout<<"q      "<<y<<std::endl;
         Tensor vrc = Tensor::row_sum(((x->value )- y)*((x->value )- y))*(1.f/x->value.cols());
@@ -340,7 +340,7 @@ return n;
         return n;
     }
 
-    std::shared_ptr<Node> relaynor(const std::shared_ptr<Node>& x, float& b, float& g){ 
+    std::shared_ptr<Node> relaynor_nodeops(const std::shared_ptr<Node>& x, float& b, float& g){ 
         Tensor y = Tensor::row_sum(x->value)*(1.f/x->value.cols()); 
       //  std::cout<<"q      "<<y<<std::endl;
         Tensor vrc = Tensor::row_sum(((x->value )- y)*((x->value )- y))*(1.f/x->value.cols());
@@ -363,7 +363,7 @@ return n;
         return n;
     }
     
-    std::shared_ptr<Node> mean_all(const std::shared_ptr<Node>& x){ 
+    std::shared_ptr<Node> mean_all_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = Tensor::mean_all(x->value); 
         auto n=std::make_shared<Node>(y, x->requires_grad, Op::MeanAll, "meanall"); 
         n->inputs={x}; 
@@ -371,7 +371,7 @@ return n;
         return n;
     }
 
-    std::shared_ptr<Node> dyntanh(const std::shared_ptr<Node>& x, float& a, float& b, float& g){ 
+    std::shared_ptr<Node> dyntanh_nodeops(const std::shared_ptr<Node>& x, float& a, float& b, float& g){ 
         Tensor h = x->value*a;
         Tensor y = Tensor::tanh(h)*g + b; 
         std::shared_ptr<Node> A = std::make_shared<Node>(a*Tensor::ones_like(x->value), false, Op::Leaf, "a");
@@ -384,7 +384,7 @@ return n;
         return n;
     }
     
-    std::shared_ptr<Node> softmax_row(const std::shared_ptr<Node>& z){ 
+    std::shared_ptr<Node> softmax_row_nodeops(const std::shared_ptr<Node>& z){ 
         Tensor y = Tensor::softmax_row(z->value); 
         auto n=std::make_shared<Node>(y, z->requires_grad, Op::SoftmaxRow, "softmax_row"); 
         n->inputs={z}; 
@@ -392,7 +392,7 @@ return n;
         return n;
     }
     
-    std::shared_ptr<Node> logsumexp_row(const std::shared_ptr<Node>& z){ 
+    std::shared_ptr<Node> logsumexp_row_nodeops(const std::shared_ptr<Node>& z){ 
         Tensor y = Tensor::logsumexp_row(z->value); 
         auto n=std::make_shared<Node>(y, z->requires_grad, Op::LogSumExpRow, "logsumexp_row"); 
         n->inputs={z}; 
@@ -401,7 +401,7 @@ return n;
     }
 
 
-    std::shared_ptr<Node> mambassm(const std::shared_ptr<Node>& z, const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d){ 
+    std::shared_ptr<Node> mambassm_nodeops(const std::shared_ptr<Node>& z, const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d){ 
 
         if (z->tape.size()==0) {
 
@@ -437,7 +437,7 @@ return n;
     }
 
 
-     std::shared_ptr<Node> cross_entropy_with_logits(std::shared_ptr<Node> logits, std::shared_ptr<Node> onehot){
+     std::shared_ptr<Node> cross_entropy_with_logits(const std::shared_ptr<Node>& logits,const std::shared_ptr<Node>& onehot){
     // Stable CE = mean( -sum(onehot * (logits - logsumexp_row(logits))) )
         Tensor Z = logits->value;
         Tensor Y = onehot->value;
@@ -457,7 +457,7 @@ return n;
     }
 
 
-    std::shared_ptr<Node> kldivergence(std::shared_ptr<Node> logits, std::shared_ptr<Node> onehot){
+    std::shared_ptr<Node> kldivergence(const std::shared_ptr<Node>& logits,const std::shared_ptr<Node>& onehot){
     // Stable CE = mean( -sum(onehot * (logits - logsumexp_row(logits))) )
         Tensor Z = logits->value;
         Tensor Y = onehot->value;
@@ -477,7 +477,7 @@ return n;
         return n;
     }
 
-    std::shared_ptr<Node> mse_loss(const std::shared_ptr<Node>& pred, const std::shared_ptr<Node>& target) {
+    std::shared_ptr<Node> mse_loss_nodeops(const std::shared_ptr<Node>& pred, const std::shared_ptr<Node>& target) {
     Tensor diff = pred->value - target->value;
     Tensor sq   = diff * diff;               // elementwise
     Tensor s    = Tensor::sum_all(sq);                   // scalar [1,1]
@@ -492,7 +492,7 @@ return n;
 }
 
 
-    std::shared_ptr<Node> mae_loss(const std::shared_ptr<Node>& pred, const std::shared_ptr<Node>& target) {
+    std::shared_ptr<Node> mae_loss_nodeops(const std::shared_ptr<Node>& pred, const std::shared_ptr<Node>& target) {
     Tensor diff = pred->value - target->value;
     Tensor sq   = Tensor::abs(diff);               // elementwise
     Tensor s    = Tensor::sum_all(sq);                   // scalar [1,1]
@@ -506,7 +506,7 @@ return n;
     return n;                 // broadcast scalar
 }
 
-// Tensor forward_eval_node(const std::shared_ptr<Node> &node) {
+// Tensor forward_eval_node_nodeops(const std::shared_ptr<Node> &node) {
 //     if (!node) throw std::runtime_error("forward_eval_node: null node");
 
 //     switch (node->op) {
@@ -588,7 +588,7 @@ return n;
 // ------------------------------------------------------------
 // checkpoint() — mark a node for checkpointing
 // ------------------------------------------------------------
-//  std::shared_ptr<Node> checkpoint(const std::shared_ptr<Node> &v, const CheckpointOptions &opts) {
+//  std::shared_ptr<Node> checkpoint_nodeops(const std::shared_ptr<Node> &v, const CheckpointOptions &opts) {
 //     if (!v) return v;
 //     ag::checkpoint_impl::mark_node_checkpoint(v, opts);
 //     return v;
