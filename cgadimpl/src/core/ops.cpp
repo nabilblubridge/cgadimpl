@@ -1,9 +1,8 @@
 // =====================
 // file: src/ops.cpp
 // =====================
-
-#include <iostream>
 #include "ad/ops.hpp"
+<<<<<<< HEAD
 #include "ad/graph.hpp"
 #include "ad/debug.hpp"
 #include "ad/kernels_api.hpp"
@@ -11,32 +10,54 @@
 #include <math.h>
 #include <iterator>
 
+=======
+#include "ad/nodeops.hpp" // Include the new node-level declarations
+>>>>>>> newbr/HEAD
 
 namespace ag {
 
-
     Value add(const Value& a, const Value& b){ 
+<<<<<<< HEAD
         return Value(add_nodeops(a.node, b.node)); 
+=======
+        return Value(detail::add_nodeops(a.node, b.node)); 
+>>>>>>> newbr/HEAD
     }
 
     Value sub(const Value& a, const Value& b){ 
         
+<<<<<<< HEAD
         return Value(sub_nodeops(a.node, b.node)); 
+=======
+        return Value(detail::sub_nodeops(a.node, b.node)); 
+>>>>>>> newbr/HEAD
     }
 
 
 
     Value mul(const Value& a, const Value& b){ 
+<<<<<<< HEAD
         return Value(mul_nodeops(a.node, b.node)); 
     }
 
     Value flomul(const Value& a, float b){ 
         return Value(flomul_nodeops(a.node, b));
+=======
+        return Value(detail::mul_nodeops(a.node, b.node)); 
+    }
+
+    Value flomul(const Value& a, float b){ 
+        return Value(detail::flomul_nodeops(a.node, b));
+>>>>>>> newbr/HEAD
     }
 
     Value relu(const Value& x){ 
       
+<<<<<<< HEAD
         return Value(relu_nodeops(x.node));
+=======
+        return Value(detail::relu_nodeops(x.node));
+>>>>>>> newbr/HEAD
     }
 
 
@@ -44,36 +65,52 @@ namespace ag {
 
 
     Value matmul(const Value& a, const Value& b){ 
+<<<<<<< HEAD
          return Value(matmul_nodeops(a.node, b.node)); 
     }
 
     Value fmab(const Value& a, const Value& b, const Value& c){ 
         return Value(fmab_nodeops(a.node, b.node, c.node)); 
+=======
+         return Value(detail::matmul_nodeops(a.node, b.node)); 
+    }
+
+    Value fmab(const Value& a, const Value& b, const Value& c){ 
+        return Value(detail::fmab_nodeops(a.node, b.node, c.node)); 
+>>>>>>> newbr/HEAD
     }
 
 
     Value attention(const Value& a, const Value& b, const Value& c, const Value& d){ 
+<<<<<<< HEAD
     return Value(attention_nodeops(a.node, b.node, c.node, d.node));
+=======
+    return Value(detail::attention_nodeops(a.node, b.node, c.node, d.node));
+>>>>>>> newbr/HEAD
     }
 
 
     Value alibiatt(const Value& a, const Value& b, const Value& c, const Value& d, float m) { 
+<<<<<<< HEAD
     return Value(alibiatt_nodeops(a.node, b.node, c.node, d.node, m));
+=======
+    return Value(detail::alibiatt_nodeops(a.node, b.node, c.node, d.node, m));
+>>>>>>> newbr/HEAD
 }
 
 
 
     Value swiglu(const Value& x, const Value& a, const Value& b, const Value& c, const Value& d){ 
+<<<<<<< HEAD
     return Value(swiglu_nodeops(x.node, a.node, b.node, c.node, d.node));
+=======
+    return Value(detail::swiglu_nodeops(x.node, a.node, b.node, c.node, d.node));
+>>>>>>> newbr/HEAD
     }
 
 
-
-
-
-
-
     Value sum(const Value& x){ 
+<<<<<<< HEAD
         return Value(ag::sum_nodeops(x.node));
     }
 
@@ -87,10 +124,26 @@ namespace ag {
     
     Value log(const Value& x){ 
         return Value(log_nodeops(x.node));
+=======
+        return Value(detail::sum_nodeops(x.node));
+    }
+
+    Value transpose(const Value& x){ 
+        return Value(detail::transpose_nodeops(x.node));
+    }
+
+    Value exp(const Value& x){ 
+        return Value(detail::exp_nodeops(x.node));
+    }
+    
+    Value log(const Value& x){ 
+        return Value(detail::exp_nodeops(x.node));
+>>>>>>> newbr/HEAD
     }
 
 
     Value mish(const Value& x){ 
+<<<<<<< HEAD
         return Value(mish_nodeops(x.node));
     }
     
@@ -112,11 +165,35 @@ namespace ag {
     
     Value gelu(const Value& x){ 
         return Value(gelu_nodeops(x.node));
+=======
+        return Value(detail::mish_nodeops(x.node));
+    }
+    
+    Value tanh(const Value& x){ 
+        return Value(detail::tanh_nodeops(x.node));
+    }
+    
+    Value sigmoid(const Value& x){ 
+        return Value(detail::sigmoid_nodeops(x.node));
+    }
+    
+    Value softplus(const Value& x){ 
+        return Value(detail::softplus_nodeops(x.node));
+    }
+
+    Value gaus(const Value& x){ 
+        return Value(detail::gaus_nodeops(x.node));
+    }
+    
+    Value gelu(const Value& x){ 
+        return Value(detail::gelu_nodeops(x.node));
+>>>>>>> newbr/HEAD
     }
 
 
 
     Value gcu(const Value& x){ 
+<<<<<<< HEAD
         return Value(gcu_nodeops(x.node));
     }
     
@@ -134,10 +211,30 @@ namespace ag {
     
     Value leaky_relu(const Value& x, float alpha){ 
         return Value(leaky_relu_nodeops(x.node, alpha));
+=======
+        return Value(detail::gcu_nodeops(x.node));
+    }
+    
+    Value silu(const Value& x){ 
+        return Value(detail::silu_nodeops(x.node));
+    }
+
+    Value parcon(const Value& x){ 
+        return Value(detail::parcon_nodeops(x.node));
+    }
+
+    Value lisht(const Value& x){ 
+        return Value(detail::lisht_nodeops(x.node));
+    }
+    
+    Value leaky_relu(const Value& x, float alpha){ 
+        return Value(detail::leaky_relu_nodeops(x.node, alpha));
+>>>>>>> newbr/HEAD
     }
 
 
     Value rowsum(const Value& x){ 
+<<<<<<< HEAD
         return Value(rowsum_nodeops(x.node));
     }
     
@@ -175,12 +272,55 @@ return Value(realrms_nodeops(x.node, g));
     
     Value logsumexp_row(const Value& z){ 
         return Value(logsumexp_row_nodeops(z.node));
+=======
+        return Value(detail::rowsum_nodeops(x.node));
+    }
+    
+    Value rowmax(const Value& x){ 
+        return Value(detail::rowmax_nodeops(x.node));
+    }
+
+    Value rms(const Value& x){ 
+return Value(detail::rms_nodeops(x.node));
+    }
+
+    Value realrms(const Value& x, float g){ 
+return Value(detail::realrms_nodeops(x.node, g));
+    }
+
+    Value laynor(const Value& x){ 
+        return Value(detail::laynor_nodeops(x.node));
+    }
+
+    Value relaynor(const Value& x, float b, float g){ 
+        return Value(detail::relaynor_nodeops(x.node, b, g));
+    }
+    
+    Value mean_all(const Value& x){ 
+        return Value(detail::mean_all_nodeops(x.node));
+    }
+
+    Value dyntanh(const Value& x, float a, float b, float g){ 
+        return Value(detail::dyntanh_nodeops(x.node, a, b, g));
+    }
+    
+    Value softmax_row(const Value& z){ 
+        return Value(detail::softmax_row_nodeops(z.node));
+    }
+    
+    Value logsumexp_row(const Value& z){ 
+        return Value(detail::logsumexp_row_nodeops(z.node));
+>>>>>>> newbr/HEAD
     }
 
 
     Value mambassm(const Value& z, const Value& a, const Value& b, const Value& c, const Value& d){ 
 
+<<<<<<< HEAD
         return Value(mambassm_nodeops(z.node, a.node, b.node, c.node, d.node));
+=======
+        return Value(detail::mambassm_nodeops(z.node, a.node, b.node, c.node, d.node));
+>>>>>>> newbr/HEAD
 
         
     }
@@ -188,21 +328,37 @@ return Value(realrms_nodeops(x.node, g));
 
     Value cross_entropy_with_logits(const Value& logits, const Value& onehot){
     // Stable CE = mean( -sum(onehot * _nodeops(logits - logsumexp_row_nodeops(logits))) )
+<<<<<<< HEAD
         return Value(cross_entropy_with_logits_nodeops(logits.node, onehot.node));
+=======
+        return Value(detail::cross_entropy_with_logits_nodeops(logits.node, onehot.node));
+>>>>>>> newbr/HEAD
     }
 
 
     Value kldivergence(const Value& logits, const Value& onehot){
+<<<<<<< HEAD
         return Value(kldivergence_nodeops(logits.node, onehot.node));
     }
 
     Value mse_loss(const Value& pred, const Value& target) {
     return Value(mse_loss_nodeops(pred.node, target.node));
+=======
+        return Value(detail::kldivergence_nodeops(logits.node, onehot.node));
+    }
+
+    Value mse_loss(const Value& pred, const Value& target) {
+    return Value(detail::mse_loss_nodeops(pred.node, target.node));
+>>>>>>> newbr/HEAD
 }
 
 
     Value mae_loss(const Value& pred, const Value& target) {
+<<<<<<< HEAD
     return Value(mae_loss_nodeops(pred.node, target.node));
+=======
+    return Value(detail::mae_loss_nodeops(pred.node, target.node));
+>>>>>>> newbr/HEAD
 }
 
 Tensor forward_eval_node(const std::shared_ptr<Node> &node) {
@@ -293,7 +449,5 @@ Value checkpoint(const Value &v, const CheckpointOptions &opts) {
     ag::checkpoint_impl::mark_node_checkpoint(v.node, opts);
     return v;
 }
-
-
 
 } // namespace ag
