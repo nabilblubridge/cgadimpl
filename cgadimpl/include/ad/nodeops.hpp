@@ -1,4 +1,5 @@
 // =====================
+<<<<<<< HEAD
 // file: include/ag/nodeops.hpp (declarations only)
 // =====================
 #pragma once
@@ -13,6 +14,26 @@
 namespace ag {
 
 struct CheckpointOptions;
+=======
+// file: include/ag/detail/nodeops.hpp
+// =====================
+#pragma once
+
+#include "ad/graph.hpp"
+#include "ad/checkpoint.hpp"
+#include "ad/kernels_api.hpp"
+#include "ad/debug.hpp"
+#include <iostream>
+#include <math.h>
+#include <iterator>
+#include <memory>
+
+namespace ag {
+namespace detail {
+
+    // --- Node-Level Operations (Internal API) ---
+    // These functions perform the core graph manipulation and tensor computations.
+>>>>>>> newbr/HEAD
 
 //std::shared_ptr<Node> checkpoint_nodeops(const std::shared_ptr<Node> &v, const CheckpointOptions &opts);
 
@@ -70,7 +91,11 @@ std::shared_ptr<Node> mse_loss_nodeops( const std::shared_ptr<Node>& pred, const
 std::shared_ptr<Node> mae_loss_nodeops( const std::shared_ptr<Node>& pred, const std::shared_ptr<Node>& target);
 
 
+<<<<<<< HEAD
 // Tensor forward_eval_node(Node* node);
 
 
+=======
+} // namespace detail
+>>>>>>> newbr/HEAD
 } // namespace ag
