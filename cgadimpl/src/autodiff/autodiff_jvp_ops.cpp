@@ -183,8 +183,15 @@ Tensor jvp_CeWithLogits(Node* n, const std::function<const Tensor&(Node*)>& t){
 }
 
 Tensor jvp_KLDivergence(Node* n, const std::function<const Tensor&(Node*)>& t){
-    // leave it
-    return Tensor();
+    Node* Z=n->inputs[0].get(); Node* Y=n->inputs[1].get(); int B=Z->value.rows();
+    Tensor sm = Tensor::softmax_row(Z->value);
+    Tensor gZ = (sm - Y->value) * (1.0f/float(B));
+    float dotZ = (gZ * t(Z)).sum_scalar();
+    Tensor lse = Tensor::logsumexp_row(Z->value);
+    Tensor lsm = Z->value - lse;
+    Tensor gY  = (Tensor::log(Y->value) + Tensor::ones_like(Y->value) - lsm) * (1.0f / float(B));;
+    float dotY = (gY * t(Y)).sum_scalar();
+    Tensor out(1,1); out(0,0) = dotZ + dotY; return out;
 }
 
 Tensor jvp_Leaf(Node*, const std::function<const Tensor&(Node*)>&){

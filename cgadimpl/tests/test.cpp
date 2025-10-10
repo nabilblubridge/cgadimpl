@@ -44,7 +44,7 @@ int main(){
     auto a = param(Tensor::randn(2,3), "A");
     auto b = param(Tensor::randn(3,2), "B");
     auto bias = param(Tensor::zeros(1,2), "bias");
-    auto y = sum(relu(matmul(a,b) + bias)); // scalar, tests
+    auto y = (relu(matmul(a,b) + bias)); // scalar, tests
     zero_grad(y);
     backward(y);
     std::cout << "y = " << y.val().sum_scalar() << endl;
