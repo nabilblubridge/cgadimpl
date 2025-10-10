@@ -576,7 +576,6 @@ return n;
 //             throw std::runtime_error("forward_eval_node: unsupported op for recompute");
 //     }
 // }
-
 // ------------------------------------------------------------
 // Small adapter so checkpoint.cpp (which uses Node*) can link.
 // ------------------------------------------------------------
