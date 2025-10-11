@@ -3,7 +3,7 @@
 #include <cuda_runtime.h>
 
 
-#define TILE 4
+#define TILE 8
 
 __global__ void tile_matrix_multiply(float* A, float* B, float* C, int width)
 {
@@ -35,54 +35,82 @@ __global__ void tile_matrix_multiply(float* A, float* B, float* C, int width)
         C[row * width + col] = temp;
 }
 
-int main()
+
+void run_cuda_matrix(const float* A, const float* B, float* C, int width)
 {
-    const int width = 4;
-    const int size = width * width * sizeof(float);
-
-    float h_A[width * width] = {
-        1, 2, 3, 4,
-        5, 6, 7, 8,
-        9, 10, 11, 12,
-        13, 14, 15, 16
-    };
-
-    float h_B[width * width] = {
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-    };
-
-    float h_C[width * width] = {0};
-
     float *d_A, *d_B, *d_C;
+    int size = width * width * sizeof(float);
+
     cudaMalloc(&d_A, size);
     cudaMalloc(&d_B, size);
     cudaMalloc(&d_C, size);
 
-    cudaMemcpy(d_A, h_A, size, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_B, h_B, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_A, A, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, size, cudaMemcpyHostToDevice);
 
-    dim3 threadsPerBlock(TILE, TILE);           // 4×4 threads per block
-    dim3 numBlocks(width / TILE, width / TILE); // 1×1 for 4×4 input
+    dim3 threadsPerBlock(TILE, TILE);
+    dim3 numBlocks(width / TILE, width / TILE);
 
     tile_matrix_multiply<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, width);
-    cudaMemcpy(h_C, d_C, size, cudaMemcpyDeviceToHost);
-
     cudaDeviceSynchronize();
 
-
-    std::cout << "Result matrix C:\n";
-    for (int i = 0; i < width; ++i) {
-        for (int j = 0; j < width; ++j)
-            std::cout << h_C[i * width + j] << " ";
-        std::cout << "\n";
-    }
+    cudaMemcpy(C, d_C, size, cudaMemcpyDeviceToHost);
 
     cudaFree(d_A);
     cudaFree(d_B);
     cudaFree(d_C);
-
-    return 0;
 }
+
+
+
+// int main()
+// {
+//     const int width = 4;
+//     const int size = width * width * sizeof(float);
+
+//     float h_A[width * width] = {
+//         1, 2, 3, 4,
+//         5, 6, 7, 8,
+//         9, 10, 11, 12,
+//         13, 14, 15, 16
+//     };
+
+//     float h_B[width * width] = {
+//         1, 0, 0, 0,
+//         0, 1, 0, 0,
+//         0, 0, 1, 0,
+//         0, 0, 0, 1
+//     };
+
+//     float h_C[width * width] = {0};
+
+//     float *d_A, *d_B, *d_C;
+//     cudaMalloc(&d_A, size);
+//     cudaMalloc(&d_B, size);
+//     cudaMalloc(&d_C, size);
+
+//     cudaMemcpy(d_A, h_A, size, cudaMemcpyHostToDevice);
+//     cudaMemcpy(d_B, h_B, size, cudaMemcpyHostToDevice);
+
+//     dim3 threadsPerBlock(TILE, TILE);           // 4×4 threads per block
+//     dim3 numBlocks(width / TILE, width / TILE); // 1×1 for 4×4 input
+
+//     tile_matrix_multiply<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, width);
+//     cudaMemcpy(h_C, d_C, size, cudaMemcpyDeviceToHost);
+
+//     cudaDeviceSynchronize();
+
+
+//     std::cout << "Result matrix C:\n";
+//     for (int i = 0; i < width; ++i) {
+//         for (int j = 0; j < width; ++j)
+//             std::cout << h_C[i * width + j] << " ";
+//         std::cout << "\n";
+//     }
+
+//     cudaFree(d_A);
+//     cudaFree(d_B);
+//     cudaFree(d_C);
+
+//     return 0;
+// }

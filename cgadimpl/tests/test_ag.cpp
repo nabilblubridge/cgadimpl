@@ -86,24 +86,23 @@ using namespace ag;
 int main(){
 using namespace std;
 using namespace ag;
-Tensor A = Tensor::randn(2,3);
-Tensor B = Tensor::randn(3,2);
+Tensor A = Tensor::randn(8,8);
+Tensor B = Tensor::randn(8,8);
 auto a = param(A, "A");
 auto b = param(B, "B");
 
-Tensor Yt(2, 2);
+Tensor Yt(8, 8);
     std::mt19937 gen(42);
     std::uniform_int_distribution<int> pick(0, 2 - 1);
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < 8; ++i) {
         int k = pick(gen);
-        for (int j = 0; j < 2; ++j) Yt(i, j) = (j == k) ? 1.f : 0.f;
+        for (int j = 0; j < 8; ++j) Yt(i, j) = (j == k) ? 1.f : 0.f;
     }
     Value W = constant(Yt, "Y");
 
 
-auto bias = param(Tensor::zeros(1,2), "bias");
+auto bias = param(Tensor::zeros(8,8), "bias");
 
-for(int i=0;i<10;i++){
     auto q = (matmul(a,b) + bias); // [2,2]
     auto y = kldivergence((q + bias), W); // scalar, tests broadcasting [B,2] + [1,2]
 std::cout << "y = " << y.val()
@@ -116,7 +115,6 @@ std::cout << "dL/dA[0,0] = " << a.grad()
 << "dL/dbias[0,0] = " << bias.grad() << endl<< "dL/dq = " << q.grad() << endl;
 zero_grad(y);
 backward(y);
-SGD(y);
 
 
 std::cout << "y = " << y.val()
@@ -130,5 +128,4 @@ std::cout << "dL/dA[0,0] = " << a.grad()
 
 
 
-}
 }
