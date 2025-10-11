@@ -103,7 +103,7 @@ Tensor Yt(8, 8);
 
 auto bias = param(Tensor::zeros(8,8), "bias");
 
-    auto q = (matmul(a,b) + bias); // [2,2]
+    auto q = fmab(a,b, bias); // [2,2]
     auto y = kldivergence((q + bias), W); // scalar, tests broadcasting [B,2] + [1,2]
 std::cout << "y = " << y.val()
 <<","<< endl<< "A = " << a.val()
@@ -115,7 +115,7 @@ std::cout << "dL/dA[0,0] = " << a.grad()
 << "dL/dbias[0,0] = " << bias.grad() << endl<< "dL/dq = " << q.grad() << endl;
 zero_grad(y);
 backward(y);
-
+SGD(y);
 
 std::cout << "y = " << y.val()
 <<","<< endl<< "A = " << a.val()

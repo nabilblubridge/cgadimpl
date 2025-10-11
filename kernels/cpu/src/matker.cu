@@ -3,7 +3,7 @@
 #include <cuda_runtime.h>
 
 
-#define TILE 8
+#define TILE 4
 
 __global__ void tile_matrix_multiply(float* A, float* B, float* C, int width)
 {
@@ -60,6 +60,77 @@ void run_cuda_matrix(const float* A, const float* B, float* C, int width)
     cudaFree(d_B);
     cudaFree(d_C);
 }
+
+
+
+__global__ void tile_gemm(float* A, float* B, float* C, int width)
+{
+__shared__ float As[TILE][TILE];
+    __shared__ float Bs[TILE][TILE];
+
+    int bx = blockIdx.x;
+    int by = blockIdx.y;
+    int tx = threadIdx.x;
+    int ty = threadIdx.y;
+
+    int row = by * TILE + ty;
+    int col = bx * TILE + tx;
+
+    float acc = 0.0f;
+
+    // Loop over tiles
+    for (int t = 0; t < width / TILE; ++t) {
+        // Coalesced load (vectorized if possible)
+        int a_idx = row * width + (t * TILE + tx);
+        int b_idx = (t * TILE + ty) * width + col;
+
+        As[ty][tx] = A[a_idx];
+        Bs[ty][tx] = B[b_idx];
+        __syncthreads();
+
+        // Compute partial result using intrinsic fused multiply-add
+        #pragma unroll
+        for (int k = 0; k < TILE; ++k)
+            acc = fmaf(As[ty][k], Bs[k][tx], acc);
+
+        __syncthreads();
+    }
+
+    // Write result
+    C[row * width + col] = acc;
+
+
+
+}
+
+
+void run_cuda_gemm(const float* A, const float* B, float* C, int width)
+{
+    float *d_A, *d_B, *d_C;
+    int size = width * width * sizeof(float);
+
+    cudaMalloc(&d_A, size);
+    cudaMalloc(&d_B, size);
+    cudaMalloc(&d_C, size);
+
+    cudaMemcpy(d_A, A, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, size, cudaMemcpyHostToDevice);
+
+    dim3 threadsPerBlock(TILE, TILE);
+    dim3 numBlocks(width / TILE, width / TILE);
+
+    tile_gemm<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, width);
+    cudaDeviceSynchronize();
+
+        cudaMemcpy(C, d_C, size, cudaMemcpyDeviceToHost);
+
+
+
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
+}
+
 
 
 
