@@ -115,8 +115,8 @@ int main() {
     // print_value("loss", loss);
 
     // ---------- Backprop ----------
-    zero_grad(loss);
-    backward(loss);
+    zero_grad(L3);
+    backward(L3);
     
     ag::debug::print_all_grads(loss);                   // optional full gradient dump
     ag::debug::dump_dot(loss, "build/graph.dot");       // write GraphViz DOT
