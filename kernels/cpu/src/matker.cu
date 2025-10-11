@@ -65,7 +65,7 @@ void run_cuda_matrix(const float* A, const float* B, float* C, int width)
 
 __global__ void tile_gemm(float* A, float* B, float* C, int width)
 {
-__shared__ float As[TILE][TILE];
+    __shared__ float As[TILE][TILE];
     __shared__ float Bs[TILE][TILE];
 
     int bx = blockIdx.x;
@@ -78,9 +78,7 @@ __shared__ float As[TILE][TILE];
 
     float acc = 0.0f;
 
-    // Loop over tiles
     for (int t = 0; t < width / TILE; ++t) {
-        // Coalesced load (vectorized if possible)
         int a_idx = row * width + (t * TILE + tx);
         int b_idx = (t * TILE + ty) * width + col;
 
@@ -88,7 +86,6 @@ __shared__ float As[TILE][TILE];
         Bs[ty][tx] = B[b_idx];
         __syncthreads();
 
-        // Compute partial result using intrinsic fused multiply-add
         #pragma unroll
         for (int k = 0; k < TILE; ++k)
             acc = fmaf(As[ty][k], Bs[k][tx], acc);
@@ -96,11 +93,8 @@ __shared__ float As[TILE][TILE];
         __syncthreads();
     }
 
-    // Write result
-    C[row * width + col] = acc;
-
-
-
+    // Accumulate into existing C value instead of overwriting
+    C[row * width + col] = fmaf(1.0f, acc, C[row * width + col]);
 }
 
 
