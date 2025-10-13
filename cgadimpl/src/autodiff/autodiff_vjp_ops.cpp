@@ -1,6 +1,7 @@
 #include "ad/detail/autodiff_ops.hpp"
 
 #include <cmath>
+#include <src/core/nodeops.cpp>
 
 namespace ag {
 namespace detail{
@@ -368,6 +369,7 @@ void vjp_Relu(Node* n, const Tensor& gy){
 
 void vjp_Exp(Node* n, const Tensor& gy){
     Node* X = n->inputs[0].get();
+    
     if (X->requires_grad) X->grad.add_( rt( gy * Tensor::exp(X->value), X->value) );
 }
 void vjp_Log(Node* n, const Tensor& gy){
@@ -390,6 +392,7 @@ void vjp_Tanh(Node* n, const Tensor& gy){
     Node* X = n->inputs[0].get();
     if (!X->requires_grad) return;
     Tensor th = n->value, one = Tensor::ones_like(th);
+    
     X->grad.add_( rt( gy * (one - th*th), X->value) );
 }
 void vjp_Sigmoid(Node* n, const Tensor& gy){
