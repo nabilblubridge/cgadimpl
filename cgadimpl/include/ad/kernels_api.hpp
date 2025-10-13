@@ -22,6 +22,8 @@ typedef void (*ag_matmul_fn)(const float* A, const float* B, float* C,
                              int M, int K, int N);
 typedef void (*ag_gemm_fn)(const float* A, const float* B, float* C,
                              int M, int K, int N);
+typedef void (*ag_relumask_fn)(const float* x, float* y, int64_t n);
+
 
 // CPU function table (can be partially filled; nulls mean "not provided")
 struct ag_cpu_v1 {
@@ -29,6 +31,7 @@ struct ag_cpu_v1 {
   ag_relu_fn   relu;
   ag_matmul_fn matmul;
   ag_gemm_fn fmab;
+  ag_relumask_fn   relumask;
 };
 
 // Every CPU plugin must export this symbol.
@@ -43,6 +46,7 @@ struct Cpu {
   ag_relu_fn   relu   = nullptr;
   ag_matmul_fn matmul = nullptr;
     ag_gemm_fn fmab = nullptr;
+    ag_relumask_fn relumask = nullptr;
 
 };
 

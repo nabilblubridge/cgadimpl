@@ -38,6 +38,7 @@ void load_cpu_plugin(const char* path) {
   g_cpu.relu   = table.relu;
   g_cpu.matmul = table.matmul;
   g_cpu.fmab = table.fmab;
+  g_cpu.relumask   = table.relumask;
 }
 
 #ifndef AG_NO_AUTOLOAD_KERNELS

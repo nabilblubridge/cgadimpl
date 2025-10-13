@@ -348,15 +348,22 @@ void vjp_Relu(Node* n, const Tensor& gy){
     Node* X = n->inputs[0].get();
     if (!X->requires_grad) return;
 
-    Tensor& gx = X->grad;
-    const Tensor& y = n->value;  // relu(x) == y; mask with y>0
+        auto* mm = ag::kernels::cpu().relumask;
+            auto [K2, N] = (X->value).shape();
 
-    int R = y.rows(), C = y.cols();
-    for (int i = 0; i < R; ++i){
-        for (int j = 0; j < C; ++j){
-            if (y(i,j) > 0.f) gx(i,j) += gy(i,j);
-        }
-    }
+                Tensor dA(K2, N);                   // temp buffer
+
+        if(mm)
+            mm((X->value).data(), dA.data(), dA.numel());
+
+        else
+    X->grad.add_( rt( gy * -2*X->value*Tensor::exp(-1*X->value*X->value), X->value) );
+
+
+
+
+    X->grad.add_( rt( gy * dA, X->value) );
+
 }
 
 void vjp_Exp(Node* n, const Tensor& gy){

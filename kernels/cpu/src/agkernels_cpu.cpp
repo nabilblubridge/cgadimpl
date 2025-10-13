@@ -75,6 +75,9 @@ void relu_impl_optimized(const float* x, float* y, int64_t n) {
 void relu_cuda(const float* x, float* y, int64_t n) {
     run_cuda_relu(x, y, n);
 }
+void relumask_cuda(const float* x, float* y, int64_t n) {
+    run_cuda_relumask(x, y, n);
+}
 
 void gemm_impl_optimized(const float* A, const float* B,  float* C, int M, int K, int N) {
     int q = N;
@@ -178,6 +181,7 @@ AG_EXPORT int ag_get_cpu_kernels_v1(struct ag_cpu_v1* out){
   if (!out) return -1;
   out->abi_version = AG_KERNELS_ABI_V1;
   out->relu   = &relu_cuda;
+  out->relumask   = &relumask_cuda;
   out->matmul = &matmul_impl_cudatile;
   out->fmab = &gemm_impl_optimized;
   return 0;
