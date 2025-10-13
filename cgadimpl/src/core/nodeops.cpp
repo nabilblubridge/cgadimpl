@@ -91,8 +91,8 @@ namespace detail {
 
          Tensor& C = c->value; 
 
-         auto* fn = ag::kernels::cpu().matmul;
-         if (!fn) throw std::runtime_error("No CPU MatMul kernel registered");
+         auto* fn = ag::kernels::cpu().fmab;
+         if (!fn) throw std::runtime_error("No CPU GEMM kernel registered now only");
          fn(A.data(), B.data(), C.data(), M, K, N);
 
          auto n = std::make_shared<Node>(C,

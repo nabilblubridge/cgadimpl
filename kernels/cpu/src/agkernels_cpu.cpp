@@ -39,6 +39,7 @@
 // Headers for CPU intrinsics (AVX/FMA) and OpenMP
 #include <immintrin.h>
 #include <omp.h>
+#include <iostream>
 
 #include "matker.cuh"
 
@@ -74,6 +75,7 @@ void gemm_impl_optimized(const float* A, const float* B,  float* C, int M, int K
     int q = N;
     int p = K;
     int s = p+q;
+    std::cout<<"sddf";
     if(s)
     {
     run_cuda_gemm(A, B, C, M);
