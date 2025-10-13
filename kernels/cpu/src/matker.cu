@@ -5,56 +5,63 @@
 
 #define TILE 8
 
-__global__ void tile_matrix_multiply(float* A, float* B, float* C, int width)
+__global__ void tile_matrix_multiply(float* A, float* B, float* C, int M, int N, int K)
 {
     __shared__ float shareA[TILE][TILE];
     __shared__ float shareB[TILE][TILE];
 
-    int bx = blockIdx.x;
-    int by = blockIdx.y;
-    int tx = threadIdx.x;
-    int ty = threadIdx.y;
+    int row = blockIdx.y * TILE + threadIdx.y;
+    int col = blockIdx.x * TILE + threadIdx.x;
 
-    int row = by * TILE + ty;
-    int col = bx * TILE + tx;
+    float acc = 0.0f;
 
-    float temp = 0.0f;
+    // Loop over tiles of K dimension
+    for (int t = 0; t < (K + TILE - 1) / TILE; ++t) {
+        int a_col = t * TILE + threadIdx.x;
+        int b_row = t * TILE + threadIdx.y;
 
-    for (int i = 0; i < width / TILE; ++i) {
-        shareA[ty][tx] = A[row * width + (i * TILE + tx)];
-        shareB[ty][tx] = B[(i * TILE + ty) * width + col];
+        // Load tiles into shared memory (using read-only cache intrinsics)
+        shareA[threadIdx.y][threadIdx.x] =
+            (row < M && a_col < K) ? __ldg(&A[row * K + a_col]) : 0.0f;
+
+        shareB[threadIdx.y][threadIdx.x] =
+            (b_row < K && col < N) ? __ldg(&B[b_row * N + col]) : 0.0f;
+
         __syncthreads();
 
+        // Multiply the tiles (fmaf intrinsic for fused multiply-add)
+        #pragma unroll
         for (int k = 0; k < TILE; ++k)
-            temp += shareA[ty][k] * shareB[k][tx];
+            acc = fmaf(shareA[threadIdx.y][k], shareB[k][threadIdx.x], acc);
 
         __syncthreads();
     }
 
-    if (row < width && col < width)
-        C[row * width + col] = temp;
+    // Write result only inside bounds
+    if (row < M && col < N)
+        C[row * N + col] = acc;
 }
 
 
-void run_cuda_matrix(const float* A, const float* B, float* C, int width)
+
+void run_cuda_matrix(const float* A, const float* B, float* C, int M, int K, int N)
 {
     float *d_A, *d_B, *d_C;
-    int size = width * width * sizeof(float);
 
-    cudaMalloc(&d_A, size);
-    cudaMalloc(&d_B, size);
-    cudaMalloc(&d_C, size);
+    cudaMalloc(&d_A, M*K*sizeof(float));
+    cudaMalloc(&d_B, N*K*sizeof(float));
+    cudaMalloc(&d_C, M*N*sizeof(float));
 
-    cudaMemcpy(d_A, A, size, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_B, B, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_A, A, M*K*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, N*K*sizeof(float), cudaMemcpyHostToDevice);
 
     dim3 threadsPerBlock(TILE, TILE);
-    dim3 numBlocks(width / TILE, width / TILE);
+    dim3 numBlocks((N + TILE - 1) / TILE, (M + TILE - 1) / TILE);
 
-    tile_matrix_multiply<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, width);
+    tile_matrix_multiply<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, M, N, K);
     cudaDeviceSynchronize();
 
-    cudaMemcpy(C, d_C, size, cudaMemcpyDeviceToHost);
+    cudaMemcpy(C, d_C, M*N*sizeof(float), cudaMemcpyDeviceToHost);
 
     cudaFree(d_A);
     cudaFree(d_B);
@@ -63,9 +70,9 @@ void run_cuda_matrix(const float* A, const float* B, float* C, int width)
 
 
 
-__global__ void tile_gemm(float* A, float* B, float* C, int width)
+__global__ void tile_gemm(float* A, float* B, float* C, int M, int K, int N)
 {
-    __shared__ float As[TILE][TILE];
+   __shared__ float As[TILE][TILE];
     __shared__ float Bs[TILE][TILE];
 
     int bx = blockIdx.x;
@@ -78,12 +85,13 @@ __global__ void tile_gemm(float* A, float* B, float* C, int width)
 
     float acc = 0.0f;
 
-    for (int t = 0; t < width / TILE; ++t) {
-        int a_idx = row * width + (t * TILE + tx);
-        int b_idx = (t * TILE + ty) * width + col;
+    for (int t = 0; t < (K + TILE - 1) / TILE; ++t) {
+        int a_col = t * TILE + tx;
+        int b_row = t * TILE + ty;
 
-        As[ty][tx] = A[a_idx];
-        Bs[ty][tx] = B[b_idx];
+        As[ty][tx] = (row < M && a_col < K) ? A[row * K + a_col] : 0.0f;
+        Bs[ty][tx] = (b_row < K && col < N) ? B[b_row * N + col] : 0.0f;
+
         __syncthreads();
 
         #pragma unroll
@@ -93,36 +101,38 @@ __global__ void tile_gemm(float* A, float* B, float* C, int width)
         __syncthreads();
     }
 
-    // Accumulate into existing C value instead of overwriting
-    C[row * width + col] = fmaf(1.0f, acc, C[row * width + col]);
+    if (row < M && col < N)
+        C[row * N + col] = fmaf(1.0f, acc, C[row * N + col]);
+
+
+
 }
 
 
-void run_cuda_gemm(const float* A, const float* B, float* C, int width)
+void run_cuda_gemm(const float* A, const float* B,  const float* C, float* E, int M, int K, int N)
 {
     float *d_A, *d_B, *d_C;
-    int size = width * width * sizeof(float);
 
-    cudaMalloc(&d_A, size);
-    cudaMalloc(&d_B, size);
-    cudaMalloc(&d_C, size);
+    cudaMalloc(&d_A, M * K * sizeof(float));
+    cudaMalloc(&d_B, K * N * sizeof(float));
+    cudaMalloc(&d_C, M * N * sizeof(float));
 
-    cudaMemcpy(d_A, A, size, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_B, B, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_A, A, M * K * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, K * N * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_C, C, M * N * sizeof(float), cudaMemcpyHostToDevice);
 
     dim3 threadsPerBlock(TILE, TILE);
-    dim3 numBlocks(width / TILE, width / TILE);
+    dim3 numBlocks((N + TILE - 1) / TILE, (M + TILE - 1) / TILE);
 
-    tile_gemm<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, width);
+    tile_gemm<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, M, K, N);
     cudaDeviceSynchronize();
 
-        cudaMemcpy(C, d_C, size, cudaMemcpyDeviceToHost);
-
-
+    cudaMemcpy(E, d_C, M * N * sizeof(float), cudaMemcpyDeviceToHost);
 
     cudaFree(d_A);
     cudaFree(d_B);
     cudaFree(d_C);
+
 }
 
 

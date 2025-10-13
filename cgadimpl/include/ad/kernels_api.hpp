@@ -20,7 +20,7 @@ static const uint32_t AG_KERNELS_ABI_V1 = 1;
 typedef void (*ag_relu_fn)(const float* x, float* y, int64_t n);
 typedef void (*ag_matmul_fn)(const float* A, const float* B, float* C,
                              int M, int K, int N);
-typedef void (*ag_gemm_fn)(const float* A, const float* B, float* C,
+typedef void (*ag_gemm_fn)(const float* A, const float* B, const float* C, float* E,
                              int M, int K, int N);
 typedef void (*ag_relumask_fn)(const float* x, float* y, int64_t n);
 

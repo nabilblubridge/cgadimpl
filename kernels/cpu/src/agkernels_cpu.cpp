@@ -79,14 +79,14 @@ void relumask_cuda(const float* x, float* y, int64_t n) {
     run_cuda_relumask(x, y, n);
 }
 
-void gemm_impl_optimized(const float* A, const float* B,  float* C, int M, int K, int N) {
+void gemm_impl_optimized(const float* A, const float* B,  const float* C, float*E, int M, int K, int N) {
     int q = N;
     int p = K;
     int s = p+q;
     std::cout<<"sddf";
     if(s)
     {
-    run_cuda_gemm(A, B, C, M);
+    run_cuda_gemm(A, B, C, E, M, K, N);
     }
 }
 
@@ -170,7 +170,7 @@ void matmul_impl_cudatile(const float* A, const float* B, float* C, int M, int K
     int s = p+q;
     if(s)
     {
-    run_cuda_matrix(A, B, C, M);
+    run_cuda_matrix(A, B, C,  M,  K,  N);
     }
 }
 

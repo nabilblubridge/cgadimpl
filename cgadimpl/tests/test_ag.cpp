@@ -86,8 +86,8 @@ using namespace ag;
 int main(){
 using namespace std;
 using namespace ag;
-Tensor A = Tensor::randn(8,8);
-Tensor B = Tensor::randn(8,8);
+Tensor A = Tensor::randn(16,8);
+Tensor B = Tensor::randn(8,16);
 auto a = param(A, "A");
 auto b = param(B, "B");
 
@@ -101,9 +101,9 @@ Tensor Yt(8, 8);
     Value W = constant(Yt, "Y");
 
 
-auto bias = param(Tensor::zeros(8,8), "bias");
+auto bias = param(Tensor::zeros(16,16), "bias");
 
-    auto y = relu(a+b); // [2,2]
+    auto y =   matmul(a,b); // [2,2]
     auto q=y;
 std::cout << "y = " << y.val()
 <<","<< endl<< "A = " << a.val()

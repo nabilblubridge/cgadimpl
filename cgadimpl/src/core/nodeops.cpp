@@ -89,14 +89,17 @@ namespace detail {
          auto [K2,N] = B.shape();
          if (K != K2) throw std::runtime_error("gemm: inner dims mismatch");
 
-         Tensor& C = c->value; 
+         const Tensor& C = c->value; 
+
+                 Tensor E({M,N});
+ 
 
          auto* fn = ag::kernels::cpu().fmab;
          if (!fn) throw std::runtime_error("No CPU GEMM kernel registered now only");
-         fn(A.data(), B.data(), C.data(), M, K, N);
+         fn(A.data(), B.data(), C.data(), E.data(), M, K, N);
 
-         auto n = std::make_shared<Node>(C,
-             (a->requires_grad || b->requires_grad),
+         auto n = std::make_shared<Node>(E,
+             (a->requires_grad || b->requires_grad || c->requires_grad),
              Op::FMA, "fmab");
          n->inputs = { a, b , c};
          return n;
