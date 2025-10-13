@@ -126,6 +126,51 @@ void run_cuda_gemm(const float* A, const float* B, float* C, int width)
 }
 
 
+__global__ void relu_thread(const float* A, float* B, int width)
+{
+
+    int by = blockIdx.y;
+    int ty = threadIdx.y;
+
+    int row = by * TILE + ty;
+
+    float acc = 0.0f;
+
+    
+
+    // Accumulate into existing C value instead of overwriting
+    if(row<width)
+                B[row] = A[row] > 0.0f ? A[row] : 0.0f;
+}
+
+
+void run_cuda_relu(const float* A, float* B, int width)
+{
+    float *d_A, *d_B;
+    int size = width * width * sizeof(float);
+
+    cudaMalloc(&d_A, size);
+    cudaMalloc(&d_B, size);
+
+    cudaMemcpy(d_A, A, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, size, cudaMemcpyHostToDevice);
+    int threads = 1024;
+
+    dim3 threadsPerBlock(threads);
+    dim3 numBlocks((width + threads - 1) / threads);
+
+    relu_thread<<<numBlocks, threadsPerBlock>>>(d_A, d_B, width);
+    cudaDeviceSynchronize();
+
+        cudaMemcpy(B, d_B, size, cudaMemcpyDeviceToHost);
+
+
+
+    cudaFree(d_A);
+    cudaFree(d_B);
+}
+
+
 
 
 // int main()
