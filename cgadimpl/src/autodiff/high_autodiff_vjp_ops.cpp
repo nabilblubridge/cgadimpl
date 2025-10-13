@@ -1,7 +1,7 @@
 #include "ad/detail/autodiff_ops.hpp"
 
 #include <cmath>
-#include <src/core/nodeops.cpp>
+#include "ad/nodeops.hpp"
 
 namespace ag {
 namespace detail{
@@ -629,14 +629,5 @@ void vjp_Leaf(Node*, const std::shared_ptr<Node>&){ /* no-op */ }
 } // anon
 
 
-// -------- dispatch table --------
-VjpFn vjp_lookup(Op op){
-    switch(op){
-#define OP(name, arity, str) case Op::name: return &detail::vjp_##name;
-#include "ad/detail/ops.def"
-#undef OP
-        default: return nullptr;
-    }
-}
 
 } // namespace ag

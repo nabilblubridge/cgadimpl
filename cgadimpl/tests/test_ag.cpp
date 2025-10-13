@@ -103,7 +103,7 @@ Tensor Yt(8, 8);
 
 auto bias = param(Tensor::zeros(16,16), "bias");
 
-    auto y =   matmul(a,b); // [2,2]
+    auto y =   exp(a); // [2,2]
     auto q=y;
 std::cout << "y = " << y.val()
 <<","<< endl<< "A = " << a.val()

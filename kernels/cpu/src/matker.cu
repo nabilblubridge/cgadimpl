@@ -154,6 +154,53 @@ __global__ void relu_thread(const float* A, float* B, int width)
 }
 
 
+
+__global__ void exp_thread(const float* A, float* B, int width)
+{
+
+    int bx = blockIdx.x;
+    int tx = threadIdx.x;
+
+    int row = bx * blockDim.x + tx;
+
+    float acc = 0.0f;
+
+    
+
+    // Accumulate into existing C value instead of overwriting
+    if(row<width)
+                B[row] =  __expf( A[row]);
+}
+
+
+
+void run_cuda_exp(const float* A, float* B, int width)
+{
+    float *d_A, *d_B;
+    int size = width * sizeof(float);
+
+    cudaMalloc(&d_A, size);
+    cudaMalloc(&d_B, size);
+
+    cudaMemcpy(d_A, A, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, size, cudaMemcpyHostToDevice);
+    int threads = 1024;
+
+    dim3 threadsPerBlock(threads);
+    dim3 numBlocks((width + threads - 1) / threads);
+
+    exp_thread<<<numBlocks, threadsPerBlock>>>(d_A, d_B, width);
+    cudaDeviceSynchronize();
+
+        cudaMemcpy(B, d_B, size, cudaMemcpyDeviceToHost);
+
+
+
+    cudaFree(d_A);
+    cudaFree(d_B);
+}
+
+
 void run_cuda_relu(const float* A, float* B, int width)
 {
     float *d_A, *d_B;

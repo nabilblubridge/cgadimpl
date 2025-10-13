@@ -175,18 +175,23 @@ namespace detail {
 
     std::shared_ptr<Node> transpose_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = Tensor::transpose(x->value); 
-        auto n=std::make_shared<Node>(y, x->requires_grad, Op::Transpose, "exp"); 
+        auto n=std::make_shared<Node>(y, x->requires_grad, Op::Transpose, "transpose"); 
         n->inputs={x}; 
         ag::debug::on_node_created(n);  
         return n;
     }
 
     std::shared_ptr<Node> exp_nodeops(const std::shared_ptr<Node>& x){ 
-        Tensor y = Tensor::exp(x->value); 
-        auto n=std::make_shared<Node>(y, x->requires_grad, Op::Exp, "exp"); 
-        n->inputs={x}; 
-        ag::debug::on_node_created(n);  
-        return n;
+              const Tensor& xin = x->value;
+        Tensor y = Tensor::zeros_like(xin);
+
+        auto* fn = ag::kernels::cpu().exp;
+        if (!fn) throw std::runtime_error("No CPU Exp kernel registered");
+        fn(xin.data(), y.data(), static_cast<int64_t>(xin.numel()));
+
+        auto n = std::make_shared<Node>(y, x->requires_grad, Op::Exp, "exp");
+        n->inputs = { x };
+        return n;;
     }
     
     std::shared_ptr<Node> log_nodeops(const std::shared_ptr<Node>& x){ 

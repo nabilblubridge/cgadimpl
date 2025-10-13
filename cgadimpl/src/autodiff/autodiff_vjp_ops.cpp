@@ -1,7 +1,7 @@
 #include "ad/detail/autodiff_ops.hpp"
 
 #include <cmath>
-#include <src/core/nodeops.cpp>
+#include "ad/nodeops.hpp"
 
 namespace ag {
 namespace detail{
@@ -358,9 +358,12 @@ void vjp_Relu(Node* n, const Tensor& gy){
             mm((X->value).data(), dA.data(), dA.numel());
 
         else
-    X->grad.add_( rt( gy * -2*X->value*Tensor::exp(-1*X->value*X->value), X->value) );
 
+        {
+            std::cout<<"CUDA is unused";
+    dA = Tensor::relu_mask(X->value);
 
+        }
 
 
     X->grad.add_( rt( gy * dA, X->value) );
@@ -369,8 +372,26 @@ void vjp_Relu(Node* n, const Tensor& gy){
 
 void vjp_Exp(Node* n, const Tensor& gy){
     Node* X = n->inputs[0].get();
-    
-    if (X->requires_grad) X->grad.add_( rt( gy * Tensor::exp(X->value), X->value) );
+    if (!X->requires_grad) return;
+
+        auto* mm = ag::kernels::cpu().exp;
+            auto [K2, N] = (X->value).shape();
+
+                Tensor dA(K2, N);                   // temp buffer
+
+        if(mm)
+            mm((X->value).data(), dA.data(), dA.numel());
+
+        else
+
+        {
+            std::cout<<"CUDA is unused";
+    dA = Tensor::relu_mask(X->value);
+
+        }
+
+
+    X->grad.add_( rt( gy * dA, X->value) );
 }
 void vjp_Log(Node* n, const Tensor& gy){
     Node* X = n->inputs[0].get();
