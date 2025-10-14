@@ -465,8 +465,8 @@ void hvjp_Log(Node* n, const std::shared_ptr<Node>& gy){
 }
 
 void hvjp_GCU(Node* n, const std::shared_ptr<Node>& gy){
-//     auto X = n->inputs[0];
-//     if (X->requires_grad) X->grad.add_( rt( gy * ( auto::cos(X->value)-(X->value* auto::sin(X->value))), X->value) );
+    auto X = n->inputs[0];
+    if (X->requires_grad) X->grad.add_( rt( (gy * ( cos_nodeops(X)-(X* sin_nodeops(X))))->value, X->value) );
  }
 
 void hvjp_Mish(Node* n, const std::shared_ptr<Node>& gy){
@@ -483,6 +483,18 @@ void hvjp_Cosh(Node* n, const std::shared_ptr<Node>& gy){
 void hvjp_Sinh(Node* n, const std::shared_ptr<Node>& gy){
     auto X = n->inputs[0];
     if (X->requires_grad) X->grad.add_( rt( (gy * (cosh_nodeops(X)))->value, X->value) );
+}
+
+
+void hvjp_Cos(Node* n, const std::shared_ptr<Node>& gy){
+    auto X = n->inputs[0];
+    if (X->requires_grad) X->grad.add_( rt( -1.0*(gy * (sin_nodeops(X)))->value, X->value) );
+}
+
+
+void hvjp_Sin(Node* n, const std::shared_ptr<Node>& gy){
+    auto X = n->inputs[0];
+    if (X->requires_grad) X->grad.add_( rt( (gy * (cos_nodeops(X)))->value, X->value) );
 }
 
 
@@ -568,18 +580,31 @@ void hvjp_LiSHT(Node* n, const std::shared_ptr<Node>& gy){
 
 
 void hvjp_GELU(Node* n, const std::shared_ptr<Node>& gy){
-    // auto X = n->inputs[0]; if (!X->requires_grad) return;
-    // constexpr float c = 0.79788456080286535588f; // sqrt(2/pi)
-    // int R=X->value.rows(), C=X->value.cols();
-    //  auto x=X->value,u(R,C),dudx(R,C);
-    // for(int i=0;i<R;++i) for(int j=0;j<C;++j){
-    //     float z=x(i,j);
-    //     u(i,j)=c*(z+0.044715f*z*z*z);
-    //     dudx(i,j)=c*(1.f+0.134145f*z*z);
-    // }
-    //  auto th= auto::tanh(u), one= auto::ones_like(th);
-    //  auto dgelu=(one+th)*0.5f + (x * ((one - th*th) * dudx))*0.5f;
-    // X->grad.add_( rt( gy * dgelu, X->value) );
+    auto X = n->inputs[0];
+    if (!X->requires_grad) return;
+
+    constexpr float c = 0.7978845608028654f; // sqrt(2/pi)
+    int R = X->value.rows(), C = X->value.cols();
+    Tensor g(R, C);
+
+    for (int i = 0; i < R; ++i) {
+        for (int j = 0; j < C; ++j) {
+            float x = X->value(i, j);
+
+            // GELU(x) = 0.5 * x * (1 + tanh(c*(x + 0.044715x^3)))
+            float u = c * (x + 0.044715f * x * x * x);
+            float t = std::tanh(u);
+            float dudx = c * (1.f + 3.f * 0.044715f * x * x);
+
+            // derivative of GELU wrt x:
+            float dgelu = 0.5f * (1.f + t) + 0.5f * x * (1.f - t * t) * dudx;
+
+            g(i, j) = gy->value(i, j) * dgelu;
+        }
+    }
+
+    X->grad.add_(g);
+
 }
 
 
@@ -652,17 +677,17 @@ void hvjp_MatMul(Node* n, const std::shared_ptr<Node>& gy){
 }
 
  void hvjp_Dyntanh(Node* n, const std::shared_ptr<Node>& gy){
-//     auto X = n->inputs[0]; 
-//     auto A = n->inputs[1]; 
-//     auto B = n->inputs[2]; 
-//     auto G = n->inputs[3];
+    auto X = n->inputs[0]; 
+    auto A = n->inputs[1]; 
+    auto B = n->inputs[2]; 
+    auto G = n->inputs[3];
 
 
 
-//         if (X->requires_grad) X->grad.add_(gy* auto::sech(X->value*A->value)* auto::sech(X->value*A->value)*A->value*G->value); 
-//     if (A->requires_grad) A->grad.add_(gy* auto::sech(X->value*A->value)* auto::sech(X->value*A->value)*X->value*G->value);
-//     if (B->requires_grad) B->grad.add_(gy);
-//     if (G->requires_grad) G->grad.add_(gy* auto::tanh(*(n->tapenode.back()))   );
+        if (X->requires_grad) X->grad.add_((gy* reci_nodeops(cosh_nodeops(X*A)* cosh_nodeops(X*A))*A*G)->value); 
+    if (A->requires_grad) A->grad.add_((gy* reci_nodeops(cosh_nodeops(X*A)* cosh_nodeops(X*A))*X*G)->value);
+    if (B->requires_grad) B->grad.add_(gy->value);
+    if (G->requires_grad) G->grad.add_((gy* tanh_nodeops((n->tapenode.back()))  )->value );
  }
 
 

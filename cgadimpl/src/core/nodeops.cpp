@@ -284,6 +284,23 @@ namespace detail {
         ag::debug::on_node_created(n);  
         return n;
     }
+
+
+     std::shared_ptr<Node> cos_nodeops(const std::shared_ptr<Node>& x){ 
+        Tensor y = Tensor::cosh(x->value); 
+        auto n=std::make_shared<Node>(y, x->requires_grad, Op::Cosh, "cosh"); 
+        n->inputs={x}; 
+        ag::debug::on_node_created(n);  
+        return n;
+    }
+
+     std::shared_ptr<Node> sin_nodeops(const std::shared_ptr<Node>& x){ 
+        Tensor y = Tensor::sinh(x->value); 
+        auto n=std::make_shared<Node>(y, x->requires_grad, Op::Sinh, "sinh"); 
+        n->inputs={x}; 
+        ag::debug::on_node_created(n);  
+        return n;
+    }
     
     std::shared_ptr<Node> sigmoid_nodeops(const std::shared_ptr<Node>& x){ 
                       const Tensor& xin = x->value;

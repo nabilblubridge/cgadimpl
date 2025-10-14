@@ -419,6 +419,18 @@ void vjp_Sinh(Node* n, const Tensor& gy){
 }
 
 
+void vjp_Cos(Node* n, const Tensor& gy){
+    Node* X = n->inputs[0].get();
+    if (X->requires_grad) X->grad.add_( rt( -1.0 * gy* (Tensor::sin(X->value)), X->value) );
+}
+
+
+void vjp_Sin(Node* n, const Tensor& gy){
+    Node* X = n->inputs[0].get();
+    if (X->requires_grad) X->grad.add_( rt( gy * (Tensor::cos(X->value)), X->value) );
+}
+
+
 void vjp_Sqrt(Node* n, const Tensor& gy){
     Node* X = n->inputs[0].get();
     if (X->requires_grad) X->grad.add_( rt(0.5f * gy * Tensor::sqrt(  Tensor::reciprocal(X->value)), X->value) );
