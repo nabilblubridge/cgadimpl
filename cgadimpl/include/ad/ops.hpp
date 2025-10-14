@@ -30,6 +30,7 @@ inline Value operator*(const Value& a, float b){ return flomul(a,b);}
 Value exp (const Value& x);
 Value log (const Value& x);
 Value tanh (const Value& x);
+Value sign(const Value& x);
 Value gcu (const Value& x);
 Value mish (const Value& x);
 Value gaus (const Value& x);

@@ -85,11 +85,15 @@ static Tensor alibi(int rows, int cols, float m); // m = slope factor
 
 // elementwise unary
 static Tensor exp(const Tensor& x);
+static Tensor reciprocal(const Tensor& x);
+
 static Tensor log(const Tensor& x);
 static Tensor cos(const Tensor& x);
 static Tensor sin(const Tensor& x);
 static Tensor cosh(const Tensor& x);
 static Tensor sech(const Tensor& x);
+static Tensor sinh(const Tensor& x);
+
 
 static Tensor sqrt(const Tensor &x);
 

@@ -25,6 +25,15 @@ void vjp_Mul(Node* n, const Tensor& gy){
     if (A->requires_grad) A->grad.add_( rt( gy * B->value, A->value) );
     if (B->requires_grad) B->grad.add_( rt( gy * A->value, B->value) );
 }
+void vjp_Div(Node* n, const Tensor& gy){
+    Node* A = n->inputs[0].get(); Node* B = n->inputs[1].get();
+    if (A->requires_grad) A->grad.add_( rt( gy * (Tensor::reciprocal(B->value)), A->value) );
+    if (B->requires_grad) B->grad.add_( rt( -gy * (Tensor::reciprocal(B->value)) * (Tensor::reciprocal(B->value)) * A->value, B->value) );
+}
+void vjp_Reci(Node* n, const Tensor& gy){
+    Node* X = n->inputs[0].get(); if (!X->requires_grad) return;
+    X->grad.add_( rt( -gy * (Tensor::reciprocal(X->value)) * (Tensor::reciprocal(X->value)), X->value) );
+}
 
 // ----- elementwise trinary -----
 void vjp_FMA(Node* n, const Tensor& gy){
@@ -398,6 +407,23 @@ void vjp_Log(Node* n, const Tensor& gy){
     if (X->requires_grad) X->grad.add_( rt( gy / X->value, X->value) );
 }
 
+void vjp_Cosh(Node* n, const Tensor& gy){
+    Node* X = n->inputs[0].get();
+    if (X->requires_grad) X->grad.add_( rt( gy * (Tensor::sinh(X->value)), X->value) );
+}
+
+
+void vjp_Sinh(Node* n, const Tensor& gy){
+    Node* X = n->inputs[0].get();
+    if (X->requires_grad) X->grad.add_( rt( gy * (Tensor::cosh(X->value)), X->value) );
+}
+
+
+void vjp_Sqrt(Node* n, const Tensor& gy){
+    Node* X = n->inputs[0].get();
+    if (X->requires_grad) X->grad.add_( rt(0.5f * gy * Tensor::sqrt(  Tensor::reciprocal(X->value)), X->value) );
+}
+
 void vjp_GCU(Node* n, const Tensor& gy){
     Node* X = n->inputs[0].get();
     if (X->requires_grad) X->grad.add_( rt( gy * (Tensor::cos(X->value)-(X->value*Tensor::sin(X->value))), X->value) );
@@ -416,6 +442,25 @@ void vjp_Tanh(Node* n, const Tensor& gy){
     
     X->grad.add_( rt( gy * (one - th*th), X->value) );
 }
+
+void vjp_Sign(Node* n, const Tensor& gy){
+    Node* X = n->inputs[0].get();
+    if (!X->requires_grad) return;
+    Tensor th = n->value, one = Tensor::ones_like(th);
+    
+    X->grad.add_( rt( gy * 0.0f, X->value) );
+}
+
+void vjp_Relumask(Node* n, const Tensor& gy){
+    Node* X = n->inputs[0].get();
+    if (!X->requires_grad) return;
+    Tensor th = n->value, one = Tensor::ones_like(th);
+    
+    X->grad.add_( rt( gy * 0.0f, X->value) );
+}
+
+
+
 void vjp_Sigmoid(Node* n, const Tensor& gy){
 
 

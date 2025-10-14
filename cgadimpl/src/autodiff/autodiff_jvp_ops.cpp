@@ -142,6 +142,22 @@ Tensor jvp_AlibiAttention(Node* n, const std::function<const Tensor&(Node*)>& t)
     return Tensor();
 }
 
+
+
+Tensor jvp_Div(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+Tensor jvp_Reciprocal(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+Tensor jvp_Sign(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_Sqrt(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
 // ---- reductions ----
 Tensor jvp_Sum(Node* n, const std::function<const Tensor&(Node*)>& t){
     Node* X=n->inputs[0].get(); Tensor s(1,1); s(0,0) = t(X).sum_scalar(); return s;

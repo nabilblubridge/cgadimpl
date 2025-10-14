@@ -104,11 +104,39 @@ for(int i=0;i<R;++i){ int ia = pick(i,a.r), ib = pick(i,b.r);
         y(i,j) = a(ia,ja) * b(ib,jb);
     }
 }
+
+
+
 return y; }
+
+
+
+
+Tensor operator/(const Tensor& a, const Tensor& b){
+auto [R,C] = bshape(a.r,a.c,b.r,b.c);
+Tensor y(R,C);
+for(int i=0;i<R;++i){ int ia = pick(i,a.r), ib = pick(i,b.r);
+    for(int j=0;j<C;++j){ int ja = pick(j,a.c), jb = pick(j,b.c);
+        y(i,j) = a(ia,ja) / b(ib,jb);
+    }
+}
+
+
+
+return y; }
+
+Tensor Tensor::reciprocal(const Tensor& x){ Tensor y(x.r,x.c); for(int i=0;i<x.d.size();++i) y.d[i]=1.0f/(x.d[i]); return y; }
+
+
+
+
 Tensor operator-(const Tensor& x){ Tensor y(x.r,x.c); for(std::size_t i=0;i<x.d.size();++i) y.d[i] = -x.d[i]; return y; }
 // ...existing code...
 Tensor operator*(const Tensor& a, float s){ Tensor y(a.r,a.c); for(std::size_t i=0;i<a.d.size();++i) y.d[i]=a.d[i]*s; return y; }
 Tensor operator*(float s, const Tensor& a){ return a*s; }
+Tensor operator/(float s, const Tensor& a){ return s*(Tensor::reciprocal(a)); }
+Tensor operator/(const Tensor& a, float s){ a*(1.0f/s); }
+
 Tensor operator+(const Tensor& a, float s){ Tensor y(a.r,a.c); for(std::size_t i=0;i<a.d.size();++i) y.d[i]=a.d[i]+s; return y; }
 Tensor operator+(float s, const Tensor& a){ Tensor y(a.r,a.c); for(std::size_t i=0;i<a.d.size();++i) y.d[i]=a.d[i]+s; return y; }
 
@@ -159,6 +187,7 @@ Tensor Tensor::sin(const Tensor& x){ Tensor y(x.r,x.c); for(size_t i=0;i<x.d.siz
 Tensor Tensor::cosh(const Tensor& x){ Tensor y(x.r,x.c); for(size_t i=0;i<x.d.size();++i) y.d[i]=std::cosh(x.d[i]); return y; }
 Tensor Tensor::sech(const Tensor& x){ Tensor y(x.r,x.c); for(size_t i=0;i<x.d.size();++i) y.d[i]=1.f/std::cosh(x.d[i]); return y; }
 Tensor Tensor::sqrt(const Tensor& x){ Tensor y(x.r,x.c); for(size_t i=0;i<x.d.size();++i) y.d[i]=std::sqrt(x.d[i]); return y; }
+Tensor Tensor::sinh(const Tensor& x){ Tensor y(x.r,x.c); for(size_t i=0;i<x.d.size();++i) y.d[i]=std::sinh(x.d[i]); return y; }
 
 
 Tensor operator/(const Tensor& a, const Tensor& b){

@@ -20,6 +20,7 @@ Tensor value; // forward value
 Tensor grad; // same shape as value
 bool requires_grad{false};
 bool is_checkpoint{false};
+bool requires_higher_grad{false};
 
 std::vector<Value> saved_inputs;
 std::vector<uint8_t> saved_rng_blob;
@@ -27,6 +28,7 @@ std::vector<uint8_t> saved_rng_blob;
 bool has_saved_rng{false};
 const char* debug_name{""};
 std::vector<std::shared_ptr<Tensor>> tape;// optional: for ops that need to save intermediates for backward
+std::vector<std::shared_ptr<Node>> tapenode;
 
 Node();
 Node(const Tensor& v, bool rg, Op op_, const char* nm="");

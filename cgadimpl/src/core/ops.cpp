@@ -15,7 +15,10 @@ namespace ag {
         return Value(detail::sub_nodeops(a.node, b.node)); 
     }
 
-
+    Value div(const Value& a, const Value& b){ 
+        
+        return Value(detail::div_nodeops(a.node, b.node)); 
+    }
 
     Value mul(const Value& a, const Value& b){ 
         return Value(detail::mul_nodeops(a.node, b.node)); 
@@ -87,6 +90,10 @@ namespace ag {
     Value sigmoid(const Value& x){ 
         return Value(detail::sigmoid_nodeops(x.node));
     }
+
+      Value sign(const Value& x){ 
+        return Value(detail::sign_nodeops(x.node));
+    }
     
     Value softplus(const Value& x){ 
         return Value(detail::softplus_nodeops(x.node));
@@ -112,6 +119,10 @@ namespace ag {
 
     Value parcon(const Value& x){ 
         return Value(detail::parcon_nodeops(x.node));
+    }
+
+    Value relumask(const Value& x){ 
+        return Value(detail::relumask_nodeops(x.node));
     }
 
     Value lisht(const Value& x){ 
