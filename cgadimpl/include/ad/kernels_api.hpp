@@ -24,6 +24,10 @@ typedef void (*ag_gemm_fn)(const float* A, const float* B, const float* C, float
                              int M, int K, int N);
 typedef void (*ag_relumask_fn)(const float* x, float* y, int64_t n);
 typedef void (*ag_exp_fn)(const float* x, float* y, int64_t n);
+typedef void (*ag_sig_fn)(const float* x, float* y, int64_t n);
+typedef void (*ag_sigd_fn)(const float* x, float* y, int64_t n);
+
+
 
 
 // CPU function table (can be partially filled; nulls mean "not provided")
@@ -34,6 +38,8 @@ struct ag_cpu_v1 {
   ag_gemm_fn fmab;
   ag_relumask_fn   relumask;
   ag_exp_fn exp;
+  ag_sig_fn sigmoid;
+  ag_sigd_fn sigmoidiff;
 };
 
 // Every CPU plugin must export this symbol.
@@ -50,7 +56,8 @@ struct Cpu {
     ag_gemm_fn fmab = nullptr;
     ag_relumask_fn relumask = nullptr;
     ag_exp_fn exp = nullptr;
-
+ag_sig_fn sigmoid = nullptr;
+  ag_sigd_fn sigmoidiff = nullptr;
 };
 
 // Global registry accessor

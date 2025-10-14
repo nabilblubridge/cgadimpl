@@ -84,6 +84,15 @@ void relumask_cuda(const float* x, float* y, int64_t n) {
     run_cuda_relumask(x, y, n);
 }
 
+void sigmoid_cuda(const float* x, float* y, int64_t n) {
+    run_cuda_sigmoid(x, y, n);
+}
+
+void sigmoidiff_cuda(const float* x, float* y, int64_t n) {
+    run_cuda_sigmoidiff(x, y, n);
+}
+
+
 void gemm_impl_optimized(const float* A, const float* B,  const float* C, float*E, int M, int K, int N) {
     int q = N;
     int p = K;
@@ -190,6 +199,9 @@ AG_EXPORT int ag_get_cpu_kernels_v1(struct ag_cpu_v1* out){
   out->matmul = &matmul_impl_cudatile;
   out->fmab = &gemm_impl_optimized;
   out->exp = &exp_cuda;
+  out->sigmoid = &sigmoid_cuda;
+  out->sigmoidiff = &sigmoidiff_cuda;
+
   return 0;
 }
 

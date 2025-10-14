@@ -1,7 +1,7 @@
 #include <cuda.h>
 #include <iostream>
 #include <cuda_runtime.h>
-
+#include <math_functions.h>
 
 #define TILE 8
 
@@ -273,7 +273,100 @@ void run_cuda_relumask(const float* A, float* B, int width)
     cudaFree(d_B);
 }
 
+__global__ void sigmoid_thread(const float* A, float* B, int width)
+{
 
+    int bx = blockIdx.x;
+    int tx = threadIdx.x;
+
+    int row = bx * blockDim.x + tx;
+
+    float acc = 0.0f;
+
+    
+
+    // Accumulate into existing C value instead of overwriting
+    if(row<width)
+             //  { 
+                B[row] = (1.0f + tanhf(A[row]/ 2.0f)) / 2.0f;
+              //  printf("Block %d Thread %d active for row %d\n", blockIdx.x, threadIdx.x, row);}
+}
+
+void run_cuda_sigmoid(const float* A, float* B, int width)
+{
+    float *d_A, *d_B;
+    int size = width * sizeof(float);
+
+    cudaMalloc(&d_A, size);
+    cudaMalloc(&d_B, size);
+
+    cudaMemcpy(d_A, A, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, size, cudaMemcpyHostToDevice);
+    int threads = 1024;
+
+    dim3 threadsPerBlock(threads);
+    dim3 numBlocks((width + threads - 1) / threads);
+
+    sigmoid_thread<<<numBlocks, threadsPerBlock>>>(d_A, d_B, width);
+    cudaDeviceSynchronize();
+
+        cudaMemcpy(B, d_B, size, cudaMemcpyDeviceToHost);
+
+
+
+    cudaFree(d_A);
+    cudaFree(d_B);
+}
+
+
+__global__ void sigmoidiff_thread(const float* A, float* B, int width)
+{
+
+    int bx = blockIdx.x;
+    int tx = threadIdx.x;
+
+    int row = bx * blockDim.x + tx;
+
+    float acc = 0.0f;
+
+    
+
+    // Accumulate into existing C value instead of overwriting
+    if(row<width)
+       { 
+            float t = tanhf(A[row] * 0.5f);
+B[row] = 0.25f * (1.0f -( t * t));
+              //  printf("Block %d Thread %d active for row %d\n", blockIdx.x, threadIdx.x, row);
+              
+            }
+}
+
+
+void run_cuda_sigmoidiff(const float* A, float* B, int width)
+{
+    float *d_A, *d_B;
+    int size = width * sizeof(float);
+
+    cudaMalloc(&d_A, size);
+    cudaMalloc(&d_B, size);
+
+    cudaMemcpy(d_A, A, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, size, cudaMemcpyHostToDevice);
+    int threads = 1024;
+
+    dim3 threadsPerBlock(threads);
+    dim3 numBlocks((width + threads - 1) / threads);
+
+    sigmoidiff_thread<<<numBlocks, threadsPerBlock>>>(d_A, d_B, width);
+    cudaDeviceSynchronize();
+
+        cudaMemcpy(B, d_B, size, cudaMemcpyDeviceToHost);
+
+
+
+    cudaFree(d_A);
+    cudaFree(d_B);
+}
 
 
 // int main()

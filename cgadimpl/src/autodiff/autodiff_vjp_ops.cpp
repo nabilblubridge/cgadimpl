@@ -417,9 +417,41 @@ void vjp_Tanh(Node* n, const Tensor& gy){
     X->grad.add_( rt( gy * (one - th*th), X->value) );
 }
 void vjp_Sigmoid(Node* n, const Tensor& gy){
-    Node* X = n->inputs[0].get(); if (!X->requires_grad) return;
-    Tensor s = Tensor::sigmoid(X->value);
-    X->grad.add_( rt( gy * ( s * (Tensor::ones_like(s)-s) ), X->value) );
+
+
+
+
+
+
+
+
+
+
+ Node* X = n->inputs[0].get();
+    if (!X->requires_grad) return;
+
+        auto* mm = ag::kernels::cpu().sigmoidiff;
+            auto [K2, N] = (X->value).shape();
+
+                Tensor dA(K2, N);                   // temp buffer
+
+        if(mm)
+            mm((X->value).data(), dA.data(), dA.numel());
+
+        else
+
+        {
+            std::cout<<"CUDA is unused";
+             Tensor s = Tensor::sigmoid(X->value);
+
+    dA = ( s * (Tensor::ones_like(s)-s));
+
+        }
+
+
+    X->grad.add_( rt( gy * dA, X->value) );
+
+
 }
 void vjp_Softplus(Node* n, const Tensor& gy){
     Node* X = n->inputs[0].get(); if (!X->requires_grad) return;

@@ -4,3 +4,6 @@ void run_cuda_gemm(const float* A, const float* B,  const float* C, float* E, in
 void run_cuda_relu(const float* A, float* B, int N);
 void run_cuda_relumask(const float* A, float* B, int N);
 void run_cuda_exp(const float* A, float* B, int N);
+void run_cuda_sigmoid(const float* A, float* B, int N);
+void run_cuda_sigmoidiff(const float* A, float* B, int N);
+

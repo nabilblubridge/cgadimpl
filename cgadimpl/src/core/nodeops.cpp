@@ -191,7 +191,7 @@ namespace detail {
 
         auto n = std::make_shared<Node>(y, x->requires_grad, Op::Exp, "exp");
         n->inputs = { x };
-        return n;;
+        return n;
     }
     
     std::shared_ptr<Node> log_nodeops(const std::shared_ptr<Node>& x){ 
@@ -220,10 +220,15 @@ namespace detail {
     }
     
     std::shared_ptr<Node> sigmoid_nodeops(const std::shared_ptr<Node>& x){ 
-        Tensor y = Tensor::sigmoid(x->value); 
-        auto n=std::make_shared<Node>(y, x->requires_grad, Op::Sigmoid, "sigmoid"); 
-        n->inputs={x}; 
-        ag::debug::on_node_created(n);  
+                      const Tensor& xin = x->value;
+        Tensor y = Tensor::zeros_like(xin);
+
+        auto* fn = ag::kernels::cpu().sigmoid;
+        if (!fn) throw std::runtime_error("No CPU Sigmoid kernel registered");
+        fn(xin.data(), y.data(), static_cast<int64_t>(xin.numel()));
+
+        auto n = std::make_shared<Node>(y, x->requires_grad, Op::Sigmoid, "sigmoid");
+        n->inputs = { x };
         return n;
     }
     
