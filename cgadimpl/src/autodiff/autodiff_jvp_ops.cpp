@@ -157,6 +157,15 @@ Tensor jvp_Sign(Node* n, const std::function<const Tensor&(Node*)>& t){
 Tensor jvp_Sqrt(Node* n, const std::function<const Tensor&(Node*)>& t){
     return Tensor();
 }
+Tensor jvp_Relumask(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+Tensor jvp_Cosh(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+Tensor jvp_Sinh(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
 
 // ---- reductions ----
 Tensor jvp_Sum(Node* n, const std::function<const Tensor&(Node*)>& t){

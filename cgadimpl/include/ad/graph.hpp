@@ -32,6 +32,8 @@ std::vector<std::shared_ptr<Node>> tapenode;
 
 Node();
 Node(const Tensor& v, bool rg, Op op_, const char* nm="");
+
+Node(const Tensor& v) : value(v), requires_grad(false), op(Op::Leaf) {}
 };
 
 

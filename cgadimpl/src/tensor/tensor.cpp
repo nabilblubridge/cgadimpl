@@ -190,13 +190,7 @@ Tensor Tensor::sqrt(const Tensor& x){ Tensor y(x.r,x.c); for(size_t i=0;i<x.d.si
 Tensor Tensor::sinh(const Tensor& x){ Tensor y(x.r,x.c); for(size_t i=0;i<x.d.size();++i) y.d[i]=std::sinh(x.d[i]); return y; }
 
 
-Tensor operator/(const Tensor& a, const Tensor& b){
-auto [R,C] = bshape(a.r,a.c,b.r,b.c); Tensor y(R,C);
-for(int i=0;i<R;++i){ int ia=pick(i,a.r), ib=pick(i,b.r); 
-    for(int j=0;j<C;++j){ int ja=pick(j,a.c), jb=pick(j,b.c); y(i,j) = a(ia,ja)/b(ib,jb); }
-}
-return y;
-}
+
 
 
 Tensor Tensor::row_sum(const Tensor& X){ Tensor y(X.r,1); for(int i=0;i<X.r;++i){ float s=0.f; for(int j=0;j<X.c;++j) s+=X(i,j); y(i,0)=s; } return y; }

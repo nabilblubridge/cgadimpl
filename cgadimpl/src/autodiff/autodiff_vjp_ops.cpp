@@ -30,7 +30,7 @@ void vjp_Div(Node* n, const Tensor& gy){
     if (A->requires_grad) A->grad.add_( rt( gy * (Tensor::reciprocal(B->value)), A->value) );
     if (B->requires_grad) B->grad.add_( rt( -gy * (Tensor::reciprocal(B->value)) * (Tensor::reciprocal(B->value)) * A->value, B->value) );
 }
-void vjp_Reci(Node* n, const Tensor& gy){
+void vjp_Reciprocal(Node* n, const Tensor& gy){
     Node* X = n->inputs[0].get(); if (!X->requires_grad) return;
     X->grad.add_( rt( -gy * (Tensor::reciprocal(X->value)) * (Tensor::reciprocal(X->value)), X->value) );
 }
@@ -644,6 +644,9 @@ void vjp_MeanAll(Node* n, const Tensor& gy){
     float scale = gy(0,0) / float(X->value.rows()*X->value.cols());
     X->grad.add_( Tensor::ones_like(X->value) * scale );
 }
+
+
+
 
 // ----- softmax / losses -----
 void vjp_SoftmaxRow(Node* n, const Tensor& gy){

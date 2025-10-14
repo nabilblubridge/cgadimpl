@@ -7,7 +7,7 @@ namespace ag {
 namespace detail{
 
 // helper: reduce a gradient to a parent's shape (broadcast-aware)
-inline  auto rt(const  auto& g, const  auto& like){ return  auto::reduce_to(g, like); }
+inline Tensor rt(const Tensor& g, const Tensor& like){ return Tensor::reduce_to(g, like); }
 
 // ----- elementwise binary -----
 void hvjp_Add(Node* n, const std::shared_ptr<Node>& gy){
@@ -101,13 +101,13 @@ void hvjp_FMA(Node* n, const std::shared_ptr<Node>& gy){
         }
        
     }
-    if (C->requires_grad) C->grad.add_( rt(gy, C->value) );
+    if (C->requires_grad) C->grad.add_( rt(gy->value, C->value) );
 }
 
 
-void hvjp_Sqrt(Node* n, const Tensor& gy){
-    Node* X = n->inputs[0].get();
-    if (X->requires_grad) X->grad.add_( rt(0.5f * gy * Tensor::sqrt(  Tensor::reciprocal(X->value)), X->value) );
+void hvjp_Sqrt(Node* n, const std::shared_ptr<Node>& gy){
+    auto X = n->inputs[0];
+    if (X->requires_grad) X->grad.add_( rt((0.5f * gy * sqrt_nodeops(  reci_nodeops(X)))->value, X->value) );
 }
 
 void hvjp_LayerNorm(Node* n, const std::shared_ptr<Node>& gy){
@@ -220,6 +220,39 @@ void hvjp_RMSNorm(Node* n, const std::shared_ptr<Node>& gy){
     if (x->requires_grad) x->grad.add_(grad_x->value);
 
 
+}
+
+
+void hvjp_Div(Node* n, const std::shared_ptr<Node>& gy){
+    auto A = n->inputs[0]; auto B = n->inputs[1];
+    if (A->requires_grad) A->grad.add_( rt( (gy * (reci_nodeops(B)))->value, A->value) );
+    if (B->requires_grad) B->grad.add_( rt( (-1.0*gy * (reci_nodeops(B)) * (reci_nodeops(B)) * A)->value, B->value) );
+}
+void hvjp_Reciprocal(Node* n, const std::shared_ptr<Node>& gy){
+    auto X = n->inputs[0]; if (!X->requires_grad) return;
+    X->grad.add_( rt( (-1.0*gy * (reci_nodeops(X)) * (reci_nodeops(X)))->value, X->value) );
+}
+
+
+void hvjp_Sign(Node* n, const std::shared_ptr<Node>& gy){
+    auto X = n->inputs[0]; if (!X->requires_grad) return;
+
+    auto zeros_node = std::make_shared<Node>(
+        Tensor::zeros_like(X->value),
+        X->requires_grad, Op::Leaf, "ones_like"
+    );
+    X->grad.add_( rt( (gy *zeros_node)->value, X->value) );
+}
+
+
+void hvjp_Relumask(Node* n, const std::shared_ptr<Node>& gy){
+    auto X = n->inputs[0]; if (!X->requires_grad) return;
+
+    auto zeros_node = std::make_shared<Node>(
+        Tensor::zeros_like(X->value),
+        X->requires_grad, Op::Leaf, "ones_like"
+    );
+    X->grad.add_( rt( (gy *zeros_node)->value, X->value) );
 }
 
 
@@ -431,25 +464,25 @@ void hvjp_Log(Node* n, const std::shared_ptr<Node>& gy){
     if (X->requires_grad) X->grad.add_( rt( (gy / X)->value, X->value) );
 }
 
-// void hvjp_GCU(Node* n, const std::shared_ptr<Node>& gy){
+void hvjp_GCU(Node* n, const std::shared_ptr<Node>& gy){
 //     auto X = n->inputs[0];
 //     if (X->requires_grad) X->grad.add_( rt( gy * ( auto::cos(X->value)-(X->value* auto::sin(X->value))), X->value) );
-// }
+ }
 
 void hvjp_Mish(Node* n, const std::shared_ptr<Node>& gy){
     auto X = n->inputs[0];
-    if (X->requires_grad) X->grad.add_( rt( gy * ( tanh_nodeops(  softplus_nodeops(X) )-(  (X* sigmoid_nodeops(X))  / ( cosh_nodeops(  softplus_nodeops(X)* cosh_nodeops(  softplus_nodeops(X) ))    )            )), X->value) );
+    if (X->requires_grad) X->grad.add_( rt( (gy * ( tanh_nodeops(  softplus_nodeops(X) )-(  (X* sigmoid_nodeops(X))  / ( cosh_nodeops(  softplus_nodeops(X)* cosh_nodeops(  softplus_nodeops(X) ))    )            )))->value, X->value) );
 }
 
 void hvjp_Cosh(Node* n, const std::shared_ptr<Node>& gy){
     auto X = n->inputs[0];
-    if (X->requires_grad) X->grad.add_( rt( gy * (sinh_nodeops(X)), X->value) );
+    if (X->requires_grad) X->grad.add_( rt( (gy * (sinh_nodeops(X)))->value, X->value) );
 }
 
 
 void hvjp_Sinh(Node* n, const std::shared_ptr<Node>& gy){
     auto X = n->inputs[0];
-    if (X->requires_grad) X->grad.add_( rt( gy * (cosh_nodeops(X)), X->value) );
+    if (X->requires_grad) X->grad.add_( rt( (gy * (cosh_nodeops(X)))->value, X->value) );
 }
 
 
@@ -464,7 +497,7 @@ void hvjp_Tanh(Node* n, const std::shared_ptr<Node>& gy){
         X->requires_grad, Op::Leaf, "ones_like"
     );
     
-    X->grad.add_( rt( gy * (ones_node - th*th), X->value) );
+    X->grad.add_( rt( (gy * (ones_node - th*th))->value, X->value) );
 }
 
 
@@ -481,7 +514,7 @@ void hvjp_Sigmoid(Node* n, const std::shared_ptr<Node>& gy){
     );
 
 
-    X->grad.add_( rt( gy * ( s * ( ones_node-s) ), X->value) );
+    X->grad.add_( rt( (gy * ( s * ( ones_node-s) ))->value, X->value) );
 }
 
 
@@ -494,13 +527,13 @@ void hvjp_Softplus(Node* n, const std::shared_ptr<Node>& gy){
 
 void hvjp_Gaus(Node* n, const std::shared_ptr<Node>& gy){
     auto X = n->inputs[0]; if (!X->requires_grad) return;
-    X->grad.add_( rt( gy * -2*X* exp_nodeops(-1*X*X), X->value) );
+    X->grad.add_( rt( (gy * -2*X* exp_nodeops(-1*X*X))->value, X->value) );
 }
 
 void hvjp_Transpose(Node* n, const std::shared_ptr<Node>& gy){
     auto X = n->inputs[0]; if (!X->requires_grad) return;
 
-    X->grad.add_( rt(  transpose_nodeops(gy) , X->value) );
+    X->grad.add_( rt(  (transpose_nodeops(gy) )->value, X->value) );
 }
 
 
@@ -514,7 +547,7 @@ auto ones_node = std::make_shared<Node>(
         Tensor::ones_like(s->value),
         X->requires_grad, Op::Leaf, "ones_like"
     );
-    X->grad.add_( rt( gy * ( s + X * ( s * ( ones_node-s) ) ), X->value) );
+    X->grad.add_( rt( (gy * ( s + X * ( s * ( ones_node-s) ) ))->value, X->value) );
 }
 
 void hvjp_Parcon(Node* n, const std::shared_ptr<Node>& gy){
@@ -523,31 +556,31 @@ void hvjp_Parcon(Node* n, const std::shared_ptr<Node>& gy){
         Tensor::ones_like(X->value),
         X->requires_grad, Op::Leaf, "ones_like"
     );
-    X->grad.add_( rt( gy * ( 2 * ones_node - 2*X  ), X->value) );
+    X->grad.add_( rt( (gy * ( 2 * ones_node - 2*X  ))->value, X->value) );
 }
 
 void hvjp_LiSHT(Node* n, const std::shared_ptr<Node>& gy){
     auto X = n->inputs[0]; if (!X->requires_grad) return;
-    X->grad.add_( rt( gy * (  tanh_nodeops(X)+ ( reci_nodeops(cosh_nodeops(X)* cosh_nodeops(X))*X ) ), X->value) );
+    X->grad.add_( rt( (gy * (  tanh_nodeops(X)+ ( reci_nodeops(cosh_nodeops(X)* cosh_nodeops(X))*X ) ))->value, X->value) );
 }
 
 
 
 
-// void hvjp_GELU(Node* n, const std::shared_ptr<Node>& gy){
-//     auto X = n->inputs[0]; if (!X->requires_grad) return;
-//     constexpr float c = 0.79788456080286535588f; // sqrt(2/pi)
-//     int R=X->value.rows(), C=X->value.cols();
-//      auto x=X->value,u(R,C),dudx(R,C);
-//     for(int i=0;i<R;++i) for(int j=0;j<C;++j){
-//         float z=x(i,j);
-//         u(i,j)=c*(z+0.044715f*z*z*z);
-//         dudx(i,j)=c*(1.f+0.134145f*z*z);
-//     }
-//      auto th= auto::tanh(u), one= auto::ones_like(th);
-//      auto dgelu=(one+th)*0.5f + (x * ((one - th*th) * dudx))*0.5f;
-//     X->grad.add_( rt( gy * dgelu, X->value) );
-// }
+void hvjp_GELU(Node* n, const std::shared_ptr<Node>& gy){
+    // auto X = n->inputs[0]; if (!X->requires_grad) return;
+    // constexpr float c = 0.79788456080286535588f; // sqrt(2/pi)
+    // int R=X->value.rows(), C=X->value.cols();
+    //  auto x=X->value,u(R,C),dudx(R,C);
+    // for(int i=0;i<R;++i) for(int j=0;j<C;++j){
+    //     float z=x(i,j);
+    //     u(i,j)=c*(z+0.044715f*z*z*z);
+    //     dudx(i,j)=c*(1.f+0.134145f*z*z);
+    // }
+    //  auto th= auto::tanh(u), one= auto::ones_like(th);
+    //  auto dgelu=(one+th)*0.5f + (x * ((one - th*th) * dudx))*0.5f;
+    // X->grad.add_( rt( gy * dgelu, X->value) );
+}
 
 
 
@@ -618,7 +651,7 @@ void hvjp_MatMul(Node* n, const std::shared_ptr<Node>& gy){
     }
 }
 
-// void hvjp_Dyntanh(Node* n, const std::shared_ptr<Node>& gy){
+ void hvjp_Dyntanh(Node* n, const std::shared_ptr<Node>& gy){
 //     auto X = n->inputs[0]; 
 //     auto A = n->inputs[1]; 
 //     auto B = n->inputs[2]; 
@@ -630,7 +663,7 @@ void hvjp_MatMul(Node* n, const std::shared_ptr<Node>& gy){
 //     if (A->requires_grad) A->grad.add_(gy* auto::sech(X->value*A->value)* auto::sech(X->value*A->value)*X->value*G->value);
 //     if (B->requires_grad) B->grad.add_(gy);
 //     if (G->requires_grad) G->grad.add_(gy* auto::tanh(*(n->tapenode.back()))   );
-// }
+ }
 
 
 
