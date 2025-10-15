@@ -47,3 +47,7 @@ OP(Sqrt, 1, "sqrt")
 OP(Relumask, 1, "relumask")
 OP(Cos, 1, "cosh")
 OP(Sin, 1, "sinh")
+OP(MOE,      3,    "moe") // mixture of experts with weights and bias
+OP(RELUAtt,     4,    "reluatt") // relu attention
+OP(SigAtt,    4,    "sigatt") // sigmoid attention
+OP(Linear, 3, "linear") // linear layer

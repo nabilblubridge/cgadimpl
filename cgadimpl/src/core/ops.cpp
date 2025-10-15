@@ -182,6 +182,24 @@ return Value(detail::realrms_nodeops(x.node, g));
         
     }
 
+    Value reluatt(const Value& a, const Value& b, const Value& c, const Value& d){ 
+    return Value(detail::reluatt_nodeops(a.node, b.node, c.node, d.node));
+    }
+
+
+    Value sigatt(const Value& a, const Value& b, const Value& c, const Value& d){ 
+    return Value(detail::sigatt_nodeops(a.node, b.node, c.node, d.node));
+    }
+
+    Value linear(const Value& a, const Value& b, const Value& c){ 
+        return Value(detail::linear_nodeops(a.node, b.node, c.node)); 
+    }
+
+
+        Value moewe(const Value& x, const Value& w, const Value& b){ 
+        return Value(detail::moewe_nodeops(x.node, w.node, b.node));
+    }
+
 
     Value cross_entropy_with_logits(const Value& logits, const Value& onehot){
     // Stable CE = mean( -sum(onehot * _nodeops(logits - logsumexp_row_nodeops(logits))) )

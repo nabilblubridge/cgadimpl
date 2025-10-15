@@ -6,7 +6,10 @@
 #include <cassert>
 #include "ad/graph.hpp"
 #include "nn/nn.hpp" // for silu
-
+// #include <cuda.h>
+// #include <iostream>
+// #include <cuda_runtime.h>
+// #include <math_functions.h>
 
 namespace ag {
 
@@ -14,6 +17,22 @@ namespace ag {
     Node::Node() = default;
     Node::Node(const Tensor& v, bool rg, Op op_, const char* nm) : op(op_), value(v), grad(Tensor::zeros_like(v)), requires_grad(rg), debug_name(nm) {}
 
+// Node::Node(const Tensor& v, bool device_gpu)
+// {
+
+// if(device_gpu)
+// {
+
+// cudaMalloc((void**)&d_array, value.size() * sizeof(float));
+// cudaMemcpy(d_array, value.data(), value.size() * sizeof(float), cudaMemcpyHostToDevice);
+
+
+// }
+
+
+// }
+
+    
 
     Value::Value() = default;
 

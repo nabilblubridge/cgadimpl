@@ -9,6 +9,7 @@
 #include <cmath>
 #include "tensor.hpp"
 #include<iostream>
+#include <cstddef>
 
 namespace ag {
 

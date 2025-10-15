@@ -142,6 +142,18 @@ Tensor jvp_AlibiAttention(Node* n, const std::function<const Tensor&(Node*)>& t)
     return Tensor();
 }
 
+Tensor jvp_RELUAtt(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+Tensor jvp_SigAtt(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+Tensor jvp_MOE(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+Tensor jvp_Linear(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
 
 
 Tensor jvp_Div(Node* n, const std::function<const Tensor&(Node*)>& t){

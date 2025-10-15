@@ -277,6 +277,144 @@ void hvjp_RealRMSNorm(Node* n, const std::shared_ptr<Node>& gy){
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+// // ----- elementwise quarternary -----
+void hvjp_RELUAtt(Node* n, const std::shared_ptr<Node>& gy){
+    auto A = n->inputs[0];
+    auto B = n->inputs[1];
+    auto C = n->inputs[2];
+    auto D = n->inputs[3];
+    
+     auto q = n->tapenode[0] ;
+     auto k = n->tapenode[1] ;
+     auto v = n->tapenode[2] ;
+    float scale = 1.0f / std::sqrt(float(k->value.cols()));
+     auto s = n->tapenode[3] ;
+
+    // ---- Backprop chain ----
+
+    // y = s v
+     auto dL_ds =  matmul_nodeops(gy,  transpose_nodeops(v));   // [B x B]
+     auto dL_dv =  matmul_nodeops( transpose_nodeops(s), gy);   // [A x D]
+
+    // s = softmax(g)
+    
+         auto dot =  relumask_nodeops(s )* dL_ds;
+      auto  dL_dg = dot;
+    
+
+    // g = q k^T
+     auto dL_dq =  matmul_nodeops(dL_dg, k);
+     auto dL_dk =  matmul_nodeops( transpose_nodeops(dL_dg), q);
+
+    // q = A B
+     auto dL_dA_q =  matmul_nodeops(dL_dq,  transpose_nodeops(B));
+     auto dL_dB   =  matmul_nodeops( transpose_nodeops(A), dL_dq)* scale;;
+
+    // k = A C
+     auto dL_dA_k =  matmul_nodeops(dL_dk,  transpose_nodeops(C));
+     auto dL_dC   =  matmul_nodeops( transpose_nodeops(A), dL_dk)* scale;
+
+    // v = A D
+     auto dL_dA_v =  matmul_nodeops(dL_dv,  transpose_nodeops(D));
+     auto dL_dD   =  matmul_nodeops( transpose_nodeops(A), dL_dv);
+
+    // combine A contributions
+     auto dL_dA = dL_dA_q + dL_dA_k + dL_dA_v;
+
+    // ---- Accumulate ----
+    if (A->requires_grad) A->grad.add_(dL_dA->value);
+    if (B->requires_grad) B->grad.add_(dL_dB->value);
+    if (C->requires_grad) C->grad.add_(dL_dC->value);
+    if (D->requires_grad) D->grad.add_(dL_dD->value);
+
+}
+
+
+
+
+// // ----- elementwise quarternary -----
+void hvjp_SigAtt(Node* n, const std::shared_ptr<Node>& gy){
+    auto A = n->inputs[0];
+    auto B = n->inputs[1];
+    auto C = n->inputs[2];
+    auto D = n->inputs[3];
+    
+     auto q = n->tapenode[0] ;
+     auto k = n->tapenode[1] ;
+     auto v = n->tapenode[2] ;
+    float scale = 1.0f / std::sqrt(float(k->value.cols()));
+     auto s = n->tapenode[3] ;
+
+    // ---- Backprop chain ----
+
+    // y = s v
+     auto dL_ds =  matmul_nodeops(gy,  transpose_nodeops(v));   // [B x B]
+     auto dL_dv =  matmul_nodeops( transpose_nodeops(s), gy);   // [A x D]
+
+    // s = softmax(g)
+    auto ones_node = std::make_shared<Node>(
+        Tensor::ones_like(s->value),
+        s->requires_grad, Op::Leaf, "ones_like"
+    );
+         auto dot =  ( s * (ones_node-s))* dL_ds;
+      auto  dL_dg = dot;
+    
+
+    // g = q k^T
+     auto dL_dq =  matmul_nodeops(dL_dg, k);
+     auto dL_dk =  matmul_nodeops( transpose_nodeops(dL_dg), q);
+
+    // q = A B
+     auto dL_dA_q =  matmul_nodeops(dL_dq,  transpose_nodeops(B));
+     auto dL_dB   =  matmul_nodeops( transpose_nodeops(A), dL_dq)* scale;;
+
+    // k = A C
+     auto dL_dA_k =  matmul_nodeops(dL_dk,  transpose_nodeops(C));
+     auto dL_dC   =  matmul_nodeops( transpose_nodeops(A), dL_dk)* scale;
+
+    // v = A D
+     auto dL_dA_v =  matmul_nodeops(dL_dv,  transpose_nodeops(D));
+     auto dL_dD   =  matmul_nodeops( transpose_nodeops(A), dL_dv);
+
+    // combine A contributions
+     auto dL_dA = dL_dA_q + dL_dA_k + dL_dA_v;
+
+    // ---- Accumulate ----
+    if (A->requires_grad) A->grad.add_(dL_dA->value);
+    if (B->requires_grad) B->grad.add_(dL_dB->value);
+    if (C->requires_grad) C->grad.add_(dL_dC->value);
+    if (D->requires_grad) D->grad.add_(dL_dD->value);
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // // ----- elementwise quarternary -----
 void hvjp_Attention(Node* n, const std::shared_ptr<Node>& gy){
     auto A = n->inputs[0];
@@ -451,6 +589,25 @@ void hvjp_Relu(Node* n, const std::shared_ptr<Node>& gy){
 
 }
 
+
+void hvjp_MOE(Node* n, const std::shared_ptr<Node>& gy){
+    auto X = n->inputs[0];
+    auto W = n->inputs[1];
+    auto B = n->inputs[2];
+
+    auto y = matmul_nodeops(X, transpose_nodeops(W)) + B; 
+
+    auto dL_dB = gy;
+    auto dL_dW = matmul_nodeops(transpose_nodeops(gy), X);
+    auto dL_dX = matmul_nodeops(gy, W);
+
+    if (X->requires_grad) X->grad.add_(dL_dX->value);
+    if (W->requires_grad) W->grad.add_(dL_dW->value);
+    if (B->requires_grad) B->grad.add_(dL_dB->value);
+
+}
+
+
 void hvjp_Exp(Node* n, const std::shared_ptr<Node>& gy){
     auto X = n->inputs[0];
     
@@ -547,6 +704,72 @@ void hvjp_Transpose(Node* n, const std::shared_ptr<Node>& gy){
 
     X->grad.add_( rt(  (transpose_nodeops(gy) )->value, X->value) );
 }
+
+
+
+
+
+void hvjp_Linear(Node* n, const std::shared_ptr<Node>& gy){
+    auto A = n->inputs[0];
+    auto B = n->inputs[1];
+    auto C = n->inputs[2];
+
+    // External kernel (if plugin loaded), else fallback to Tensor::matmul
+    auto* mm = ag::kernels::cpu().matmul;
+
+    // Shapes
+    auto At = A;
+    auto Bt = B;
+    auto [M, K]  = A->value.shape();
+    auto [K2, N] = B->value.shape();
+    (void)K2; // assume forward already checked
+
+    if (A->requires_grad){
+        auto BT = transpose_nodeops(B); // (N x K)
+        Tensor dA(M, K);                   // temp buffer
+
+        if (mm) {
+            // dA = gy (MxN) * BT (NxK)
+            mm(gy->value.data(), BT->value.data(), dA.data(), M, N, K);
+
+            auto c = std::make_shared<Node>(dA, false, Op::MatMul, "matmul");
+
+            A->grad.add_(c->value);
+        } else {
+            dA = Tensor::matmul(gy->value, BT->value);
+
+            auto c = std::make_shared<Node>(dA, false, Op::MatMul, "matmul");
+
+            A->grad.add_(c->value);
+        }
+        A->grad.add_(dA);
+    }
+
+    if (B->requires_grad){
+        auto AT = transpose_nodeops(At); // (K x M)
+        Tensor dB(K, N);                   // temp buffer
+
+        if (mm) {
+            // dB = AT (KxM) * gy (MxN)
+            mm(AT->value.data(), gy->value.data(), dB.data(), K, M, N);
+
+            auto c = std::make_shared<Node>(dB, false, Op::MatMul, "matmul");
+
+            A->grad.add_(c->value);
+        } else {
+            dB = Tensor::matmul(AT->value, gy->value);
+              auto c = std::make_shared<Node>(dB, false, Op::MatMul, "matmul");
+
+            A->grad.add_(c->value);
+        }
+        B->grad.add_(dB);
+    }
+    if (C->requires_grad) C->grad.add_( rt(gy->value, C->value) );
+}
+
+
+
+
 
 
 

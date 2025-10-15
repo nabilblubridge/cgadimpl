@@ -234,6 +234,31 @@ namespace detail {
          return n;
     }
 
+        std::shared_ptr<Node> linear_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c){ 
+        const Tensor& A = a->value;
+         const Tensor& B = Tensor::transpose(b->value);
+
+         auto [M,K]  = A.shape();
+         auto [K2,N] = B.shape();
+         if (K != K2) throw std::runtime_error("gemm: inner dims mismatch");
+
+         const Tensor& C = c->value; 
+
+                 Tensor E({M,N});
+ 
+
+         auto* fn = ag::kernels::cpu().fmab;
+         if (!fn) throw std::runtime_error("No CPU GEMM kernel registered now only");
+         fn(A.data(), B.data(), C.data(), E.data(), M, K, N);
+
+         auto n = std::make_shared<Node>(E,
+             (a->requires_grad || b->requires_grad || c->requires_grad),
+             Op::Linear, "linear");
+         n->inputs = { a, b , c};
+         return n;
+    }
+
+
 
     std::shared_ptr<Node> attention_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d){ 
     Tensor q = Tensor::matmul(a->value, b->value); 
@@ -249,6 +274,45 @@ namespace detail {
     ag::debug::on_node_created(n); 
     return n; 
     }
+
+    std::shared_ptr<Node> reluatt_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d){ 
+    Tensor q = Tensor::matmul(a->value, b->value); 
+    Tensor k = Tensor::matmul(a->value, c->value); 
+    Tensor v = Tensor::matmul(a->value, d->value);
+    Tensor g = Tensor::matmul(q, Tensor::transpose(k)*(1.f/sqrt(float(k.cols())))) ;
+    Tensor s = Tensor::relu(g);
+    Tensor y = Tensor::matmul(s, v);
+    auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad || c->requires_grad || d->requires_grad, Op::RELUAtt, "reluatt"); 
+    n->inputs = {a, b, c, d};
+    n->tape.resize(4);
+    n->tape={std::make_shared<Tensor>(q), std::make_shared<Tensor>(k), std::make_shared<Tensor>(v), std::make_shared<Tensor>(s)};
+    ag::debug::on_node_created(n); 
+    return n; 
+    }
+
+        std::shared_ptr<Node> sigatt_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d){ 
+    Tensor q = Tensor::matmul(a->value, b->value); 
+    Tensor k = Tensor::matmul(a->value, c->value); 
+    Tensor v = Tensor::matmul(a->value, d->value);
+    Tensor g = Tensor::matmul(q, Tensor::transpose(k)*(1.f/sqrt(float(k.cols())))) ;
+    Tensor s = Tensor::relu(g);
+    Tensor y = Tensor::matmul(s, v);
+    auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad || c->requires_grad || d->requires_grad, Op::SigAtt, "sigatt"); 
+    n->inputs = {a, b, c, d};
+    n->tape.resize(4);
+    n->tape={std::make_shared<Tensor>(q), std::make_shared<Tensor>(k), std::make_shared<Tensor>(v), std::make_shared<Tensor>(s)};
+    ag::debug::on_node_created(n); 
+    return n; 
+    }
+
+        std::shared_ptr<Node> moewe_nodeops(const std::shared_ptr<Node>& x, const std::shared_ptr<Node>& w, const std::shared_ptr<Node>& b){ 
+        Tensor y = Tensor::softmax_row(Tensor::matmul(x->value, Tensor::transpose(w->value)) + b->value); 
+        auto n=std::make_shared<Node>(y, x->requires_grad, Op::MOE, "moe"); 
+        n->inputs={x}; 
+        ag::debug::on_node_created(n);  
+        return n;
+    }
+
 
 
     std::shared_ptr<Node> alibiatt_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d, float& m) { 

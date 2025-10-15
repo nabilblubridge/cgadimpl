@@ -6,6 +6,10 @@
 #include <vector>
 #include "tensor.hpp"
 #include "ad/schema.hpp"
+// #include <cuda.h>
+// #include <iostream>
+// #include <cuda_runtime.h>
+// #include <math_functions.h>
 
 
 namespace ag {
@@ -21,6 +25,8 @@ Tensor grad; // same shape as value
 bool requires_grad{false};
 bool is_checkpoint{false};
 bool requires_higher_grad{false};
+// bool device_gpu{false};
+// float *d_array;
 
 std::vector<Value> saved_inputs;
 std::vector<uint8_t> saved_rng_blob;
@@ -34,6 +40,9 @@ Node();
 Node(const Tensor& v, bool rg, Op op_, const char* nm="");
 
 Node(const Tensor& v) : value(v), requires_grad(false), op(Op::Leaf) {}
+
+// Node(const Tensor& v, bool device_gpu) {}
+
 };
 
 

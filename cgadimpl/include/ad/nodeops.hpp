@@ -61,6 +61,8 @@ std::shared_ptr<Node> cosh_nodeops(const std::shared_ptr<Node>& x);
 std::shared_ptr<Node> sinh_nodeops(const std::shared_ptr<Node>& x);
 std::shared_ptr<Node> cos_nodeops(const std::shared_ptr<Node>& x);
 std::shared_ptr<Node> sin_nodeops(const std::shared_ptr<Node>& x);
+std::shared_ptr<Node> reluatt_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d);
+std::shared_ptr<Node> sigatt_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d);
 
 std::shared_ptr<Node> gelu_nodeops(const std::shared_ptr<Node>& x); // tanh approx
 std::shared_ptr<Node> silu_nodeops(const std::shared_ptr<Node>& x); // x * sigmoid(x)
@@ -82,7 +84,9 @@ std::shared_ptr<Node> mean_all_nodeops( const std::shared_ptr<Node>& x); // scal
 std::shared_ptr<Node> softmax_row_nodeops( const std::shared_ptr<Node>& z); // [B,C] -> [B,C]
 std::shared_ptr<Node> logsumexp_row_nodeops(const std::shared_ptr<Node>& z); // [B,C] -> [B,1]
 std::shared_ptr<Node> laynor_nodeops(const std::shared_ptr<Node>& x);
+std::shared_ptr<Node> linear_nodeops(const  std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c); // fused multiply-add a@b + c
 std::shared_ptr<Node> alibiatt_nodeops( const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d, float& m); // m = max seq len
+std::shared_ptr<Node> moewe_nodeops(const std::shared_ptr<Node>& x, const std::shared_ptr<Node>& w, const std::shared_ptr<Node>& b);
 
 // composite loss (one-hot targets)
 std::shared_ptr<Node> cross_entropy_with_logits_nodeops(const std::shared_ptr<Node>& logits, const std::shared_ptr<Node>& onehot);
