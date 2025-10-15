@@ -524,6 +524,7 @@ void hvjp_Sigmoid(Node* n, const std::shared_ptr<Node>& gy){
         Tensor::ones_like(X->value),
         X->requires_grad, Op::Leaf, "ones_like"
     );
+    std::cout<<"YAY!";
 
 
     X->grad.add_( rt( (gy * ( s * ( ones_node-s) ))->value, X->value) );

@@ -103,7 +103,7 @@ Tensor Yt(8, 8);
 
 auto bias = param(Tensor::zeros(8,8), "bias");
 
-    auto y =   sigmoid(a); // [2,2]
+    auto y =   fmab(a, b, bias); // [2,2]
     auto q=y;
 std::cout << "y = " << y.val()
 <<","<< endl<< "A = " << a.val()
@@ -114,7 +114,7 @@ std::cout << "dL/dA[0,0] = " << a.grad()
 <<","<< endl<< "dL/dB[0,0] = " << b.grad()<<","<< endl
 << "dL/dbias[0,0] = " << bias.grad() << endl<< "dL/dq = " << q.grad() << endl;
 zero_grad(y);
-backward(y);
+highbackward(y);
 
 std::cout << "y = " << y.val()
 <<","<< endl<< "A = " << a.val()
