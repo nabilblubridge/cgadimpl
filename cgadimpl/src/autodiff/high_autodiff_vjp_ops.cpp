@@ -24,7 +24,13 @@ void hvjp_Sub(Node* n, const std::shared_ptr<Node>& gy){
     if (A->requires_grad) A->grad.add_( rt(H->value, A->value) );
     if (B->requires_grad) B->grad.add_( rt(-(H->value), B->value) );
 }
+void hvjp_Mul(Node* n, const std::shared_ptr<Node>& gy){
+    auto A = n->inputs[0]; auto B = n->inputs[1];
 
+
+    if (A->requires_grad) A->grad.add_( rt((gy*B)->value, A->value) );
+    if (B->requires_grad) B->grad.add_( rt((gy*A)->value, B->value) );
+ }
 
 void hvjp_MSELoss(Node* n, const std::shared_ptr<Node>& gy /*unused: scalar gy*/){
     auto Z = n->inputs[0];
@@ -37,14 +43,7 @@ void hvjp_MSELoss(Node* n, const std::shared_ptr<Node>& gy /*unused: scalar gy*/
     if (Y->requires_grad) Y->grad.add_(gY->value);
 }
 
-void hvjp_Mul(Node* n, const std::shared_ptr<Node>& gy){
-    auto A = n->inputs[0]; auto B = n->inputs[1];
 
-
-    auto H = gy*A ;
-    if (A->requires_grad) A->grad.add_( rt(H->value, A->value) );
-    if (B->requires_grad) B->grad.add_( rt(H->value, B->value) );
- }
 
 // ----- elementwise trinary -----
 void hvjp_FMA(Node* n, const std::shared_ptr<Node>& gy){

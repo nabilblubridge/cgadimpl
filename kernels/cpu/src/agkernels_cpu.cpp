@@ -80,6 +80,18 @@ void exp_cuda(const float* x, float* y, int64_t n) {
     run_cuda_exp(x, y, n);
 }
 
+void add_cuda(const float* x, const float* z, float* y, int64_t n) {
+    run_cuda_add(x, z, y, n);
+}
+
+void sub_cuda(const float* x, const float* z, float* y, int64_t n) {
+    run_cuda_sub(x, z, y, n);
+}
+
+void hadmul_cuda(const float* x, const float* z, float* y, int64_t n) {
+    run_cuda_hadmul(x, z, y, n);
+}
+
 void relumask_cuda(const float* x, float* y, int64_t n) {
     run_cuda_relumask(x, y, n);
 }
@@ -201,6 +213,10 @@ AG_EXPORT int ag_get_cpu_kernels_v1(struct ag_cpu_v1* out){
   out->exp = &exp_cuda;
   out->sigmoid = &sigmoid_cuda;
   out->sigmoidiff = &sigmoidiff_cuda;
+  out->add = &add_cuda;
+  out->sub = &sub_cuda;
+  out->hadmul = &hadmul_cuda;
+
 
   return 0;
 }

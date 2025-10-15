@@ -9,29 +9,111 @@ namespace detail {
 
 
     std::shared_ptr<Node> add_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b){ 
-        Tensor y = a->value + b->value; 
-        auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad, Op::Add, "+"); 
-        n->inputs = {a, b}; 
-        ag::debug::on_node_created(n); 
-        return n; 
+
+     const Tensor& A = a->value;
+         const Tensor& B = b->value;
+
+         auto [M,K]  = A.shape();
+         auto [K2,N] = B.shape();
+         if (K != K2) throw std::runtime_error("add: inner dims mismatch");
+
+
+         auto* fn = ag::kernels::cpu().add;
+         if (!fn) 
+         {
+         
+        //  Tensor y = a->value + b->value; 
+        // auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad, Op::Add, "+"); 
+        // n->inputs = {a, b}; 
+        // ag::debug::on_node_created(n); 
+                  throw std::runtime_error("No CPU Add kernel registered");
+
+        // return n; 
+
+         }
+                  Tensor C({M,N});
+
+         fn(A.data(), B.data(), C.data(), M*K);
+
+         auto n = std::make_shared<Node>(C,
+             (a->requires_grad || b->requires_grad),
+             Op::Add, "+");
+         n->inputs = { a, b };
+         return n;
+
+
+
+
     }
 
     std::shared_ptr<Node> sub_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b){ 
-        Tensor y = a->value - b->value; 
-        auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad, Op::Sub, "-"); 
-        n->inputs = {a, b}; 
-        ag::debug::on_node_created(n); 
-        return n; 
+ 
+     const Tensor& A = a->value;
+         const Tensor& B = b->value;
+
+         auto [M,K]  = A.shape();
+         auto [K2,N] = B.shape();
+         if (K != K2) throw std::runtime_error("sub: inner dims mismatch");
+
+
+         auto* fn = ag::kernels::cpu().sub;
+         if (!fn) 
+         {
+        //  Tensor y = a->value - b->value; 
+        // auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad, Op::Sub, "-"); 
+        // n->inputs = {a, b}; 
+        // ag::debug::on_node_created(n); 
+                  throw std::runtime_error("No CPU Sub kernel registered");
+
+        // return n; 
+
+         }
+                  Tensor C({M,N});
+
+         fn(A.data(), B.data(), C.data(), M*K);
+
+         auto n = std::make_shared<Node>(C,
+             (a->requires_grad || b->requires_grad),
+             Op::Sub, "-");
+         n->inputs = { a, b };
+         return n;
+
+
     }
 
 
 
     std::shared_ptr<Node> mul_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b){ 
-        Tensor y = a->value * b->value; 
-        auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad, Op::Mul, "*"); 
-        n->inputs = {a, b}; 
-        ag::debug::on_node_created(n); 
-        return n; 
+      
+     const Tensor& A = a->value;
+         const Tensor& B = b->value;
+
+         auto [M,K]  = A.shape();
+         auto [K2,N] = B.shape();
+         if (K != K2) throw std::runtime_error("mul: inner dims mismatch");
+
+
+         auto* fn = ag::kernels::cpu().hadmul;
+         if (!fn) 
+         {
+        //  Tensor y = a->value - b->value; 
+        // auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad, Op::Sub, "-"); 
+        // n->inputs = {a, b}; 
+        // ag::debug::on_node_created(n); 
+                  throw std::runtime_error("No CPU Mul kernel registered");
+
+        // return n; 
+
+         }
+                  Tensor C({M,N});
+
+         fn(A.data(), B.data(), C.data(), M*K);
+
+         auto n = std::make_shared<Node>(C,
+             (a->requires_grad || b->requires_grad),
+             Op::Mul, "*");
+         n->inputs = { a, b };
+         return n;
     }
 
     std::shared_ptr<Node> div_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b){ 

@@ -3,7 +3,7 @@
 #include <cuda_runtime.h>
 #include <math_functions.h>
 
-#define TILE 8
+#define TILE 16
 
 __global__ void tile_matrix_multiply(float* A, float* B, float* C, int M, int N, int K)
 {
@@ -67,6 +67,202 @@ void run_cuda_matrix(const float* A, const float* B, float* C, int M, int K, int
     cudaFree(d_B);
     cudaFree(d_C);
 }
+
+
+
+
+
+
+
+
+
+
+__global__ void adding_cuda(const float* A, const float* B, float* C, int width)
+{
+   int bx = blockIdx.x;
+    int tx = threadIdx.x;
+
+    int row = bx * blockDim.x + tx;
+
+    float acc = 0.0f;
+
+    
+
+    // Accumulate into existing C value instead of overwriting
+    if(row<width)
+                C[row] = A[row] + B[row];
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void run_cuda_add(const float* A, const float* B, float* C, int width)
+{
+    float *d_A, *d_B, *d_C;
+    int size = width * sizeof(float);
+
+    cudaMalloc(&d_A, size);
+    cudaMalloc(&d_B, size);
+    cudaMalloc(&d_C, size);
+
+    cudaMemcpy(d_A, A, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, size, cudaMemcpyHostToDevice);
+    int threads = 1024;
+
+    dim3 threadsPerBlock(threads);
+    dim3 numBlocks((width + threads - 1) / threads);
+
+    adding_cuda<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, width);
+    cudaDeviceSynchronize();
+
+        cudaMemcpy(C, d_C, size, cudaMemcpyDeviceToHost);
+
+
+
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
+}
+
+
+
+
+
+__global__ void subbing_cuda(const float* A, const float* B, float* C, int width)
+{
+   int bx = blockIdx.x;
+    int tx = threadIdx.x;
+
+    int row = bx * blockDim.x + tx;
+
+    float acc = 0.0f;
+
+    
+
+    // Accumulate into existing C value instead of overwriting
+    if(row<width)
+                C[row] = A[row] - B[row];
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void run_cuda_sub(const float* A, const float* B, float* C, int width)
+{
+    float *d_A, *d_B, *d_C;
+    int size = width * sizeof(float);
+
+    cudaMalloc(&d_A, size);
+    cudaMalloc(&d_B, size);
+    cudaMalloc(&d_C, size);
+
+    cudaMemcpy(d_A, A, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, size, cudaMemcpyHostToDevice);
+    int threads = 1024;
+
+    dim3 threadsPerBlock(threads);
+    dim3 numBlocks((width + threads - 1) / threads);
+
+    subbing_cuda<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, width);
+    cudaDeviceSynchronize();
+
+        cudaMemcpy(C, d_C, size, cudaMemcpyDeviceToHost);
+
+
+
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
+}
+
+
+
+
+
+
+__global__ void muling_cuda(const float* A, const float* B, float* C, int width)
+{
+   int bx = blockIdx.x;
+    int tx = threadIdx.x;
+
+    int row = bx * blockDim.x + tx;
+
+    float acc = 0.0f;
+
+    
+
+    // Accumulate into existing C value instead of overwriting
+    if(row<width)
+                C[row] = A[row] * B[row];
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void run_cuda_hadmul(const float* A, const float* B, float* C, int width)
+{
+    float *d_A, *d_B, *d_C;
+    int size = width * sizeof(float);
+
+    cudaMalloc(&d_A, size);
+    cudaMalloc(&d_B, size);
+    cudaMalloc(&d_C, size);
+
+    cudaMemcpy(d_A, A, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, size, cudaMemcpyHostToDevice);
+    int threads = 1024;
+
+    dim3 threadsPerBlock(threads);
+    dim3 numBlocks((width + threads - 1) / threads);
+
+    muling_cuda<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, width);
+    cudaDeviceSynchronize();
+
+        cudaMemcpy(C, d_C, size, cudaMemcpyDeviceToHost);
+
+
+
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
+}
+
 
 
 

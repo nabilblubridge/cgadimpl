@@ -26,6 +26,9 @@ typedef void (*ag_relumask_fn)(const float* x, float* y, int64_t n);
 typedef void (*ag_exp_fn)(const float* x, float* y, int64_t n);
 typedef void (*ag_sig_fn)(const float* x, float* y, int64_t n);
 typedef void (*ag_sigd_fn)(const float* x, float* y, int64_t n);
+typedef void (*ag_add_fn)(const float* x, const float* z, float* y, int64_t n);
+typedef void (*ag_sub_fn)(const float* x, const float* z, float* y, int64_t n);
+typedef void (*ag_hadmul_fn)(const float* x, const float* z, float* y, int64_t n);
 
 
 
@@ -38,6 +41,9 @@ struct ag_cpu_v1 {
   ag_gemm_fn fmab;
   ag_relumask_fn   relumask;
   ag_exp_fn exp;
+  ag_add_fn add;
+  ag_sub_fn sub;
+  ag_hadmul_fn hadmul;
   ag_sig_fn sigmoid;
   ag_sigd_fn sigmoidiff;
 };
@@ -58,6 +64,9 @@ struct Cpu {
     ag_exp_fn exp = nullptr;
 ag_sig_fn sigmoid = nullptr;
   ag_sigd_fn sigmoidiff = nullptr;
+  ag_add_fn add = nullptr;
+  ag_sub_fn sub = nullptr;
+  ag_hadmul_fn hadmul = nullptr;
 };
 
 // Global registry accessor
