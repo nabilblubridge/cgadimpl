@@ -587,6 +587,8 @@ __global__ void flash_forward_kernel(const float* Q, const float* K, const float
     float* Kj = &sram[tile_size];
     float* Vj = &sram[tile_size * 2];
     float* S = &sram[tile_size * 3];
+    int i = blockIdx.z;
+
 
     for (int j = 0; j < Tc; j++) {
 
@@ -597,7 +599,6 @@ __global__ void flash_forward_kernel(const float* Q, const float* K, const float
         }
         __syncthreads();  // such that the inner loop can use the correct Kj, Vj
 
-        for (int i = 0; i < Tr; i++)  {
 
             // Load Qi to SRAM, l and m to registers
             for (int x = 0; x < d; x++) {
@@ -643,7 +644,6 @@ __global__ void flash_forward_kernel(const float* Q, const float* K, const float
             }
             m[lm_offset + (Br * i) + tx] = row_m_new;
             l[lm_offset + (Br * i) + tx] = row_l_new;
-        }
         __syncthreads();  // otherwise, thread can use the wrong Kj, Vj in inner loop
     }
 }
@@ -676,8 +676,8 @@ void run_flash_forward(
     cudaMemset(d_l, 0, lm_size);
     cudaMemset(d_m, 0xff, lm_size); // initialize to -inf (roughly)
 
-    dim3 grid_dim(B, nh);
-    dim3 block_dim(Bc);
+    dim3 grid_dim(B, nh, Tr);
+dim3 block_dim(Bc);
 
     int shared_mem = (3 * Bc * d + Bc * Br) * sizeof(float);
 
