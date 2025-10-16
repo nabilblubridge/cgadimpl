@@ -426,7 +426,8 @@ void hvjp_Attention(Node* n, const std::shared_ptr<Node>& gy){
      auto k = n->tapenode[1] ;
      auto v = n->tapenode[2] ;
     float scale = 1.0f / std::sqrt(float(k->value.cols()));
-     auto s = n->tapenode[3] ;
+        auto g = matmul_nodeops(q, (transpose_nodeops(k)*scale)) ;
+    auto s = softmax_row_nodeops(g);
 
     // ---- Backprop chain ----
 
@@ -617,6 +618,7 @@ void hvjp_Exp(Node* n, const std::shared_ptr<Node>& gy){
 
 void hvjp_Log(Node* n, const std::shared_ptr<Node>& gy){
     auto X = n->inputs[0];
+    std::cout<<"trfhnjy";
     if (X->requires_grad) X->grad.add_( rt( (gy / X)->value, X->value) );
 }
 
@@ -938,8 +940,9 @@ void hvjp_RowSum(Node* n, const std::shared_ptr<Node>& gy){
         Tensor::ones_like(X->value),
         X->requires_grad, Op::Leaf, "ones_like"
     );
-     auto g = gy *  ones_node;
-    X->grad.add_( g->value );
+     Tensor g = Tensor::ones_like(X->value) * gy->value; // explicit broadcast
+auto n_g = std::make_shared<Node>(g, false, Op::Leaf, "broadcast_grad");
+    X->grad.add_( n_g->value );
 }
 
 

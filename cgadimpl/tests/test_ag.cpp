@@ -1,86 +1,99 @@
-// // =====================
-// // file: tests/test_ag.cpp
-// // =====================
-// #include <iostream>
-// #include "ad/ag_all.hpp"
-// #include <iomanip>
-// #include <iostream>
-
-// static void printTensor(const char* name,
-//                         const ag::Tensor& T,
-//                         int max_r = -1, int max_c = -1,
-//                         int width = 9, int prec = 4) {
-//     using std::cout;
-//     using std::fixed;
-//     using std::setw;
-//     using std::setprecision;
-
-//     const int r = T.rows(), c = T.cols();
-//     if (max_r < 0) max_r = r;
-//     if (max_c < 0) max_c = c;
-
-//     cout << name << " [" << r << "x" << c << "]";
-//     if (r == 1 && c == 1) { // scalar fast path
-//         cout << " = " << fixed << setprecision(6) << T(0,0) << "\n";
-//         return;
-//     }
-//     cout << "\n";
-
-//     const int rr = std::min(r, max_r);
-//     const int cc = std::min(c, max_c);
-//     for (int i = 0; i < rr; ++i) {
-//         cout << "  ";
-//         for (int j = 0; j < cc; ++j) {
-//             cout << setw(width) << fixed << setprecision(prec) << T(i,j);
-//         }
-//         if (cc < c) cout << " ...";
-//         cout << "\n";
-//     }
-//     if (rr < r) cout << "  ...\n";
-// }
-
-// using namespace std;
-
-// int main(){
-// using namespace ag;
-// Tensor A = Tensor::randn(2,3);
-// Tensor B = Tensor::randn(3,2);
-// auto a = param(A, "A");
-// auto b = param(B, "B");
-
-
-// auto y = sum(relu(matmul(a,b))); // scalar
-
-
-// zero_grad(y);
-// backward(y);
-// std::cout << "y = " << y.val().sum_scalar() << endl;
-// std::cout << "dL/dA[0,0] = " << a.grad()(0,0) << ", dL/dB[0,0] = " << b.grad()(0,0) << endl;
-
-
-// // JVP: along dA=ones, dB=zeros
-// std::unordered_map<Node*, Tensor> seed; seed[a.node.get()] = Tensor::ones_like(a.val());
-// Tensor jy = jvp(y, seed);
-// std::cout << "JVP dy(dA,0) = " << jy(0,0) << endl;
-
-// printTensor("A", a.val());
-// printTensor("B", b.val());
-// ag::Tensor Z = ag::Tensor::matmul(a.val(), b.val());
-// printTensor("Z = A*B", Z);
-// printTensor("ReLU mask", ag::Tensor::relu_mask(Z));
-// printTensor("grad A", a.grad());
-// printTensor("grad B", b.grad());
-// printTensor("JVP dy(dA,0)", jy);  // jy is 1x1, prints as scalar
-
-// cout << "Numerically verified! \nTest successful!\n";
-// return 0;
-// }
 #include <iostream>
-#include "ad/ag_all.hpp"
-#include "optim.hpp"
 #include <random>
+#include "ad/ag_all.hpp"
+#include "ad/export_hlo.hpp"
+
 #include <iomanip>
+#include <fstream>
+#include <filesystem>
+// ==========================================================================
+// CSV dump utilities
+// ==========================================================================
+// 
+// static void write_csv_tensor(const ag::Tensor& T,
+//                              const std::string& filepath,
+//                              int precision = 6)
+// {
+//     std::filesystem::create_directories(std::filesystem::path(filepath).parent_path());
+//     std::ofstream out(filepath);
+//     if (!out) { std::cerr << "Failed to open " << filepath << "\n"; return; }
+//     out << std::fixed << std::setprecision(precision);
+//     for (int i = 0; i < T.rows(); ++i) {
+//         for (int j = 0; j < T.cols(); ++j) {
+//             if (j) out << ',';
+//             out << T(i, j);
+//         }
+//         out << '\n';
+//     }
+//     out.close();
+//     std::cout << "Wrote " << T.rows() << "x" << T.cols()
+//               << " CSV to: " << filepath << "\n";
+// }
+
+// // Convenience wrappers for ag::Value
+// static void dump_csv_val (const std::string& label, const ag::Value& v,
+//                           const std::string& dir = "build/dumps")
+// {
+//     write_csv_tensor(v.val(),  dir + "/" + label + ".csv");
+// }
+// static void dump_csv_grad(const std::string& label,  ag::Value& v,
+//                           const std::string& dir = "build/dumps")
+// {
+//     write_csv_tensor(v.grad(), dir + "/" + label + "_grad.csv");
+// }
+
+
+// ==========================================================================
+// Pretty-print utilities
+// ==========================================================================
+
+static void print_tensor(const std::string& label,
+                         const ag::Tensor& T,
+                         int max_r = 6, int max_c = 8,
+                         int width = 10, int precision = 4) {
+    std::cout << label << " [" << T.rows() << "x" << T.cols() << "]\n";
+    const int R = std::min(T.rows(), max_r);
+    const int C = std::min(T.cols(), max_c);
+    for (int i = 0; i < R; ++i) {
+        for (int j = 0; j < C; ++j) {
+            std::cout << std::setw(width) << std::fixed
+                      << std::setprecision(precision) << T(i,j);
+        }
+        if (C < T.cols()) std::cout << "  ...";
+        std::cout << "\n";
+    }
+    if (R < T.rows()) std::cout << "...\n";
+    std::cout << std::endl;
+}
+
+static void print_value(const std::string& label,
+                        const ag::Value& v,
+                        int max_r = 6, int max_c = 8) {
+    print_tensor(label, v.val(), max_r, max_c);
+}
+static void print_grad(const std::string& label, ag::Value& v,  int max_r = 6, int max_c = 8) {
+    print_tensor(label + ".grad", v.grad(), max_r, max_c);
+}
+
+// ==========================================================================
+// MLP utilities
+// ==========================================================================
+
 using namespace ag;
+
+
+
+// Mean-squared error over all elements (batch & classes)
+static inline ag::Value mse_loss(const ag::Value& pred, const ag::Value& target) {
+    ag::Value diff = pred - target;
+    ag::Value sq   = diff * diff;               // elementwise
+    ag::Value s    = sum(sq);                   // scalar [1,1]
+    int B = pred.shape().first, C = pred.shape().second;
+    ag::Tensor scale = ag::Tensor::ones(1,1);
+    scale(0,0) = 1.0f / float(B * C);
+    return s * constant(scale);                 // broadcast scalar
+}
+
 
 
 int main(){
@@ -88,42 +101,56 @@ using namespace std;
 using namespace ag;
 Tensor A = Tensor::randn(8,8);
 Tensor B = Tensor::randn(8,8);
+Tensor C = Tensor::randn(8,8);
+Tensor D = Tensor::randn(8,8);
+Tensor E = Tensor::randn(2,2);
+Tensor F = Tensor::randn(2,2);
+Tensor G = Tensor::randn(2,2);
+Tensor H = Tensor::randn(2,2);
+Tensor I = Tensor::randn(2,2);
+Tensor J = Tensor::randn(2,2);
+Tensor K = Tensor::randn(2,1);
+Tensor X = Tensor::randn(8,8);
+
+
+auto x = param(X, "X"); 
 auto a = param(A, "A");
 auto b = param(B, "B");
-
-Tensor Yt(8, 8);
-    std::mt19937 gen(42);
-    std::uniform_int_distribution<int> pick(0, 2 - 1);
-    for (int i = 0; i < 8; ++i) {
-        int k = pick(gen);
-        for (int j = 0; j < 8; ++j) Yt(i, j) = (j == k) ? 1.f : 0.f;
-    }
-    Value W = constant(Yt, "Y");
+auto c = param(C, "C");
+auto d = param(D, "D");
 
 
-auto bias = param(Tensor::zeros(8,8), "bias");
 
-    auto q =   a*b; // [2,2]
-    auto y=q+a;
-std::cout << "y = " << y.val()
-<<","<< endl<< "A = " << a.val()
+
+auto y = rms(a); // scalar, tests broadcasting [B,2] + [1,2]
+std::cout << "y = " << y.val() << endl;
+std::cout << "dL/dA = " << a.grad()
+<<","<< endl<< "dL/dB = " << b.grad()<<","<< endl
+<< "dL/dC = " << c.grad()<<","<< endl
+<< "dL/dD = " << d.grad() <<","<< endl << "dL/dX = " << x.grad() << endl;
+std::cout << "A = " << a.val()
 <<","<< endl<< "B = " << b.val()<<","<< endl
-<< "bias = " << bias.val() << endl<< "q = " << q.val() << endl;
-std::cout << "y grad " << y.grad() << endl;
-std::cout << "dL/dA[0,0] = " << a.grad()
-<<","<< endl<< "dL/dB[0,0] = " << b.grad()<<","<< endl
-<< "dL/dbias[0,0] = " << bias.grad() << endl<< "dL/dq = " << q.grad() << endl;
+<< "C = " << c.val()<<","<< endl
+<< "D = " << d.val() <<","<< endl << "X = " << x.val() << endl;
+
 zero_grad(y);
 highbackward(y);
+std::cout << "Forward \n \n \n \n \n";
 
-std::cout << "y = " << y.val()
-<<","<< endl<< "A = " << a.val()
+
+std::cout << "y = " << y.val() << endl;
+std::cout << "dL/dA = " << a.grad()
+<<","<< endl<< "dL/dB = " << b.grad()<<","<< endl
+<< "dL/dC = " << c.grad()<<","<< endl
+<< "dL/dD = " << d.grad() <<","<< endl << "dL/dX = " << x.grad() << endl;
+std::cout << "A = " << a.val()
 <<","<< endl<< "B = " << b.val()<<","<< endl
-<< "bias = " << bias.val() << endl<< "q = " << q.val() << endl;
-std::cout << "y grad " << y.grad() << endl;
-std::cout << "dL/dA[0,0] = " << a.grad()
-<<","<< endl<< "dL/dB[0,0] = " << b.grad()<<","<< endl
-<< "dL/dbias[0,0] = " << bias.grad() << endl<< "dL/dq = " << q.grad() << endl;
+<< "C = " << c.val()<<","<< endl
+<< "D = " << d.val() <<","<< endl << "X= " << x.val() << endl;
+
+
+zero_grad(y);
+std::cout << "Backward \n \n \n";
 
 
 

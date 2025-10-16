@@ -54,11 +54,11 @@ void vjp_RELUAtt(Node* n, const Tensor& gy){
     Node* C = n->inputs[2].get();
     Node* D = n->inputs[3].get();
     
-    Tensor q = n->tape[0] ? *n->tape[0] : Tensor();
-    Tensor k = n->tape[1] ? *n->tape[1] : Tensor();
-    Tensor v = n->tape[2] ? *n->tape[2] : Tensor();
+    Tensor q = n->tapenode[0]->value;
+    Tensor k = n->tapenode[1]->value;
+    Tensor v = n->tapenode[2]->value;
     float scale = 1.0f / std::sqrt(float(k.cols()));
-    Tensor s = n->tape[3] ? *n->tape[3] : Tensor();
+    Tensor s = n->tapenode[3]->value;
 
     // ---- Backprop chain ----
 
@@ -131,11 +131,11 @@ void vjp_SigAtt(Node* n, const Tensor& gy){
     Node* C = n->inputs[2].get();
     Node* D = n->inputs[3].get();
     
-    Tensor q = n->tape[0] ? *n->tape[0] : Tensor();
-    Tensor k = n->tape[1] ? *n->tape[1] : Tensor();
-    Tensor v = n->tape[2] ? *n->tape[2] : Tensor();
+    Tensor q = n->tapenode[0]->value;
+    Tensor k = n->tapenode[1]->value;
+    Tensor v = n->tapenode[2]->value;
     float scale = 1.0f / std::sqrt(float(k.cols()));
-    Tensor s = n->tape[3] ? *n->tape[3] : Tensor();
+    Tensor s = n->tapenode[3]->value;
 
     // ---- Backprop chain ----
 
@@ -424,11 +424,12 @@ void vjp_Attention(Node* n, const Tensor& gy){
     Node* C = n->inputs[2].get();
     Node* D = n->inputs[3].get();
     
-    Tensor q = n->tape[0] ? *n->tape[0] : Tensor();
-    Tensor k = n->tape[1] ? *n->tape[1] : Tensor();
-    Tensor v = n->tape[2] ? *n->tape[2] : Tensor();
+    Tensor q = n->tapenode[0]->value;
+    Tensor k = n->tapenode[1]->value;
+    Tensor v = n->tapenode[2]->value;
     float scale = 1.0f / std::sqrt(float(k.cols()));
-    Tensor s = n->tape[3] ? *n->tape[3] : Tensor();
+    Tensor s = n->tapenode[3]->value;
+    
 
     // ---- Backprop chain ----
 
@@ -477,11 +478,11 @@ void vjp_AlibiAttention(Node* n, const Tensor& gy){
     Node* C = n->inputs[2].get();
     Node* D = n->inputs[3].get();
     
-    Tensor q = n->tape[0] ? *n->tape[0] : Tensor();
-    Tensor k = n->tape[1] ? *n->tape[1] : Tensor();
-    Tensor v = n->tape[2] ? *n->tape[2] : Tensor();
+    Tensor q = n->tapenode[0]->value;
+    Tensor k = n->tapenode[1]->value;
+    Tensor v = n->tapenode[2]->value;
     float scale = 1.0f / std::sqrt(float(k.cols()));
-    Tensor s = n->tape[3] ? *n->tape[3] : Tensor();
+    Tensor s = n->tapenode[3]->value;
 
     // ---- Backprop chain ----
 

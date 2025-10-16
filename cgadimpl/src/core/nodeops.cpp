@@ -261,49 +261,62 @@ namespace detail {
 
 
     std::shared_ptr<Node> attention_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d){ 
-    Tensor q = Tensor::matmul(a->value, b->value); 
-    Tensor k = Tensor::matmul(a->value, c->value); 
-    Tensor v = Tensor::matmul(a->value, d->value);
-    Tensor g = Tensor::matmul(q, Tensor::transpose(k)*(1.f/sqrt(float(k.cols())))) ;
-    Tensor s = Tensor::softmax_row(g);
-    Tensor y = Tensor::matmul(s, v);
-    auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad || c->requires_grad || d->requires_grad, Op::Attention, "attention"); 
+    auto q = matmul_nodeops(a, b); 
+    auto k = matmul_nodeops(a, c); 
+    auto v = matmul_nodeops(a, d);
+    auto g = matmul_nodeops(q, transpose_nodeops(k)*(1.f/sqrt(float(k->value.cols())))) ;
+    auto s = softmax_row_nodeops(g);
+
+      int B = 1;                  // or a->value.batch() if batched
+int nh = 1;         // defined in your model config
+int N = a->value.rows();    // sequence length
+int x = b->value.cols();    // per-head hidden dim
+
+// Allocate output tensor (same shape as q)
+Tensor o({q->value.shape().first,q->value.shape().second});  
+
+// Call the CUDA flash kernel
+std::cout<<"Functionalaaa";
+
+
+auto* fn = ag::kernels::cpu().flasha;
+         if (!fn) throw std::runtime_error("No CPU Flash Attention kernel registered now only");
+
+
+fn(q->value.data(), k->value.data(), v->value.data(), o.data(),
+                  B, nh, N, x);
+
+// Now wrap it in a Node as usual
+auto n = std::make_shared<Node>(
+    o,
+    a->requires_grad || b->requires_grad || c->requires_grad || d->requires_grad,
+    Op::Attention,
+    "attention"
+);    
+    
     n->inputs = {a, b, c, d};
-    n->tape.resize(4);
-    n->tape={std::make_shared<Tensor>(q), std::make_shared<Tensor>(k), std::make_shared<Tensor>(v), std::make_shared<Tensor>(s)};
+    n->tapenode.resize(4);
+    n->tapenode={q, k, v, s};
     ag::debug::on_node_created(n); 
-    return n; 
+  return n;
     }
 
     std::shared_ptr<Node> reluatt_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d){ 
-    Tensor q = Tensor::matmul(a->value, b->value); 
-    Tensor k = Tensor::matmul(a->value, c->value); 
-    Tensor v = Tensor::matmul(a->value, d->value);
-    Tensor g = Tensor::matmul(q, Tensor::transpose(k)*(1.f/sqrt(float(k.cols())))) ;
-    Tensor s = Tensor::relu(g);
-    Tensor y = Tensor::matmul(s, v);
-    auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad || c->requires_grad || d->requires_grad, Op::RELUAtt, "reluatt"); 
+    auto q = matmul_nodeops(a, b); 
+    auto k = matmul_nodeops(a, c); 
+    auto v = matmul_nodeops(a, d);
+    auto g = matmul_nodeops(q, transpose_nodeops(k)*(1.f/sqrt(float(k->value.cols())))) ;
+    auto s = relu_nodeops(g);
+    auto y = matmul_nodeops(s, v);
+    auto n = std::make_shared<Node>(y->value, a->requires_grad || b->requires_grad || c->requires_grad || d->requires_grad, Op::RELUAtt, "reluatt"); 
     n->inputs = {a, b, c, d};
-    n->tape.resize(4);
-    n->tape={std::make_shared<Tensor>(q), std::make_shared<Tensor>(k), std::make_shared<Tensor>(v), std::make_shared<Tensor>(s)};
+    n->tapenode.resize(4);
+    n->tapenode={q, k, v, s};
     ag::debug::on_node_created(n); 
     return n; 
     }
 
-        std::shared_ptr<Node> sigatt_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d){ 
-    Tensor q = Tensor::matmul(a->value, b->value); 
-    Tensor k = Tensor::matmul(a->value, c->value); 
-    Tensor v = Tensor::matmul(a->value, d->value);
-    Tensor g = Tensor::matmul(q, Tensor::transpose(k)*(1.f/sqrt(float(k.cols())))) ;
-    Tensor s = Tensor::relu(g);
-    Tensor y = Tensor::matmul(s, v);
-    auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad || c->requires_grad || d->requires_grad, Op::SigAtt, "sigatt"); 
-    n->inputs = {a, b, c, d};
-    n->tape.resize(4);
-    n->tape={std::make_shared<Tensor>(q), std::make_shared<Tensor>(k), std::make_shared<Tensor>(v), std::make_shared<Tensor>(s)};
-    ag::debug::on_node_created(n); 
-    return n; 
-    }
+
 
         std::shared_ptr<Node> moewe_nodeops(const std::shared_ptr<Node>& x, const std::shared_ptr<Node>& w, const std::shared_ptr<Node>& b){ 
         Tensor y = Tensor::softmax_row(Tensor::matmul(x->value, Tensor::transpose(w->value)) + b->value); 
@@ -568,17 +581,30 @@ namespace detail {
     }
 
     std::shared_ptr<Node> rms_nodeops(const std::shared_ptr<Node>& x){ 
-Tensor z = Tensor::row_sum(x->value*x->value) * (1.f/x->value.cols());
-Tensor q = Tensor::sqrt(z + 1e-8f);
-Tensor y = x->value / q;
+auto z = rowsum_nodeops(x*x) ;
+auto q = sqrt_nodeops(z + 1e-8f);
 
-auto n = std::make_shared<Node>(y, x->requires_grad, Op::RMSNorm, "rmsnorm");
-n->tapenode.resize(2);
-n->tapenode[0] = std::make_shared<Node>(q); // denominator
-n->tapenode[1] = std::make_shared<Node>(y);   // normalized output
-n->inputs = {x};
-return n;
+
+
+return q;
     }
+
+
+            std::shared_ptr<Node> sigatt_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d){ 
+    auto q = matmul_nodeops(a, b); 
+    auto k = matmul_nodeops(a, c); 
+    auto v = matmul_nodeops(a, d);
+    auto g = matmul_nodeops(q, transpose_nodeops(k)*(1.f/sqrt(float(k->value.cols())))) ;
+    auto s = sigmoid_nodeops(g);
+    auto y = matmul_nodeops(s, v);
+    auto n = std::make_shared<Node>(y->value, a->requires_grad || b->requires_grad || c->requires_grad || d->requires_grad, Op::RELUAtt, "reluatt"); 
+    n->inputs = {a, b, c, d};
+    n->tapenode.resize(4);
+    n->tapenode={q, k, v, s};
+    ag::debug::on_node_created(n); 
+    return n; 
+    }
+
 
     std::shared_ptr<Node> realrms_nodeops(const std::shared_ptr<Node>& x, float& g){ 
 Tensor z = Tensor::row_sum(x->value*x->value) * (1.f/x->value.cols());
@@ -588,11 +614,16 @@ Tensor y = (x->value) / q;
 
 auto n = std::make_shared<Node>(y*g, x->requires_grad || G->requires_grad, Op::RealRMSNorm, "realrmsnorm");
 n->tape.resize(2);
-n->tape[0] = std::make_shared<Tensor>(q); // denominator
-n->tape[1] = std::make_shared<Tensor>(y);   // normalized output
+n->tapenode[0] = std::make_shared<Node>(q); // denominator
+n->tapenode[1] = std::make_shared<Node>(y);   // normalized output
 n->inputs = {x, G};
 return n;
     }
+
+
+
+
+
 
     std::shared_ptr<Node> laynor_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = Tensor::row_sum(x->value)*(1.f/x->value.cols()); 

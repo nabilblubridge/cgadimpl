@@ -75,7 +75,7 @@ namespace ag {
     }
     
     Value log(const Value& x){ 
-        return Value(detail::exp_nodeops(x.node));
+        return Value(detail::log_nodeops(x.node));
     }
 
 

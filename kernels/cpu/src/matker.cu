@@ -570,10 +570,13 @@ void run_cuda_sigmoidiff(const float* A, float* B, int width)
 
 
 
+// --------------------------------------------
+// Flash Attention Forward Kernel (Simplified)
+// --------------------------------------------
 __global__ void flash_forward_kernel(const float* Q, const float* K, const float* V, float* O, const int N, const int d,
                     const int Tc, const int Tr, const int Bc, const int Br,
                     float* l, float *m, const float softmax_scale) {
-    int tx = threadIdx.x;
+        int tx = threadIdx.x;
     int bx = blockIdx.x; int by = blockIdx.y;  // batch and head index
 
     // Offset into Q,K,V,O,l,m - different for each batch and head
@@ -587,72 +590,85 @@ __global__ void flash_forward_kernel(const float* Q, const float* K, const float
     float* Kj = &sram[tile_size];
     float* Vj = &sram[tile_size * 2];
     float* S = &sram[tile_size * 3];
-    int i = blockIdx.z;
-
 
     for (int j = 0; j < Tc; j++) {
 
-        // Load Kj, Vj to SRAM
-        for (int x = 0; x < d; x++) {
-            Kj[(tx * d) + x] = K[qkv_offset + (tile_size * j) + (tx * d) + x];
-            Vj[(tx * d) + x] = V[qkv_offset + (tile_size * j) + (tx * d) + x];
+        // Add bounds check for loading Kj and Vj
+        if ((j * Bc + tx) < N) {
+            // Load Kj, Vj to SRAM
+            for (int x = 0; x < d; x++) {
+                Kj[(tx * d) + x] = K[qkv_offset + (tile_size * j) + (tx * d) + x];
+                Vj[(tx * d) + x] = V[qkv_offset + (tile_size * j) + (tx * d) + x];
+            }
+        } else {
+            // Pad with zeros for out-of-bounds rows
+            for (int x = 0; x < d; x++) {
+                Kj[(tx * d) + x] = 0.0f;
+                Vj[(tx * d) + x] = 0.0f;
+            }
         }
         __syncthreads();  // such that the inner loop can use the correct Kj, Vj
 
+        for (int i = 0; i < Tr; i++)  {
 
-            // Load Qi to SRAM, l and m to registers
-            for (int x = 0; x < d; x++) {
-                Qi[(tx * d) + x] = Q[qkv_offset + (tile_size * i) + (tx * d) + x];
-            }
-            float row_m_prev = m[lm_offset + (Br * i) + tx];
-            float row_l_prev = l[lm_offset + (Br * i) + tx];
-
-            // S = QK^T, row_m = rowmax(S)
-            float row_m = -INFINITY;
-            for (int y = 0; y < Bc; y++) {
-                float sum = 0;
+            // Add bounds check for the entire inner loop processing
+            if ((i * Br + tx) < N) {
+                // Load Qi to SRAM, l and m to registers
                 for (int x = 0; x < d; x++) {
-                    sum += Qi[(tx * d) + x] * Kj[(y * d) + x];
+                    Qi[(tx * d) + x] = Q[qkv_offset + (tile_size * i) + (tx * d) + x];
                 }
-                sum *= softmax_scale;
-                S[(Bc * tx) + y] = sum;
+                float row_m_prev = m[lm_offset + (Br * i) + tx];
+                float row_l_prev = l[lm_offset + (Br * i) + tx];
 
-                if (sum > row_m)
-                    row_m = sum;
-            }
-
-            // P = exp(S - row_m), row_l = rowsum(P)
-            float row_l = 0;
-            for (int y = 0; y < Bc; y++) {
-                S[(Bc * tx) + y] = __expf(S[(Bc * tx) + y] - row_m);
-                row_l += S[(Bc * tx) + y];
-            }
-
-            // Compute new m and l
-            float row_m_new = max(row_m_prev, row_m);
-            float row_l_new = (__expf(row_m_prev - row_m_new) * row_l_prev) + (__expf(row_m - row_m_new) * row_l);
-
-            // Write O, l, m to HBM
-            for (int x = 0; x < d; x++) {
-                float pv = 0;  // Pij * Vj
+                // S = QK^T, row_m = rowmax(S)
+                float row_m = -INFINITY;
                 for (int y = 0; y < Bc; y++) {
-                    pv += S[(Bc * tx) + y] * Vj[(y * d) + x];
+                    float sum = 0;
+                    for (int x = 0; x < d; x++) {
+                        sum += Qi[(tx * d) + x] * Kj[(y * d) + x];
+                    }
+                    sum *= softmax_scale;
+                    S[(Bc * tx) + y] = sum;
+
+                    if (sum > row_m)
+                        row_m = sum;
                 }
-                O[qkv_offset + (tile_size * i) + (tx * d) + x] = (1 / row_l_new) \
-                    * ((row_l_prev * __expf(row_m_prev - row_m_new) * O[qkv_offset + (tile_size * i) + (tx * d) + x]) \
-                    + (__expf(row_m - row_m_new) * pv));
+
+                // P = exp(S - row_m), row_l = rowsum(P)
+                float row_l = 0;
+                for (int y = 0; y < Bc; y++) {
+                    S[(Bc * tx) + y] = __expf(S[(Bc * tx) + y] - row_m);
+                    row_l += S[(Bc * tx) + y];
+                }
+
+                // Compute new m and l
+                float row_m_new = max(row_m_prev, row_m);
+                float row_l_new = (__expf(row_m_prev - row_m_new) * row_l_prev) + (__expf(row_m - row_m_new) * row_l);
+
+                // Write O, l, m to HBM
+                for (int x = 0; x < d; x++) {
+                    float pv = 0;  // Pij * Vj
+                    for (int y = 0; y < Bc; y++) {
+                        pv += S[(Bc * tx) + y] * Vj[(y * d) + x];
+                    }
+                    O[qkv_offset + (tile_size * i) + (tx * d) + x] = (1 / row_l_new) \
+                        * ((row_l_prev * __expf(row_m_prev - row_m_new) * O[qkv_offset + (tile_size * i) + (tx * d) + x]) \
+                        + (__expf(row_m - row_m_new) * pv));
+                }
+                m[lm_offset + (Br * i) + tx] = row_m_new;
+                l[lm_offset + (Br * i) + tx] = row_l_new;
             }
-            m[lm_offset + (Br * i) + tx] = row_m_new;
-            l[lm_offset + (Br * i) + tx] = row_l_new;
+        }
         __syncthreads();  // otherwise, thread can use the wrong Kj, Vj in inner loop
     }
 }
-
-void run_flash_forward(
-    const float* Q, const float* K, const float* V,
-    float* O, int B, int nh, int N, int d)
-{
-    const int Bc = 32, Br = 32;
+// --------------------------------------------
+// Host-side launcher
+// --------------------------------------------
+void run_flash_forward(const float* Q, const float* K, const float* V, float* O,
+                       int B, int nh, int N, int d) {
+    // Here we ignore batch/head for simplicity
+     const int Bc = 32, Br = 32;
     const int Tc = (N + Bc - 1) / Bc;
     const int Tr = (N + Br - 1) / Br;
     const float softmax_scale = 1.0f / sqrtf((float)d);
@@ -676,8 +692,8 @@ void run_flash_forward(
     cudaMemset(d_l, 0, lm_size);
     cudaMemset(d_m, 0xff, lm_size); // initialize to -inf (roughly)
 
-    dim3 grid_dim(B, nh, Tr);
-dim3 block_dim(Bc);
+    dim3 grid_dim(B, nh);
+    dim3 block_dim(Bc);
 
     int shared_mem = (3 * Bc * d + Bc * Br) * sizeof(float);
 
@@ -696,6 +712,8 @@ dim3 block_dim(Bc);
     cudaFree(d_l);
     cudaFree(d_m);
 }
+
+
 
 
 // int main()

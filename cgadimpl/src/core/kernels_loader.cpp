@@ -45,6 +45,7 @@ void load_cpu_plugin(const char* path) {
   g_cpu.hadmul   = table.hadmul;
   g_cpu.sigmoid = table.sigmoid;
   g_cpu.sigmoidiff = table.sigmoidiff;
+  g_cpu.flasha = table.flasha;
 }
 
 #ifndef AG_NO_AUTOLOAD_KERNELS
