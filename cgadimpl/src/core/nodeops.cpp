@@ -112,8 +112,45 @@ namespace detail {
     Tensor v = Tensor::matmul(a->value, d->value);
     Tensor g = Tensor::matmul(q, Tensor::transpose(k)*(1.f/sqrt(float(k.cols())))) ;
     Tensor s = Tensor::softmax_row(g);
-    Tensor y = Tensor::matmul(s, v);
-    auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad || c->requires_grad || d->requires_grad, Op::Attention, "attention"); 
+
+
+
+
+
+
+
+
+
+ int B = 1;                  // or a->value.batch() if batched
+int nh = 1;         // defined in your model config
+int N = a->value.rows();    // sequence length
+int x = b->value.cols();    // per-head hidden dim
+
+// Allocate output tensor (same shape as q)
+Tensor o({q.shape().first,q.shape().second});  
+
+// Call the CUDA flash kernel
+std::cout<<"Functionalaaa";
+
+
+auto* fn = ag::kernels::cpu().flasha;
+         if (!fn) throw std::runtime_error("No CPU Flash Attention kernel registered now only");
+
+
+fn(q.data(), k.data(), v.data(), o.data(),
+                  B, nh, N, x);
+
+// Now wrap it in a Node as usual
+auto n = std::make_shared<Node>(
+    o,
+    a->requires_grad || b->requires_grad || c->requires_grad || d->requires_grad,
+    Op::Attention,
+    "attention"
+);        
+    
+    
+    
+    
     n->inputs = {a, b, c, d};
     n->tape.resize(4);
     n->tape={std::make_shared<Tensor>(q), std::make_shared<Tensor>(k), std::make_shared<Tensor>(v), std::make_shared<Tensor>(s)};

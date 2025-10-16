@@ -40,8 +40,12 @@ void load_cpu_plugin(const char* path) {
   g_cpu.fmab = table.fmab;
   g_cpu.relumask   = table.relumask;
   g_cpu.exp   = table.exp;
+  g_cpu.add   = table.add;
+  g_cpu.sub   = table.sub;
+  g_cpu.hadmul   = table.hadmul;
   g_cpu.sigmoid = table.sigmoid;
   g_cpu.sigmoidiff = table.sigmoidiff;
+  g_cpu.flasha = table.flasha;
 }
 
 #ifndef AG_NO_AUTOLOAD_KERNELS
