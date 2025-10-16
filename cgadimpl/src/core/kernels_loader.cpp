@@ -37,6 +37,15 @@ void load_cpu_plugin(const char* path) {
 
   g_cpu.relu   = table.relu;
   g_cpu.matmul = table.matmul;
+  g_cpu.fmab = table.fmab;
+  g_cpu.relumask   = table.relumask;
+  g_cpu.exp   = table.exp;
+  g_cpu.add   = table.add;
+  g_cpu.sub   = table.sub;
+  g_cpu.hadmul   = table.hadmul;
+  g_cpu.sigmoid = table.sigmoid;
+  g_cpu.sigmoidiff = table.sigmoidiff;
+  g_cpu.flasha = table.flasha;
 }
 
 #ifndef AG_NO_AUTOLOAD_KERNELS
@@ -48,7 +57,7 @@ static bool try_default_autoload() {
 #elif defined(__APPLE__)
     "./agkernels_cpu.dylib"
 #else
-    "./libagkernels_cpu.so"
+    "./kernels/build/cpu/libagkernels_cpu.so"
 #endif
   };
   for (const char* p : cands) {

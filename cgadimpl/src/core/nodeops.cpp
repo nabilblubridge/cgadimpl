@@ -9,27 +9,125 @@ namespace detail {
 
 
     std::shared_ptr<Node> add_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b){ 
-        Tensor y = a->value + b->value; 
-        auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad, Op::Add, "+"); 
-        n->inputs = {a, b}; 
-        ag::debug::on_node_created(n); 
-        return n; 
+
+     const Tensor& A = a->value;
+         const Tensor& B = b->value;
+
+         auto [M,K]  = A.shape();
+         auto [K2,N] = B.shape();
+         if (K != K2) throw std::runtime_error("add: inner dims mismatch");
+
+
+         auto* fn = ag::kernels::cpu().add;
+         if (!fn) 
+         {
+         
+        //  Tensor y = a->value + b->value; 
+        // auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad, Op::Add, "+"); 
+        // n->inputs = {a, b}; 
+        // ag::debug::on_node_created(n); 
+                  throw std::runtime_error("No CPU Add kernel registered");
+
+        // return n; 
+
+         }
+                  Tensor C({M,N});
+
+         fn(A.data(), B.data(), C.data(), M*K);
+
+         auto n = std::make_shared<Node>(C,
+             (a->requires_grad || b->requires_grad),
+             Op::Add, "+");
+         n->inputs = { a, b };
+         return n;
+
+
+
+
     }
 
     std::shared_ptr<Node> sub_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b){ 
-        Tensor y = a->value - b->value; 
-        auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad, Op::Sub, "-"); 
-        n->inputs = {a, b}; 
-        ag::debug::on_node_created(n); 
-        return n; 
+ 
+     const Tensor& A = a->value;
+         const Tensor& B = b->value;
+
+         auto [M,K]  = A.shape();
+         auto [K2,N] = B.shape();
+         if (K != K2) throw std::runtime_error("sub: inner dims mismatch");
+
+
+         auto* fn = ag::kernels::cpu().sub;
+         if (!fn) 
+         {
+        //  Tensor y = a->value - b->value; 
+        // auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad, Op::Sub, "-"); 
+        // n->inputs = {a, b}; 
+        // ag::debug::on_node_created(n); 
+                  throw std::runtime_error("No CPU Sub kernel registered");
+
+        // return n; 
+
+         }
+                  Tensor C({M,N});
+
+         fn(A.data(), B.data(), C.data(), M*K);
+
+         auto n = std::make_shared<Node>(C,
+             (a->requires_grad || b->requires_grad),
+             Op::Sub, "-");
+         n->inputs = { a, b };
+         return n;
+
+
     }
 
 
 
     std::shared_ptr<Node> mul_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b){ 
-        Tensor y = a->value * b->value; 
-        auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad, Op::Mul, "*"); 
+      
+     const Tensor& A = a->value;
+         const Tensor& B = b->value;
+
+         auto [M,K]  = A.shape();
+         auto [K2,N] = B.shape();
+         if (K != K2) throw std::runtime_error("mul: inner dims mismatch");
+
+
+         auto* fn = ag::kernels::cpu().hadmul;
+         if (!fn) 
+         {
+        //  Tensor y = a->value - b->value; 
+        // auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad, Op::Sub, "-"); 
+        // n->inputs = {a, b}; 
+        // ag::debug::on_node_created(n); 
+                  throw std::runtime_error("No CPU Mul kernel registered");
+
+        // return n; 
+
+         }
+                  Tensor C({M,N});
+
+         fn(A.data(), B.data(), C.data(), M*K);
+
+         auto n = std::make_shared<Node>(C,
+             (a->requires_grad || b->requires_grad),
+             Op::Mul, "*");
+         n->inputs = { a, b };
+         return n;
+    }
+
+    std::shared_ptr<Node> div_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b){ 
+        Tensor y = a->value / b->value; 
+        auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad, Op::Div, "/"); 
         n->inputs = {a, b}; 
+        ag::debug::on_node_created(n); 
+        return n; 
+    }
+
+        std::shared_ptr<Node> reci_nodeops(const std::shared_ptr<Node>& a){ 
+        Tensor y = Tensor::ones_like(a->value)/a->value; 
+        auto n = std::make_shared<Node>(y, a->requires_grad, Op::Reciprocal, "reciprocal"); 
+        n->inputs = {a}; 
         ag::debug::on_node_created(n); 
         return n; 
     }
@@ -38,6 +136,25 @@ namespace detail {
         auto c = std::make_shared<Node>(b*Tensor::ones_like(a->value), false, Op::Leaf, "leaf");
         Tensor y = a->value * c->value; 
         auto n = std::make_shared<Node>(y, a->requires_grad || c->requires_grad, Op::Mul, "*"); 
+        n->inputs = {a, c}; 
+        ag::debug::on_node_created(n); 
+        return n; 
+    }
+
+    std::shared_ptr<Node> flodiv_nodeops(float b , const std::shared_ptr<Node>& a){ 
+        auto c = std::make_shared<Node>(b*Tensor::ones_like(a->value), false, Op::Leaf, "leaf");
+        Tensor y = c->value / a->value; 
+        auto n = std::make_shared<Node>(y, a->requires_grad || c->requires_grad, Op::Div, "/"); 
+        n->inputs = {a, c}; 
+        ag::debug::on_node_created(n); 
+        return n; 
+    }
+
+
+     std::shared_ptr<Node> floadd_nodeops(float b , const std::shared_ptr<Node>& a){ 
+        auto c = std::make_shared<Node>(b*Tensor::ones_like(a->value), false, Op::Leaf, "leaf");
+        Tensor y = c->value + a->value; 
+        auto n = std::make_shared<Node>(y, a->requires_grad || c->requires_grad, Op::Add, "+"); 
         n->inputs = {a, c}; 
         ag::debug::on_node_created(n); 
         return n; 
@@ -57,6 +174,18 @@ namespace detail {
     }
 
 
+ std::shared_ptr<Node> relumask_nodeops(const std::shared_ptr<Node>& x){ 
+        const Tensor& xin = x->value;
+        Tensor y = Tensor::zeros_like(xin);
+
+        auto* fn = ag::kernels::cpu().relumask;
+        if (!fn) throw std::runtime_error("No CPU ReLU Mask kernel registered");
+        fn(xin.data(), y.data(), static_cast<int64_t>(xin.numel()));
+
+        auto n = std::make_shared<Node>(y, x->requires_grad, Op::Relumask, "relumask");
+        n->inputs = { x };
+        return n;
+    }
 
 
 
@@ -82,27 +211,121 @@ namespace detail {
     }
 
     std::shared_ptr<Node> fmab_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c){ 
-        Tensor y = Tensor::matmul(a->value, b->value)+c->value; 
-        auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad || c->requires_grad, Op::FMA, "fmab"); 
-        n->inputs = {a, b, c}; ag::debug::on_node_created(n); 
-        return n; 
+        const Tensor& A = a->value;
+         const Tensor& B = b->value;
+
+         auto [M,K]  = A.shape();
+         auto [K2,N] = B.shape();
+         if (K != K2) throw std::runtime_error("gemm: inner dims mismatch");
+
+         const Tensor& C = c->value; 
+
+                 Tensor E({M,N});
+ 
+
+         auto* fn = ag::kernels::cpu().fmab;
+         if (!fn) throw std::runtime_error("No CPU GEMM kernel registered now only");
+         fn(A.data(), B.data(), C.data(), E.data(), M, K, N);
+
+         auto n = std::make_shared<Node>(E,
+             (a->requires_grad || b->requires_grad || c->requires_grad),
+             Op::FMA, "fmab");
+         n->inputs = { a, b , c};
+         return n;
     }
+
+        std::shared_ptr<Node> linear_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c){ 
+        const Tensor& A = a->value;
+         const Tensor& B = Tensor::transpose(b->value);
+
+         auto [M,K]  = A.shape();
+         auto [K2,N] = B.shape();
+         if (K != K2) throw std::runtime_error("gemm: inner dims mismatch");
+
+         const Tensor& C = c->value; 
+
+                 Tensor E({M,N});
+ 
+
+         auto* fn = ag::kernels::cpu().fmab;
+         if (!fn) throw std::runtime_error("No CPU GEMM kernel registered now only");
+         fn(A.data(), B.data(), C.data(), E.data(), M, K, N);
+
+         auto n = std::make_shared<Node>(E,
+             (a->requires_grad || b->requires_grad || c->requires_grad),
+             Op::Linear, "linear");
+         n->inputs = { a, b , c};
+         return n;
+    }
+
 
 
     std::shared_ptr<Node> attention_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d){ 
-    Tensor q = Tensor::matmul(a->value, b->value); 
-    Tensor k = Tensor::matmul(a->value, c->value); 
-    Tensor v = Tensor::matmul(a->value, d->value);
-    Tensor g = Tensor::matmul(q, Tensor::transpose(k)*(1.f/sqrt(float(k.cols())))) ;
-    Tensor s = Tensor::softmax_row(g);
-    Tensor y = Tensor::matmul(s, v);
-    auto n = std::make_shared<Node>(y, a->requires_grad || b->requires_grad || c->requires_grad || d->requires_grad, Op::Attention, "attention"); 
+    auto q = matmul_nodeops(a, b); 
+    auto k = matmul_nodeops(a, c); 
+    auto v = matmul_nodeops(a, d);
+    auto g = matmul_nodeops(q, transpose_nodeops(k)*(1.f/sqrt(float(k->value.cols())))) ;
+    auto s = softmax_row_nodeops(g);
+
+      int B = 1;                  // or a->value.batch() if batched
+int nh = 1;         // defined in your model config
+int N = a->value.rows();    // sequence length
+int x = b->value.cols();    // per-head hidden dim
+
+// Allocate output tensor (same shape as q)
+Tensor o({q->value.shape().first,q->value.shape().second});  
+
+// Call the CUDA flash kernel
+std::cout<<"Functionalaaa";
+
+
+auto* fn = ag::kernels::cpu().flasha;
+         if (!fn) throw std::runtime_error("No CPU Flash Attention kernel registered now only");
+
+
+fn(q->value.data(), k->value.data(), v->value.data(), o.data(),
+                  B, nh, N, x);
+
+// Now wrap it in a Node as usual
+auto n = std::make_shared<Node>(
+    o,
+    a->requires_grad || b->requires_grad || c->requires_grad || d->requires_grad,
+    Op::Attention,
+    "attention"
+);    
+    
     n->inputs = {a, b, c, d};
-    n->tape.resize(4);
-    n->tape={std::make_shared<Tensor>(q), std::make_shared<Tensor>(k), std::make_shared<Tensor>(v), std::make_shared<Tensor>(s)};
+    n->tapenode.resize(4);
+    n->tapenode={q, k, v, s};
+    ag::debug::on_node_created(n); 
+  return n;
+    }
+
+    std::shared_ptr<Node> reluatt_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d){ 
+    auto q = matmul_nodeops(a, b); 
+    auto k = matmul_nodeops(a, c); 
+    auto v = matmul_nodeops(a, d);
+    auto g = matmul_nodeops(q, transpose_nodeops(k)*(1.f/sqrt(float(k->value.cols())))) ;
+    auto s = relu_nodeops(g);
+    auto y = matmul_nodeops(s, v);
+    auto n = std::make_shared<Node>(y->value, a->requires_grad || b->requires_grad || c->requires_grad || d->requires_grad, Op::RELUAtt, "reluatt"); 
+    n->inputs = {a, b, c, d};
+    n->tapenode.resize(4);
+    n->tapenode={q, k, v, s};
     ag::debug::on_node_created(n); 
     return n; 
     }
+
+
+
+        std::shared_ptr<Node> moewe_nodeops(const std::shared_ptr<Node>& x, const std::shared_ptr<Node>& w, const std::shared_ptr<Node>& b){ 
+        Tensor y = Tensor::softmax_row(Tensor::matmul(x->value, Tensor::transpose(w->value)) + b->value); 
+        auto n=std::make_shared<Node>(y, x->requires_grad, Op::MOE, "moe"); 
+        n->inputs={x}; 
+        ag::debug::on_node_created(n);  
+        return n;
+    }
+
 
 
     std::shared_ptr<Node> alibiatt_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d, float& m) { 
@@ -158,17 +381,24 @@ namespace detail {
 
     std::shared_ptr<Node> transpose_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = Tensor::transpose(x->value); 
-        auto n=std::make_shared<Node>(y, x->requires_grad, Op::Transpose, "exp"); 
+        auto n=std::make_shared<Node>(y, x->requires_grad, Op::Transpose, "transpose"); 
         n->inputs={x}; 
         ag::debug::on_node_created(n);  
         return n;
     }
 
     std::shared_ptr<Node> exp_nodeops(const std::shared_ptr<Node>& x){ 
-        Tensor y = Tensor::exp(x->value); 
-        auto n=std::make_shared<Node>(y, x->requires_grad, Op::Exp, "exp"); 
-        n->inputs={x}; 
-        ag::debug::on_node_created(n);  
+              const Tensor& xin = x->value;
+        Tensor y = Tensor::zeros_like(xin);
+
+        auto* fn = ag::kernels::cpu().exp;
+        if (!fn) throw std::runtime_error("No CPU Exp kernel registered");
+        fn(xin.data(), y.data(), static_cast<int64_t>(xin.numel()));
+
+        auto n = std::make_shared<Node>(y, x->requires_grad, Op::Exp, "exp");
+        n->inputs = { x };
+        n->tapenode.resize(1);
+        n->tapenode[0]=n;
         return n;
     }
     
@@ -196,12 +426,51 @@ namespace detail {
         ag::debug::on_node_created(n);  
         return n;
     }
-    
-    std::shared_ptr<Node> sigmoid_nodeops(const std::shared_ptr<Node>& x){ 
-        Tensor y = Tensor::sigmoid(x->value); 
-        auto n=std::make_shared<Node>(y, x->requires_grad, Op::Sigmoid, "sigmoid"); 
+
+
+     std::shared_ptr<Node> cosh_nodeops(const std::shared_ptr<Node>& x){ 
+        Tensor y = Tensor::cosh(x->value); 
+        auto n=std::make_shared<Node>(y, x->requires_grad, Op::Cosh, "cosh"); 
         n->inputs={x}; 
         ag::debug::on_node_created(n);  
+        return n;
+    }
+
+     std::shared_ptr<Node> sinh_nodeops(const std::shared_ptr<Node>& x){ 
+        Tensor y = Tensor::sinh(x->value); 
+        auto n=std::make_shared<Node>(y, x->requires_grad, Op::Sinh, "sinh"); 
+        n->inputs={x}; 
+        ag::debug::on_node_created(n);  
+        return n;
+    }
+
+
+     std::shared_ptr<Node> cos_nodeops(const std::shared_ptr<Node>& x){ 
+        Tensor y = Tensor::cosh(x->value); 
+        auto n=std::make_shared<Node>(y, x->requires_grad, Op::Cosh, "cosh"); 
+        n->inputs={x}; 
+        ag::debug::on_node_created(n);  
+        return n;
+    }
+
+     std::shared_ptr<Node> sin_nodeops(const std::shared_ptr<Node>& x){ 
+        Tensor y = Tensor::sinh(x->value); 
+        auto n=std::make_shared<Node>(y, x->requires_grad, Op::Sinh, "sinh"); 
+        n->inputs={x}; 
+        ag::debug::on_node_created(n);  
+        return n;
+    }
+    
+    std::shared_ptr<Node> sigmoid_nodeops(const std::shared_ptr<Node>& x){ 
+                      const Tensor& xin = x->value;
+        Tensor y = Tensor::zeros_like(xin);
+
+        auto* fn = ag::kernels::cpu().sigmoid;
+        if (!fn) throw std::runtime_error("No CPU Sigmoid kernel registered");
+        fn(xin.data(), y.data(), static_cast<int64_t>(xin.numel()));
+
+        auto n = std::make_shared<Node>(y, x->requires_grad, Op::Sigmoid, "sigmoid");
+        n->inputs = { x };
         return n;
     }
     
@@ -265,6 +534,25 @@ namespace detail {
         ag::debug::on_node_created(n);  
         return n;
     }
+
+
+    std::shared_ptr<Node> sign_nodeops(const std::shared_ptr<Node>& x){ 
+        Tensor y = Tensor::sign(x->value); 
+
+        auto n=std::make_shared<Node>(y, x->requires_grad, Op::Sign, "sign"); 
+        n->inputs={x}; 
+        ag::debug::on_node_created(n);  
+        return n;
+    }
+
+        std::shared_ptr<Node> sqrt_nodeops(const std::shared_ptr<Node>& x){ 
+        Tensor y = Tensor::sqrt(x->value); 
+
+        auto n=std::make_shared<Node>(y, x->requires_grad, Op::Sqrt, "sqrt"); 
+        n->inputs={x}; 
+        ag::debug::on_node_created(n);  
+        return n;
+    }
     
     std::shared_ptr<Node> leaky_relu_nodeops(const std::shared_ptr<Node>& x, float alpha){ 
         Tensor y = Tensor::leaky_relu(x->value, alpha); 
@@ -293,17 +581,30 @@ namespace detail {
     }
 
     std::shared_ptr<Node> rms_nodeops(const std::shared_ptr<Node>& x){ 
-Tensor z = Tensor::row_sum(x->value*x->value) * (1.f/x->value.cols());
-Tensor q = Tensor::sqrt(z + 1e-8f);
-Tensor y = x->value / q;
+auto z = rowsum_nodeops(x*x) ;
+auto q = sqrt_nodeops(z + 1e-8f);
 
-auto n = std::make_shared<Node>(y, x->requires_grad, Op::RMSNorm, "rmsnorm");
-n->tape.resize(2);
-n->tape[0] = std::make_shared<Tensor>(q); // denominator
-n->tape[1] = std::make_shared<Tensor>(y);   // normalized output
-n->inputs = {x};
-return n;
+
+
+return q;
     }
+
+
+            std::shared_ptr<Node> sigatt_nodeops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b, const std::shared_ptr<Node>& c, const std::shared_ptr<Node>& d){ 
+    auto q = matmul_nodeops(a, b); 
+    auto k = matmul_nodeops(a, c); 
+    auto v = matmul_nodeops(a, d);
+    auto g = matmul_nodeops(q, transpose_nodeops(k)*(1.f/sqrt(float(k->value.cols())))) ;
+    auto s = sigmoid_nodeops(g);
+    auto y = matmul_nodeops(s, v);
+    auto n = std::make_shared<Node>(y->value, a->requires_grad || b->requires_grad || c->requires_grad || d->requires_grad, Op::RELUAtt, "reluatt"); 
+    n->inputs = {a, b, c, d};
+    n->tapenode.resize(4);
+    n->tapenode={q, k, v, s};
+    ag::debug::on_node_created(n); 
+    return n; 
+    }
+
 
     std::shared_ptr<Node> realrms_nodeops(const std::shared_ptr<Node>& x, float& g){ 
 Tensor z = Tensor::row_sum(x->value*x->value) * (1.f/x->value.cols());
@@ -313,11 +614,16 @@ Tensor y = (x->value) / q;
 
 auto n = std::make_shared<Node>(y*g, x->requires_grad || G->requires_grad, Op::RealRMSNorm, "realrmsnorm");
 n->tape.resize(2);
-n->tape[0] = std::make_shared<Tensor>(q); // denominator
-n->tape[1] = std::make_shared<Tensor>(y);   // normalized output
+n->tapenode[0] = std::make_shared<Node>(q); // denominator
+n->tapenode[1] = std::make_shared<Node>(y);   // normalized output
 n->inputs = {x, G};
 return n;
     }
+
+
+
+
+
 
     std::shared_ptr<Node> laynor_nodeops(const std::shared_ptr<Node>& x){ 
         Tensor y = Tensor::row_sum(x->value)*(1.f/x->value.cols()); 

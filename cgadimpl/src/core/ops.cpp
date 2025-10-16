@@ -15,7 +15,10 @@ namespace ag {
         return Value(detail::sub_nodeops(a.node, b.node)); 
     }
 
-
+    Value div(const Value& a, const Value& b){ 
+        
+        return Value(detail::div_nodeops(a.node, b.node)); 
+    }
 
     Value mul(const Value& a, const Value& b){ 
         return Value(detail::mul_nodeops(a.node, b.node)); 
@@ -72,7 +75,7 @@ namespace ag {
     }
     
     Value log(const Value& x){ 
-        return Value(detail::exp_nodeops(x.node));
+        return Value(detail::log_nodeops(x.node));
     }
 
 
@@ -86,6 +89,10 @@ namespace ag {
     
     Value sigmoid(const Value& x){ 
         return Value(detail::sigmoid_nodeops(x.node));
+    }
+
+      Value sign(const Value& x){ 
+        return Value(detail::sign_nodeops(x.node));
     }
     
     Value softplus(const Value& x){ 
@@ -112,6 +119,10 @@ namespace ag {
 
     Value parcon(const Value& x){ 
         return Value(detail::parcon_nodeops(x.node));
+    }
+
+    Value relumask(const Value& x){ 
+        return Value(detail::relumask_nodeops(x.node));
     }
 
     Value lisht(const Value& x){ 
@@ -169,6 +180,24 @@ return Value(detail::realrms_nodeops(x.node, g));
         return Value(detail::mambassm_nodeops(z.node, a.node, b.node, c.node, d.node));
 
         
+    }
+
+    Value reluatt(const Value& a, const Value& b, const Value& c, const Value& d){ 
+    return Value(detail::reluatt_nodeops(a.node, b.node, c.node, d.node));
+    }
+
+
+    Value sigatt(const Value& a, const Value& b, const Value& c, const Value& d){ 
+    return Value(detail::sigatt_nodeops(a.node, b.node, c.node, d.node));
+    }
+
+    Value linear(const Value& a, const Value& b, const Value& c){ 
+        return Value(detail::linear_nodeops(a.node, b.node, c.node)); 
+    }
+
+
+        Value moewe(const Value& x, const Value& w, const Value& b){ 
+        return Value(detail::moewe_nodeops(x.node, w.node, b.node));
     }
 
 

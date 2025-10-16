@@ -39,6 +39,10 @@
 // Headers for CPU intrinsics (AVX/FMA) and OpenMP
 #include <immintrin.h>
 #include <omp.h>
+#include <iostream>
+
+#include "matker.cuh"
+
 
 extern "C" {
 
@@ -64,6 +68,56 @@ void relu_impl_optimized(const float* x, float* y, int64_t n) {
                 y[j] = x[j] > 0.0f ? x[j] : 0.0f;
             }
         }
+    }
+}
+
+
+void relu_cuda(const float* x, float* y, int64_t n) {
+    run_cuda_relu(x, y, n);
+}
+
+void exp_cuda(const float* x, float* y, int64_t n) {
+    run_cuda_exp(x, y, n);
+}
+
+void add_cuda(const float* x, const float* z, float* y, int64_t n) {
+    run_cuda_add(x, z, y, n);
+}
+
+void sub_cuda(const float* x, const float* z, float* y, int64_t n) {
+    run_cuda_sub(x, z, y, n);
+}
+
+void hadmul_cuda(const float* x, const float* z, float* y, int64_t n) {
+    run_cuda_hadmul(x, z, y, n);
+}
+
+void relumask_cuda(const float* x, float* y, int64_t n) {
+    run_cuda_relumask(x, y, n);
+}
+
+void sigmoid_cuda(const float* x, float* y, int64_t n) {
+    run_cuda_sigmoid(x, y, n);
+}
+
+void sigmoidiff_cuda(const float* x, float* y, int64_t n) {
+    run_cuda_sigmoidiff(x, y, n);
+}
+
+void flashattention_cuda(const float* Q, const float* K, const float* V,
+    float* O, int B, int nh, int N, int d) {
+    run_flash_forward(Q, K, V, O, B, nh, N, d);
+}
+
+
+void gemm_impl_optimized(const float* A, const float* B,  const float* C, float*E, int M, int K, int N) {
+    int q = N;
+    int p = K;
+    int s = p+q;
+    std::cout<<"sddf";
+    if(s)
+    {
+    run_cuda_gemm(A, B, C, E, M, K, N);
     }
 }
 
@@ -138,13 +192,39 @@ void matmul_impl_optimized(const float* A, const float* B, float* C, int M, int 
 }
 
 
+void matmul_impl_cudatile(const float* A, const float* B, float* C, int M, int K, int N) {
+    // This is a placeholder for a CUDA-tiled implementation.
+    // In a real scenario, this function would offload computation to a GPU.
+    // For now, we will just call the naive implementation as a stub.
+    int q = N;
+    int p = K;
+    int s = p+q;
+    if(s)
+    {
+    run_cuda_matrix(A, B, C,  M,  K,  N);
+    }
+}
+
+
 // ---------------- required export ----------------
 // This part exports the new optimized functions.
 AG_EXPORT int ag_get_cpu_kernels_v1(struct ag_cpu_v1* out){
   if (!out) return -1;
   out->abi_version = AG_KERNELS_ABI_V1;
-  out->relu   = &relu_impl_optimized;
-  out->matmul = &matmul_impl_optimized;
+  out->relu   = &relu_cuda;
+  out->relumask   = &relumask_cuda;
+  out->matmul = &matmul_impl_cudatile;
+  out->fmab = &gemm_impl_optimized;
+  out->exp = &exp_cuda;
+  out->sigmoid = &sigmoid_cuda;
+  out->sigmoidiff = &sigmoidiff_cuda;
+  out->add = &add_cuda;
+  out->sub = &sub_cuda;
+  out->hadmul = &hadmul_cuda;
+  out->flasha = &flashattention_cuda;
+
+
+
   return 0;
 }
 

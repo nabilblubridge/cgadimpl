@@ -142,6 +142,51 @@ Tensor jvp_AlibiAttention(Node* n, const std::function<const Tensor&(Node*)>& t)
     return Tensor();
 }
 
+Tensor jvp_RELUAtt(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+Tensor jvp_SigAtt(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+Tensor jvp_MOE(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+Tensor jvp_Linear(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+
+Tensor jvp_Div(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+Tensor jvp_Reciprocal(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+Tensor jvp_Sign(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+Tensor jvp_Sqrt(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+Tensor jvp_Relumask(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+Tensor jvp_Cosh(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+Tensor jvp_Sinh(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
+
+Tensor jvp_Cos(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+Tensor jvp_Sin(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
+
 // ---- reductions ----
 Tensor jvp_Sum(Node* n, const std::function<const Tensor&(Node*)>& t){
     Node* X=n->inputs[0].get(); Tensor s(1,1); s(0,0) = t(X).sum_scalar(); return s;
