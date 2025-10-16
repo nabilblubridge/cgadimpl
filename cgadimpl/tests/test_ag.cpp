@@ -90,6 +90,10 @@ Tensor A = Tensor::randn(8,8);
 Tensor B = Tensor::randn(8,8);
 auto a = param(A, "A");
 auto b = param(B, "B");
+Tensor C = Tensor::randn(8,8);
+Tensor D = Tensor::randn(8,8);
+auto c = param(C, "C");
+auto d = param(D, "D");
 
 Tensor Yt(8, 8);
     std::mt19937 gen(42);
@@ -103,7 +107,7 @@ Tensor Yt(8, 8);
 
 auto bias = param(Tensor::zeros(8,8), "bias");
 
-    auto y =   sigmoid(a); // [2,2]
+    auto y =   sigatt(a,b,c,d); // [2,2]
     auto q=y;
 std::cout << "y = " << y.val()
 <<","<< endl<< "A = " << a.val()
@@ -123,7 +127,7 @@ std::cout << "y = " << y.val()
 std::cout << "y grad " << y.grad() << endl;
 std::cout << "dL/dA[0,0] = " << a.grad()
 <<","<< endl<< "dL/dB[0,0] = " << b.grad()<<","<< endl
-<< "dL/dbias[0,0] = " << bias.grad() << endl<< "dL/dq = " << q.grad() << endl;
+<< "dL/dC = " << c.grad() << endl<< "dL/dD = " << d.grad() << endl;
 
 
 

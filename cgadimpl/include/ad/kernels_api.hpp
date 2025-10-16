@@ -26,7 +26,11 @@ typedef void (*ag_relumask_fn)(const float* x, float* y, int64_t n);
 typedef void (*ag_exp_fn)(const float* x, float* y, int64_t n);
 typedef void (*ag_sig_fn)(const float* x, float* y, int64_t n);
 typedef void (*ag_sigd_fn)(const float* x, float* y, int64_t n);
-
+typedef void (*ag_add_fn)(const float* x, const float* z, float* y, int64_t n);
+typedef void (*ag_sub_fn)(const float* x, const float* z, float* y, int64_t n);
+typedef void (*ag_hadmul_fn)(const float* x, const float* z, float* y, int64_t n);
+typedef void (*ag_flashatt_fn)(const float* Q, const float* K, const float* V,
+    float* O, int B, int nh, int N, int d);
 
 
 
@@ -40,6 +44,10 @@ struct ag_cpu_v1 {
   ag_exp_fn exp;
   ag_sig_fn sigmoid;
   ag_sigd_fn sigmoidiff;
+    ag_add_fn add;
+  ag_sub_fn sub;
+  ag_hadmul_fn hadmul;
+    ag_flashatt_fn flasha;
 };
 
 // Every CPU plugin must export this symbol.
@@ -58,6 +66,10 @@ struct Cpu {
     ag_exp_fn exp = nullptr;
 ag_sig_fn sigmoid = nullptr;
   ag_sigd_fn sigmoidiff = nullptr;
+   ag_add_fn add = nullptr;
+  ag_sub_fn sub = nullptr;
+  ag_hadmul_fn hadmul = nullptr;
+    ag_flashatt_fn flasha = nullptr;
 };
 
 // Global registry accessor

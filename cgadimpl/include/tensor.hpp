@@ -90,6 +90,7 @@ static Tensor cos(const Tensor& x);
 static Tensor sin(const Tensor& x);
 static Tensor cosh(const Tensor& x);
 static Tensor sech(const Tensor& x);
+static Tensor sinh(const Tensor& x);
 
 static Tensor sqrt(const Tensor &x);
 
@@ -98,7 +99,7 @@ static Tensor sigmoid(const Tensor& x);
 static Tensor softplus(const Tensor& x);
 static Tensor gelu_tanh(const Tensor& x); // tanh approx
 static Tensor leaky_relu(const Tensor& x, float alpha);
-
+static Tensor reciprocal(const Tensor& x);
 
 // binary elementwise division (broadcasting)
 friend Tensor operator/(const Tensor& a, const Tensor& b);
