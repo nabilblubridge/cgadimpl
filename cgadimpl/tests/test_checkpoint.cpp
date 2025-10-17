@@ -84,13 +84,13 @@ int main() {
     // ag::kernels::load_cpu_plugin("./libagkernels_cpu.so");
     // ------------------------------------------------------------
     // 1. Prepare small deterministic tensors
-    Tensor x_data = Tensor::randn(2, 4, 42);
-    Tensor W1_data = Tensor::randn(4, 4, 123);
-    Tensor W2_data = Tensor::randn(4, 4, 321);
-    Tensor W3_data = Tensor::randn(4, 2, 999);
-    Tensor b1_data = Tensor::randn(1, 4, 55);
-    Tensor b2_data = Tensor::randn(1, 4, 77);
-    Tensor b3_data = Tensor::randn(1, 2, 88);
+    Tensor x_data = Tensor::randn(8, 8, 42);
+    Tensor W1_data = Tensor::randn(8, 8, 123);
+    Tensor W2_data = Tensor::randn(8, 8, 321);
+    Tensor W3_data = Tensor::randn(8, 8, 999);
+    Tensor b1_data = Tensor::randn(8, 8, 55);
+    Tensor b2_data = Tensor::randn(8, 8, 77);
+    Tensor b3_data = Tensor::randn(8, 8, 88);
 
     // ------------------------------------------------------------
     // 2. Wrap them as Values

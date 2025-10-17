@@ -3,11 +3,12 @@
 // =====================
 #include "ad/ops.hpp"
 #include "ad/nodeops.hpp" // Include the new node-level declarations
+#include "ad/cudaops.hpp"
 
 namespace ag {
 
     Value add(const Value& a, const Value& b){ 
-        return Value(detail::add_nodeops(a.node, b.node)); 
+        return Value(detail::add_cudaops(a.node, b.node)); 
     }
 
     Value sub(const Value& a, const Value& b){ 

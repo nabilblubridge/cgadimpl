@@ -20,6 +20,8 @@ Tensor value; // forward value
 Tensor grad; // same shape as value
 bool requires_grad{false};
 bool is_checkpoint{false};
+float *d_array;
+bool cuda_device{false};
 
 std::vector<Value> saved_inputs;
 std::vector<uint8_t> saved_rng_blob;
@@ -30,6 +32,7 @@ std::vector<std::shared_ptr<Tensor>> tape;// optional: for ops that need to save
 
 Node();
 Node(const Tensor& v, bool rg, Op op_, const char* nm="");
+Node(const Tensor& v, bool requires_grad, Op op_, const char* name, bool cuda_device);
 };
 
 
@@ -47,7 +50,7 @@ std::pair<int,int> shape() const;
 
 Value constant(const Tensor& v, const char* name="const");
 Value param (const Tensor& v, const char* name="param");
-
+Value paramcuda (const Tensor& v, const char* name);
 
 // Topological order from root (parents before child)
 std::vector<Node*> topo_from(Node* root);

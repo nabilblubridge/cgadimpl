@@ -5,7 +5,7 @@
 #include "ad/graph.hpp"
 #include "ad/nodeops.hpp"
 #include "ad/checkpoint.hpp"
-
+#include "ad/cudaops.hpp"
 
 namespace ag {
 

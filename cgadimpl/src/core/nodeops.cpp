@@ -33,11 +33,15 @@ std::shared_ptr<Node> add_nodeops(const std::shared_ptr<Node>& a, const std::sha
          }
                   Tensor C({M,N});
 
-         fn(A.data(), B.data(), C.data(), M*K);
 
          auto n = std::make_shared<Node>(C,
              (a->requires_grad || b->requires_grad),
              Op::Add, "+");
+
+                      fn(A.data(), B.data(), n->d_array, M*K);
+
+
+
          n->inputs = { a, b };
          return n;
 

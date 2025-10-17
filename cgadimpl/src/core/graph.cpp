@@ -6,13 +6,40 @@
 #include <cassert>
 #include "ad/graph.hpp"
 #include "nn/nn.hpp" // for silu
-
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <iostream>
 
 namespace ag {
 
 
     Node::Node() = default;
     Node::Node(const Tensor& v, bool rg, Op op_, const char* nm) : op(op_), value(v), grad(Tensor::zeros_like(v)), requires_grad(rg), debug_name(nm) {}
+
+Node::Node(const Tensor& v, bool rg, Op op_, const char* nm, bool device)
+    : op(op_), value(v), grad(Tensor::zeros_like(v)), requires_grad(rg), debug_name(nm), cuda_device(device)
+{
+    if (cuda_device) {
+        // Allocate device memory
+        size_t bytes = v.size() * sizeof(float);
+        cudaError_t err = cudaMalloc(&d_array, bytes);
+        if (err != cudaSuccess) {
+            std::cerr << "CUDA malloc failed: " << cudaGetErrorString(err) << std::endl;
+            d_array = nullptr;
+        }
+
+        // Copy data from host tensor to device
+        if (d_array && v.data()) {
+                    cudaMalloc(&d_array, bytes);
+            err = cudaMemcpy(d_array, v.data(), bytes, cudaMemcpyHostToDevice);
+            if (err != cudaSuccess) {
+                std::cerr << "CUDA memcpy (H2D) failed: " << cudaGetErrorString(err) << std::endl;
+            }
+        }
+    } else {
+        d_array = nullptr;
+    }
+}
 
 
     Value::Value() = default;
@@ -38,6 +65,11 @@ namespace ag {
 
     Value param (const Tensor& v, const char* name){ 
         return Value(std::make_shared<Node>(v,true ,Op::Leaf,name));
+    }
+
+    Value paramcuda (const Tensor& v, const char* name){ 
+        
+        return Value(std::make_shared<Node>(v,true ,Op::Leaf,name, true));
     }
 
     std::vector<Node*> topo_from(Node* root){
