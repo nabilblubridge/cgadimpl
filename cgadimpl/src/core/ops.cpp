@@ -13,18 +13,18 @@ namespace ag {
 
     Value sub(const Value& a, const Value& b){ 
         
-        return Value(detail::sub_nodeops(a.node, b.node)); 
+        return Value(detail::sub_cudaops(a.node, b.node)); 
     }
 
 
 
     Value mul(const Value& a, const Value& b){ 
-        return Value(detail::mul_nodeops(a.node, b.node)); 
+        return Value(detail::mul_cudaops(a.node, b.node)); 
     }
 
     Value div(const Value& a, const Value& b){ 
         
-        return Value(detail::div_nodeops(a.node, b.node)); 
+        return Value(detail::div_cudaops(a.node, b.node)); 
     }
 
     Value sign(const Value& a, const Value& b){ 
