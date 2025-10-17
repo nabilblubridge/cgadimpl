@@ -570,6 +570,8 @@ __global__ void flash_forward_kernel(
     int tx = threadIdx.x;
     int bx = blockIdx.x;
     int by = blockIdx.y; // batch and head index
+    int i = blockIdx.z;
+    int j = threadIdx.y;
 
     int qkv_offset = (bx * gridDim.y * N * d) + (by * N * d); // per batch+head
     int lm_offset  = (bx * gridDim.y * N) + (by * N);
@@ -581,9 +583,8 @@ __global__ void flash_forward_kernel(
     float* Vj = &sram[tile_size * 2];
     float* S  = &sram[tile_size * 3]; // S has shape [Br x Bc]
 
-    for (int i = 0; i < Tr; i++) {
         int row_idx = i * Br + tx;
-        if (row_idx >= N) continue;
+        if (row_idx < N) {
 
         // load Qi
         for (int x = 0; x < d; x++) {
@@ -602,7 +603,7 @@ __global__ void flash_forward_kernel(
         float row_l_new = row_l_prev;
 
         // process each K/V tile
-        for (int j = 0; j < Tc; j++) {
+        if (j < Tc) {
             int col_base = j * Bc;
             __syncthreads();
 
@@ -705,8 +706,8 @@ void run_flash_forward(const float* Q, const float* K, const float* V, float* O,
     cudaMemset(d_l, 0, lm_size);
     cudaMemset(d_m, 0, lm_size); // init to -inf handled inside kernel
 
-    dim3 grid_dim(B, nh);
-    dim3 block_dim(Br);
+    dim3 grid_dim(B, nh, Tr);
+    dim3 block_dim(Br, Tc);
     int shared_mem = (3 * Bc * d + Br * Bc) * sizeof(float);
 
     flash_forward_kernel<<<grid_dim, block_dim, shared_mem>>>(

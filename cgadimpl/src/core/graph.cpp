@@ -54,6 +54,7 @@ namespace ag {
 // ===================== ag::jit implementation =====================
 #include <unordered_map>
 #include <variant>
+#include <cstddef>
 
 namespace ag::jit {
 
