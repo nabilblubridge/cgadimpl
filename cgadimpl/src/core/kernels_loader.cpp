@@ -57,7 +57,7 @@ static bool try_default_autoload() {
 #elif defined(__APPLE__)
     "./agkernels_cpu.dylib"
 #else
-    "/home/blubridge-034/Downloads/Newf/cgadimpl/kernels/build/cpu/libagkernels_cpu.so"
+    "./kernels/build/cpu/libagkernels_cpu.so"
 #endif
   };
   for (const char* p : cands) {
