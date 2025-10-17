@@ -186,6 +186,9 @@ void hadmul_cuda(const float* x, const float* z, float* y, int64_t n) {
     run_cuda_hadmul(x, z, y, n);
 }
 
+void div_cuda(const float* x, const float* z, float* y, int64_t n) {
+    run_cuda_div(x, z, y, n);
+}
 
 void flashattention_cuda(const float* Q, const float* K, const float* V,
     float* O, int B, int nh, int N, int d) {
@@ -222,6 +225,8 @@ AG_EXPORT int ag_get_cpu_kernels_v1(struct ag_cpu_v1* out){
   out->sub = &sub_cuda;
   out->hadmul = &hadmul_cuda;
   out->flasha = &flashattention_cuda;
+    out->div = &div_cuda;
+
   return 0;
 }
 

@@ -494,6 +494,68 @@ void run_cuda_sub(const float* A, const float* B, float* C, int width)
 
 
 
+__global__ void diving_cuda(const float* A, const float* B, float* C, int width)
+{
+   int bx = blockIdx.x;
+    int tx = threadIdx.x;
+
+    int row = bx * blockDim.x + tx;
+
+    float acc = 0.0f;
+
+
+
+    // Accumulate into existing C value instead of overwriting
+    if(row<width)
+                C[row] = A[row] / B[row];
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void run_cuda_div(const float* A, const float* B, float* C, int width)
+{
+    float *d_A, *d_B, *d_C;
+    int size = width * sizeof(float);
+
+    cudaMalloc(&d_A, size);
+    cudaMalloc(&d_B, size);
+    cudaMalloc(&d_C, size);
+
+    cudaMemcpy(d_A, A, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, size, cudaMemcpyHostToDevice);
+    int threads = 1024;
+
+    dim3 threadsPerBlock(threads);
+    dim3 numBlocks((width + threads - 1) / threads);
+
+    diving_cuda<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, width);
+    cudaDeviceSynchronize();
+
+        cudaMemcpy(C, d_C, size, cudaMemcpyDeviceToHost);
+
+
+
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
+}
+
+
+
+
 
 
 

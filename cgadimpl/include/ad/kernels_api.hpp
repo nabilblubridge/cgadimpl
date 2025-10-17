@@ -31,6 +31,7 @@ typedef void (*ag_sub_fn)(const float* x, const float* z, float* y, int64_t n);
 typedef void (*ag_hadmul_fn)(const float* x, const float* z, float* y, int64_t n);
 typedef void (*ag_flashatt_fn)(const float* Q, const float* K, const float* V,
     float* O, int B, int nh, int N, int d);
+typedef void (*ag_div_fn)(const float* x, const float* z, float* y, int64_t n);
 
 
 
@@ -48,6 +49,8 @@ struct ag_cpu_v1 {
   ag_sub_fn sub;
   ag_hadmul_fn hadmul;
     ag_flashatt_fn flasha;
+      ag_div_fn div;
+
 };
 
 // Every CPU plugin must export this symbol.
@@ -70,6 +73,7 @@ ag_sig_fn sigmoid = nullptr;
   ag_sub_fn sub = nullptr;
   ag_hadmul_fn hadmul = nullptr;
     ag_flashatt_fn flasha = nullptr;
+    ag_div_fn div=nullptr;
 };
 
 // Global registry accessor
