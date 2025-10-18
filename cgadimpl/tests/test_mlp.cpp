@@ -93,7 +93,7 @@ auto b = paramcuda(B, "B");
 Tensor C = Tensor::randn(8,8);
 Tensor D = Tensor::randn(8,8);
 auto c = paramcuda(C, "C");
-auto d = param(D, "D");
+auto d = paramcuda(D, "D");
 
 Tensor Yt(8, 8);
     std::mt19937 gen(42);
@@ -107,8 +107,9 @@ Tensor Yt(8, 8);
 
 auto bias = param(Tensor::zeros(8,8), "bias");
 
-    auto q =   a+b; // [2,2]
-    auto y=q*c;
+    auto q =   a-b; // [2,2]
+    auto m=q*c;
+    auto y=m+d;
 std::cout << "y = " << y.val()
 <<","<< endl<< "A = " << a.val()
 <<","<< endl<< "B = " << b.val()<<","<< endl

@@ -3,24 +3,25 @@
 #include <cuda_runtime.h>
 #include <math_functions.h>
 
-#define TILE 8
 
-__global__ void tile_matrix_multiply(float* A, float* B, float* C, int M, int N, int K)
+#define TILE 16
+
+__global__ void tile_matrix_multiply(const float* __restrict__ A,
+                                     const float* __restrict__ B,
+                                     float* __restrict__ C,
+                                     int M, int N, int K)
 {
     __shared__ float shareA[TILE][TILE];
     __shared__ float shareB[TILE][TILE];
 
     int row = blockIdx.y * TILE + threadIdx.y;
     int col = blockIdx.x * TILE + threadIdx.x;
-
     float acc = 0.0f;
 
-    // Loop over tiles of K dimension
     for (int t = 0; t < (K + TILE - 1) / TILE; ++t) {
         int a_col = t * TILE + threadIdx.x;
         int b_row = t * TILE + threadIdx.y;
 
-        // Load tiles into shared memory (using read-only cache intrinsics)
         shareA[threadIdx.y][threadIdx.x] =
             (row < M && a_col < K) ? __ldg(&A[row * K + a_col]) : 0.0f;
 
@@ -29,7 +30,6 @@ __global__ void tile_matrix_multiply(float* A, float* B, float* C, int M, int N,
 
         __syncthreads();
 
-        // Multiply the tiles (fmaf intrinsic for fused multiply-add)
         #pragma unroll
         for (int k = 0; k < TILE; ++k)
             acc = fmaf(shareA[threadIdx.y][k], shareB[k][threadIdx.x], acc);
@@ -37,10 +37,10 @@ __global__ void tile_matrix_multiply(float* A, float* B, float* C, int M, int N,
         __syncthreads();
     }
 
-    // Write result only inside bounds
     if (row < M && col < N)
         C[row * N + col] = acc;
 }
+
 
 
 
