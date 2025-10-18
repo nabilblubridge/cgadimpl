@@ -51,3 +51,4 @@ OP(MOE,      3,    "moe") // mixture of experts with weights and bias
 OP(RELUAtt,     4,    "reluatt") // relu attention
 OP(SigAtt,    4,    "sigatt") // sigmoid attention
 OP(Linear, 3, "linear") // linear layer
+OP(Sigmoidiff, 1, "sigmoidiff")

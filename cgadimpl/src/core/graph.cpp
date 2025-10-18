@@ -17,25 +17,12 @@ namespace ag {
     Node::Node(const Tensor& v, bool rg, Op op_, const char* nm) : op(op_), value(v), grad(Tensor::zeros_like(v)), requires_grad(rg), debug_name(nm) {}
 
 Node::Node(const Tensor& v, bool rg, Op op_, const char* nm, bool device)
-    : op(op_), value(v), grad(Tensor::zeros_like(v)), requires_grad(rg), debug_name(nm), cuda_device(device)
+    : op(op_), value(v), grad(Tensor::zeros_like(v)), requires_grad(rg), debug_name(nm)
 {
+    cuda_device = device;
     if (cuda_device) {
-        // Allocate device memory
-        size_t bytes = v.size() * sizeof(float);
-        cudaError_t err = cudaMalloc(&d_array, bytes);
-        if (err != cudaSuccess) {
-            std::cerr << "CUDA malloc failed: " << cudaGetErrorString(err) << std::endl;
-            d_array = nullptr;
-        }
-
-        // Copy data from host tensor to device
-        if (d_array && v.data()) {
-                    cudaMalloc(&d_array, bytes);
-            err = cudaMemcpy(d_array, v.data(), bytes, cudaMemcpyHostToDevice);
-            if (err != cudaSuccess) {
-                std::cerr << "CUDA memcpy (H2D) failed: " << cudaGetErrorString(err) << std::endl;
-            }
-        }
+        cudaMalloc(&d_array, v.size() * sizeof(float));
+        cudaMemcpy(d_array, v.data(), v.size() * sizeof(float), cudaMemcpyHostToDevice);
     } else {
         d_array = nullptr;
     }
@@ -44,8 +31,16 @@ Node::Node(const Tensor& v, bool rg, Op op_, const char* nm, bool device)
 
     Value::Value() = default;
 
-    Value::Value(std::shared_ptr<Node> n): node(std::move(n)) {}
-
+Value::Value(std::shared_ptr<Node> n) : node(std::move(n)) {
+    if (node && node->cuda_device) {
+        if (!node->d_array) {
+            cudaMalloc(&node->d_array, node->value.size() * sizeof(float));
+            cudaMemcpy(node->d_array, node->value.data(),
+                       node->value.size() * sizeof(float),
+                       cudaMemcpyHostToDevice);
+        }
+    }
+}
     const Tensor& Value::val() const { 
         return node->value; 
     }

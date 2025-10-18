@@ -422,37 +422,25 @@ void vjp_Sigmoid(Node* n, const Tensor& gy){
 
 
 
-
-
-
-
-
- Node* X = n->inputs[0].get();
-    if (!X->requires_grad) return;
-
-        auto* mm = ag::kernels::cpu().sigmoidiff;
-            auto [K2, N] = (X->value).shape();
-
-                Tensor dA(K2, N);                   // temp buffer
-
-        if(mm)
-            mm((X->value).data(), dA.data(), dA.numel());
-
-        else
-
-        {
-            std::cout<<"CUDA is unused";
-             Tensor s = Tensor::sigmoid(X->value);
-
-    dA = ( s * (Tensor::ones_like(s)-s));
-
-        }
-
-
-    X->grad.add_( rt( gy * dA, X->value) );
+    auto X = n->inputs[0]; if (!X->requires_grad) return;
+    X->grad.add_( rt( gy * ((sigmoidiff_cudaops(X))->value), X->value) );
 
 
 }
+
+void vjp_Sigmoidiff(Node* n, const Tensor& gy){
+
+
+
+
+
+    auto X = n->inputs[0]; if (!X->requires_grad) return;
+    X->grad.add_( rt( gy * (Tensor::sigmoid(X->value)*(Tensor::ones_like(X->value)-Tensor::sigmoid(X->value))*(Tensor::ones_like(X->value)-(2.0*Tensor::sigmoid(X->value)))), X->value) );
+
+
+}
+
+
 void vjp_Softplus(Node* n, const Tensor& gy){
     Node* X = n->inputs[0].get(); if (!X->requires_grad) return;
     X->grad.add_( rt( gy * Tensor::sigmoid(X->value), X->value) );

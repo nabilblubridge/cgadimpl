@@ -215,7 +215,9 @@ Tensor jvp_RealLayerNorm(Node* n, const std::function<const Tensor&(Node*)>& t){
 Tensor jvp_RealRMSNorm(Node* n, const std::function<const Tensor&(Node*)>& t){
     return Tensor();
 }
-
+Tensor jvp_Sigmoidiff(Node* n, const std::function<const Tensor&(Node*)>& t){
+    return Tensor();
+}
 
 // ---- reductions ----
 Tensor jvp_Sum(Node* n, const std::function<const Tensor&(Node*)>& t){

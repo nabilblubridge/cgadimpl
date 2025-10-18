@@ -2,7 +2,9 @@
 #include <iostream>
 #include <cuda_runtime.h>
 
-
+// =====================================================
+// Elementwise Addition
+// =====================================================
 
 
 __global__ void adding_cuda(const float* A, const float* B, float* C, int width)
@@ -12,7 +14,6 @@ __global__ void adding_cuda(const float* A, const float* B, float* C, int width)
 
     int row = bx * blockDim.x + tx;
 
-    float acc = 0.0f;
 
 
 
@@ -125,6 +126,62 @@ __global__ void muling_cuda(const float* A, const float* B, float* C, int width)
     if (err != cudaSuccess)
         std::cerr << "CUDA HADMUL kernel launch error: "
                   << cudaGetErrorString(err) << std::endl;
+
+    cudaDeviceSynchronize();
+}
+
+
+
+
+
+__global__ void sigmoid_thread(const float* A, float* B, int width)
+{
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < width)
+        B[idx] = (1.0f + tanhf(A[idx] / 2.0f)) / 2.0f;
+}
+
+void run_cuda_sigmoid(const float* A, float* B, int width)
+{
+    int threads = 256;
+    int blocks = (width + threads - 1) / threads;
+
+    sigmoid_thread<<<blocks, threads>>>(A, B, width);
+
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        std::cerr << "CUDA sigmoid launch error: "
+                  << cudaGetErrorString(err) << std::endl;
+    }
+
+    cudaDeviceSynchronize();
+}
+
+
+
+
+
+__global__ void sigmoidiff_thread(const float* A, float* B, int width)
+{
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < width) {
+        float t = tanhf(A[idx] * 0.5f);
+        B[idx] = 0.25f * (1.0f - (t * t));
+    }
+}
+
+void run_cuda_sigmoidiff(const float* A, float* B, int width)
+{
+    int threads = 256;
+    int blocks = (width + threads - 1) / threads;
+
+    sigmoidiff_thread<<<blocks, threads>>>(A, B, width);
+
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        std::cerr << "CUDA sigmoid diff launch error: "
+                  << cudaGetErrorString(err) << std::endl;
+    }
 
     cudaDeviceSynchronize();
 }

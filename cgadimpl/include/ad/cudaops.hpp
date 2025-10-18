@@ -23,7 +23,8 @@ std::shared_ptr<Node> add_cudaops(const std::shared_ptr<Node>& a, const std::sha
 std::shared_ptr<Node> sub_cudaops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b);
 std::shared_ptr<Node> mul_cudaops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b);
 std::shared_ptr<Node> div_cudaops(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b);
-
+std::shared_ptr<Node> sigmoidiff_cudaops(const std::shared_ptr<Node>& x);
+std::shared_ptr<Node> sigmoid_cudaops(const std::shared_ptr<Node>& x);
 
 }
 }

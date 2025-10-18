@@ -3,6 +3,10 @@
 #include "ad/graph.hpp"
 #include "ad/schema.hpp"
 #include "ad/kernels_api.hpp"
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <iostream>
+
 
 namespace ag {
 

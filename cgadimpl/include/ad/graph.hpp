@@ -22,6 +22,7 @@ bool requires_grad{false};
 bool is_checkpoint{false};
 float *d_array;
 bool cuda_device{false};
+float siz;
 
 std::vector<Value> saved_inputs;
 std::vector<uint8_t> saved_rng_blob;

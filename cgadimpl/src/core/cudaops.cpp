@@ -31,15 +31,16 @@ std::shared_ptr<Node> add_cudaops(const std::shared_ptr<Node>& a,
                                     Op::Add, "+", true);
 
     fn(A, B, n->d_array, M * K);
+    n->siz = M*K;
 
-    cudaMemcpy(n->value.data(), n->d_array, M * N * sizeof(float),
-               cudaMemcpyDeviceToHost);
+    // cudaMemcpy(n->value.data(), n->d_array, M * N * sizeof(float),
+    //            cudaMemcpyDeviceToHost);
 
-    // Debug print
-    std::cout << "[CUDA ADD output preview]: ";
-    for (int i = 0; i < std::min(10, M * N); ++i)
-        std::cout << n->value.data()[i] << " ";
-    std::cout << "\n";
+    // // Debug print
+    // std::cout << "[CUDA ADD output preview]: ";
+    // for (int i = 0; i < std::min(10, M * N); ++i)
+    //     std::cout << n->value.data()[i] << " ";
+    // std::cout << "\n";
 
     n->inputs = {a, b};
     return n;
@@ -149,6 +150,91 @@ std::shared_ptr<Node> div_cudaops(const std::shared_ptr<Node>& a,
     n->inputs = {a, b};
     return n;
 }
+
+
+
+
+
+
+   
+    std::shared_ptr<Node> sigmoid_cudaops(const std::shared_ptr<Node>& x){ 
+                      const Tensor& xin = x->value;
+        auto X = x->d_array;
+
+    auto [M, K]  = x->value.shape();
+
+    auto* fn = run_cuda_sigmoid;
+    if (!fn)
+        throw std::runtime_error("No CUDA Div kernel registered");
+
+    Tensor C({M, K});
+    auto n = std::make_shared<Node>(C, (x->requires_grad),
+                                    Op::Sigmoid, "/", true);
+
+    fn(X, n->d_array, M * K);
+
+    cudaMemcpy(n->value.data(), n->d_array, M * K * sizeof(float),
+               cudaMemcpyDeviceToHost);
+
+    std::cout << "[CUDA Sigmoid output preview]: ";
+    for (int i = 0; i < std::min(10, M * K); ++i)
+        std::cout << n->value.data()[i] << " ";
+    std::cout << "\n";
+
+    n->inputs = {x};
+    return n;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        std::shared_ptr<Node> sigmoidiff_cudaops(const std::shared_ptr<Node>& x){ 
+                      const Tensor& xin = x->value;
+        auto X = x->d_array;
+
+    auto [M, K]  = x->value.shape();
+
+    auto* fn = run_cuda_sigmoidiff;
+    if (!fn)
+        throw std::runtime_error("No CUDA Sigmoidiff kernel registered");
+
+    Tensor C({M, K});
+    auto n = std::make_shared<Node>(C, (x->requires_grad),
+                                    Op::Sigmoidiff, "/", true);
+
+    fn(X, n->d_array, M * K);
+
+    cudaMemcpy(n->value.data(), n->d_array, M * K * sizeof(float),
+               cudaMemcpyDeviceToHost);
+
+    std::cout << "[CUDA Sigmoidiff output preview]: ";
+    for (int i = 0; i < std::min(10, M * K); ++i)
+        std::cout << n->value.data()[i] << " ";
+    std::cout << "\n";
+
+    n->inputs = {x};
+    return n;
+    }
+
+
+
 
 
 

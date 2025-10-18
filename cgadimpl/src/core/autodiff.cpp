@@ -5,6 +5,11 @@
 #include "ad/detail/autodiff_ops.hpp"
 #include "ad/debug.hpp"
 #include <ad/checkpoint.hpp>
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <iostream>
+
+
 namespace ag {
 
 void zero_grad(const Value& root){
@@ -37,6 +42,33 @@ void backward(const Value& root, const Tensor* grad_seed){
         }
         VjpFn fn = vjp_lookup(n->op);
         if (fn) fn(n, gy); // handler accumulates into parents
+    }
+}
+
+
+void valsend(const Value& root){
+    auto order = topo_from(root.node.get());
+
+
+
+    // reverse topo
+    for (auto it = order.rbegin(); it != order.rend(); ++it) {
+        Node* n = *it;
+        if (!n->requires_grad || !(n->cuda_device)) continue;
+        const Tensor& gy = n->grad;
+
+        cudaMemcpy(n->value.data(), n->d_array, n->siz * sizeof(float),
+               cudaMemcpyDeviceToHost);
+
+        ag::debug::on_backprop_step(n, gy); // (optional) prints one line per node
+
+        // if (n->is_checkpoint && n->value.size() == 0) {
+        // if (!ag::checkpoint_impl::recompute_subgraph(n->shared_from_this())) {
+        //     throw std::runtime_error("autodiff: failed to recompute checkpointed node during backward");
+        // }
+        // }
+        // VjpFn fn = vjp_lookup(n->op);
+        // if (fn) fn(n, gy); // handler accumulates into parents
     }
 }
 

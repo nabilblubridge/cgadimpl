@@ -44,6 +44,7 @@ Value mish (const Value& x);
 Value gaus (const Value& x);
 Value parcon(const Value& x);
 Value sigmoid(const Value& x);
+Value sigmoidiff(const Value& x);
 Value softplus(const Value& x);
 Value reluatt(const Value& a, const Value& b, const Value& c, const Value& d); 
 Value sigatt(const Value& a, const Value& b, const Value& c, const Value& d); 

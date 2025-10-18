@@ -159,13 +159,15 @@ namespace ag {
     }
 
 
-  
+    Value sigmoidiff(const Value& x){ 
+        return Value(detail::sigmoidiff_cudaops(x.node));
+    }  
 
 
  
 
     Value sigmoid(const Value& x){ 
-        return Value(detail::sigmoid_nodeops(x.node));
+        return Value(detail::sigmoid_cudaops(x.node));
     }
     
     Value softplus(const Value& x){ 
