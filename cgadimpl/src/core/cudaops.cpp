@@ -68,14 +68,16 @@ std::shared_ptr<Node> sub_cudaops(const std::shared_ptr<Node>& a,
                                     Op::Sub, "-", true);
 
     fn(A, B, n->d_array, M * K);
+       n->siz = M*K;
 
-    cudaMemcpy(n->value.data(), n->d_array, M * N * sizeof(float),
-               cudaMemcpyDeviceToHost);
 
-    std::cout << "[CUDA SUB output preview]: ";
-    for (int i = 0; i < std::min(10, M * N); ++i)
-        std::cout << n->value.data()[i] << " ";
-    std::cout << "\n";
+    // cudaMemcpy(n->value.data(), n->d_array, M * N * sizeof(float),
+    //            cudaMemcpyDeviceToHost);
+
+    // std::cout << "[CUDA SUB output preview]: ";
+    // for (int i = 0; i < std::min(10, M * N); ++i)
+    //     std::cout << n->value.data()[i] << " ";
+    // std::cout << "\n";
 
     n->inputs = {a, b};
     return n;
@@ -103,14 +105,15 @@ std::shared_ptr<Node> mul_cudaops(const std::shared_ptr<Node>& a,
                                     Op::Mul, "⨀", true);
 
     fn(A, B, n->d_array, M * K);
+       n->siz = M*K;
 
     cudaMemcpy(n->value.data(), n->d_array, M * N * sizeof(float),
                cudaMemcpyDeviceToHost);
 
-    std::cout << "[CUDA MUL output preview]: ";
-    for (int i = 0; i < std::min(10, M * N); ++i)
-        std::cout << n->value.data()[i] << " ";
-    std::cout << "\n";
+    // std::cout << "[CUDA MUL output preview]: ";
+    // for (int i = 0; i < std::min(10, M * N); ++i)
+    //     std::cout << n->value.data()[i] << " ";
+    // std::cout << "\n";
 
     n->inputs = {a, b};
     return n;
@@ -138,6 +141,7 @@ std::shared_ptr<Node> div_cudaops(const std::shared_ptr<Node>& a,
                                     Op::Div, "/", true);
 
     fn(A, B, n->d_array, M * K);
+       n->siz = M*K;
 
     cudaMemcpy(n->value.data(), n->d_array, M * N * sizeof(float),
                cudaMemcpyDeviceToHost);
@@ -175,6 +179,7 @@ std::shared_ptr<Node> div_cudaops(const std::shared_ptr<Node>& a,
 
     cudaMemcpy(n->value.data(), n->d_array, M * K * sizeof(float),
                cudaMemcpyDeviceToHost);
+       n->siz = M*K;
 
     std::cout << "[CUDA Sigmoid output preview]: ";
     for (int i = 0; i < std::min(10, M * K); ++i)
@@ -220,6 +225,7 @@ std::shared_ptr<Node> div_cudaops(const std::shared_ptr<Node>& a,
                                     Op::Sigmoidiff, "/", true);
 
     fn(X, n->d_array, M * K);
+       n->siz = M*K;
 
     cudaMemcpy(n->value.data(), n->d_array, M * K * sizeof(float),
                cudaMemcpyDeviceToHost);

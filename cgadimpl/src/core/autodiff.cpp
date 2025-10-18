@@ -57,10 +57,15 @@ void valsend(const Value& root){
         if (!n->requires_grad || !(n->cuda_device)) continue;
         const Tensor& gy = n->grad;
 
-        cudaMemcpy(n->value.data(), n->d_array, n->siz * sizeof(float),
+        cudaMemcpy(n->value.data(), n->d_array, (n->siz) * sizeof(float),
                cudaMemcpyDeviceToHost);
 
         ag::debug::on_backprop_step(n, gy); // (optional) prints one line per node
+
+    //        std::cout << "[CUDA SUB output preview]: ";
+    // for (int i = 0; i < 10; ++i)
+    //     std::cout << n->value.data()[i] << " ";
+    // std::cout << "\n";
 
         // if (n->is_checkpoint && n->value.size() == 0) {
         // if (!ag::checkpoint_impl::recompute_subgraph(n->shared_from_this())) {

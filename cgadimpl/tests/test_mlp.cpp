@@ -108,7 +108,7 @@ Tensor Yt(8, 8);
 auto bias = param(Tensor::zeros(8,8), "bias");
 
     auto q =   a+b; // [2,2]
-    auto y=q+c;
+    auto y=q*c;
 std::cout << "y = " << y.val()
 <<","<< endl<< "A = " << a.val()
 <<","<< endl<< "B = " << b.val()<<","<< endl
